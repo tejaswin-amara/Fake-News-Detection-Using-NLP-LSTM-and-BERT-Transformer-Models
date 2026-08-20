@@ -27,7 +27,7 @@ Every response exposes model name and artifact version. Responses also include `
 
 The native artifact is the fallback because not every estimator or preprocessing operation is exportable to ONNX or TorchScript. `src/serving/export.py` provides ONNX export for compatible scikit-learn estimators and TorchScript tracing for compatible PyTorch modules. Every export must be compared against native predictions on a conformance fixture before deployment.
 
-## Docker
+## Docker (SRC-032)
 
 The Docker image installs the pinned base requirements, copies source and configuration files, and starts Uvicorn. Dataset files, model weights, secrets, and generated artifacts should be mounted or supplied through a secure artifact store rather than baked into the image.
 

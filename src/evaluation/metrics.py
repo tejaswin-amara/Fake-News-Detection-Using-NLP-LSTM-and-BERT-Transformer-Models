@@ -1,6 +1,7 @@
 """Evaluation, calibration, model selection, and statistical testing.
 
-Compliant with M5/CO5. References SRC-024 through SRC-029 in docs/sources.md.
+Compliant with M5/CO5. References SRC-024, SRC-025, SRC-026, SRC-027, SRC-028,
+and SRC-029 in docs/sources.md.
 The module accepts predictions from any model family through a common probability
 array contract and never fits calibration on the final test set.
 """
@@ -124,11 +125,12 @@ def calibrate_probabilities(
     y_train: Any,
     X_validation: Any,
     methods: tuple[str, ...] = ("sigmoid", "isotonic"),
+    cv: int = 5,
 ) -> dict[str, np.ndarray]:
     """Fit calibration maps on training data and predict validation probabilities."""
     calibrated: dict[str, np.ndarray] = {}
     for method in methods:
-        calibrator = CalibratedClassifierCV(estimator=estimator, method=method, cv=5)
+        calibrator = CalibratedClassifierCV(estimator=estimator, method=method, cv=cv)
         calibrator.fit(X_train, y_train)
         calibrated[method] = calibrator.predict_proba(X_validation)
     return calibrated
@@ -158,28 +160,32 @@ def mcnemar_test(
     c = int(np.sum(~correct_a & correct_b))
     discordant = b + c
     if discordant == 0:
-        p_value = 1.0
         statistic = 0.0
+        continuity_p_value = 1.0
+        exact_p_value = 1.0
     else:
         statistic = (abs(b - c) - 1) ** 2 / discordant
         try:
-            from scipy.stats import chi2  # type: ignore
+            from scipy.stats import binomtest, chi2  # type: ignore
 
-            p_value = float(chi2.sf(statistic, df=1))
-        except ImportError:
-            p_value = float(
-                2.0
-                * min(sum(math.comb(discordant, k) for k in range(0, min(b, c) + 1)), 2**discordant)
-                / 2**discordant
+            continuity_p_value = float(chi2.sf(statistic, df=1))
+            exact_p_value = float(
+                binomtest(min(b, c), n=discordant, p=0.5, alternative="two-sided").pvalue
             )
+        except ImportError:
+            continuity_p_value = float("nan")
+            probability = sum(math.comb(discordant, k) for k in range(min(b, c) + 1)) / (2**discordant)
+            exact_p_value = float(min(1.0, 2.0 * probability))
     return {
         "b_model_a_only_correct": b,
         "c_model_b_only_correct": c,
         "discordant_pairs": discordant,
         "statistic_continuity_corrected": float(statistic),
-        "p_value": p_value,
+        "continuity_corrected_p_value": continuity_p_value,
+        "exact_binomial_p_value": exact_p_value,
+        "p_value": exact_p_value,
         "interpretation": "Evidence differs at alpha=0.05"
-        if p_value < 0.05
+        if exact_p_value < 0.05
         else "No evidence of a difference at alpha=0.05",
     }
 

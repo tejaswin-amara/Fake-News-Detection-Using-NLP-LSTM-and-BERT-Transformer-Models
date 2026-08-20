@@ -54,13 +54,22 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `src/models/lstm.py` | GloVe-initialized BiLSTM classifier | CO1/M1, CO5/M5 |
 | `src/models/bert.py` | `bert-base-uncased` fine-tuning path | CO1/M1, CO5/M5 |
 | `src/evaluation/metrics.py` | Metrics, cross-validation, calibration, curves, and statistical tests | CO5/M5 |
+| `src/evaluation/plots.py` | Confusion, ROC/PR, learning, and reliability diagrams | CO5/M5 |
+| `src/evaluation/search.py` | Grid, random, and optional Bayesian search | CO5/M5 |
 | `src/serving/app.py` | FastAPI health and prediction endpoints | CO6/M6 |
+| `src/serving/predictor.py` | Bound preprocessing-plus-model inference contract | CO1/M1, CO6/M6 |
+| `src/serving/export.py` | Native, ONNX, and TorchScript export helpers | CO6/M6 |
 | `src/monitoring/drift.py` | KS and PSI drift checks plus monitoring reports | CO6/M6 |
+| `src/tracking.py` | Optional MLflow experiment and artifact tracking | CO6/M6 |
+| `src/train.py` | Reproducible classical training entry point | CO1/M1, CO2/M2, CO3/M3 |
+| `src/evaluate.py` | Held-out artifact evaluation entry point | CO5/M5 |
+| `scripts/source_audit.py` | Source-register and URL consistency audit | All outcomes |
 | `configs/` | `default.yaml`, `models.yaml`, and `evaluation.yaml` for data, models, evaluation, serving, and monitoring | CO1/M1, CO5/M5, CO6/M6 |
 | `tests/` | Unit, integration, leakage, serialization, export, and API tests | CO1–CO6 |
 | `docs/sources.md` | Complete source, provenance, license, and source-to-file register | All outcomes |
 | `docs/sources.yaml` | Machine-readable source metadata used by audit tooling | All outcomes |
 | `docs/compliance_matrix.md` | Script/notebook/test/artifact traceability to every CO and module | All outcomes |
+| `docs/dependency_licenses.md` | Dependency and redistribution license inventory | CO6/M6 |
 
 ## Data and label policy
 

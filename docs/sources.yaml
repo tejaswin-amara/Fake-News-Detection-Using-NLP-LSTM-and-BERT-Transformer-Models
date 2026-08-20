@@ -253,3 +253,14 @@ sources:
       - https://peps.python.org/pep-0621/
     accessed: "2026-08-20"
     supports: [pyproject.toml, requirements.txt, docs/deployment.md]
+  - id: SRC-035
+    category: optional_nlp_and_onnx_libraries
+    citation: "Official documentation for NLTK, spaCy, Gensim, and skl2onnx."
+    urls:
+      - https://www.nltk.org/
+      - https://spacy.io/
+      - https://radimrehurek.com/gensim/
+      - https://onnx.ai/sklearn-onnx/
+    accessed: "2026-08-20"
+    license_or_terms: "Record installed package versions and follow each package license."
+    supports: [requirements.txt, src/features, src/serving/export.py]

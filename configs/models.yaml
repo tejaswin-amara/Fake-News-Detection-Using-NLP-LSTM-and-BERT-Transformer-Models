@@ -23,6 +23,6 @@ lstm:
   batch_sizes: [32, 64]
 
 bert:
-  model_name: google-bert/bert-base-uncased
+  model_name: bert-base-uncased
   epochs: [3, 4, 5]
   learning_rates: [0.00001, 0.00002, 0.00005]

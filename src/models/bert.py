@@ -16,7 +16,7 @@ import numpy as np
 
 @dataclass
 class BertConfig:
-    model_name: str = "google-bert/bert-base-uncased"
+    model_name: str = "bert-base-uncased"
     epochs: int = 3
     learning_rate: float = 2e-5
     warmup_ratio: float = 0.10
@@ -66,6 +66,7 @@ def build_training_arguments(config: BertConfig, output_dir: str | Path, train_s
         per_device_train_batch_size=config.batch_size,
         per_device_eval_batch_size=config.batch_size,
         weight_decay=0.01,
+        optim="adamw_torch",
         evaluation_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,

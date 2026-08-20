@@ -1,7 +1,7 @@
 """Unsupervised structure discovery for news-text representations.
 
-Compliant with M4: Unsupervised Learning and CO4. References SRC-016 through
-SRC-020 in docs/sources.md. Fit methods must receive training representations;
+Compliant with M4: Unsupervised Learning and CO4. References SRC-016, SRC-017,
+SRC-018, SRC-019, and SRC-020 in docs/sources.md. Fit methods must receive training representations;
 held-out data may only be passed to transform/predict methods.
 """
 

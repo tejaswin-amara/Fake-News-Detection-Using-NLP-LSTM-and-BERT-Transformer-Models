@@ -3,7 +3,8 @@ from __future__ import annotations
 import numpy as np
 from scipy import sparse
 
-from src.evaluation.metrics import evaluate_predictions, mcnemar_test
+from src.config import load_config
+from src.evaluation.metrics import calibrate_probabilities, evaluate_predictions, mcnemar_test
 from src.models.classical import build_logistic_model, build_random_forest
 from src.models.unsupervised import UnsupervisedAnalyzer
 from src.monitoring.drift import monitor_features, population_stability_index
@@ -36,6 +37,12 @@ def test_logistic_and_random_forest_train():
     assert forest.oob_score_ >= 0.0
 
 
+def test_configuration_uses_required_bert_identifier():
+    config = load_config("configs/default.yaml")
+    assert config.values["models"]["bert"]["model_name"] == "bert-base-uncased"
+    assert config.values["text"]["transformer"]["model_name"] == "bert-base-uncased"
+
+
 def test_metrics_and_mcnemar_are_structured():
     y = np.asarray([0, 1, 0, 1])
     proba_a = np.asarray([[0.8, 0.2], [0.2, 0.8], [0.7, 0.3], [0.2, 0.8]])
@@ -44,7 +51,17 @@ def test_metrics_and_mcnemar_are_structured():
     assert result.accuracy == 1.0
     comparison = mcnemar_test(y, proba_a, proba_b)
     assert "p_value" in comparison
+    assert "exact_binomial_p_value" in comparison
+    assert 0.0 <= comparison["exact_binomial_p_value"] <= 1.0
     assert comparison["discordant_pairs"] >= 0
+
+
+def test_calibration_returns_two_probability_matrices():
+    X, y = fixture_matrix()
+    estimator = build_logistic_model("l2", max_iter=100)
+    calibrated = calibrate_probabilities(estimator, X, y, X, methods=("sigmoid", "isotonic"), cv=2)
+    assert set(calibrated) == {"sigmoid", "isotonic"}
+    assert calibrated["sigmoid"].shape == (len(y), 2)
 
 
 def test_unsupervised_fit_and_feature_labels():

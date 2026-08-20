@@ -44,7 +44,7 @@ text:
     max_tokens: 30000
     max_length: 400
   transformer:
-    model_name: google-bert/bert-base-uncased
+    model_name: bert-base-uncased
     max_length: 512
     dynamic_padding: true
 
@@ -76,7 +76,7 @@ models:
     epochs: 10
     learning_rate: 0.001
   bert:
-    model_name: google-bert/bert-base-uncased
+    model_name: bert-base-uncased
     epochs: 3
     batch_size: 8
     learning_rate: 0.00002

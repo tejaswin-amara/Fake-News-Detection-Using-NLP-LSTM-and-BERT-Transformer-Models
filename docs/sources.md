@@ -182,3 +182,15 @@ Python Packaging Authority. [Packaging User Guide](https://packaging.python.org/
 | Date | Change |
 |---|---|
 | 2026-08-20 | Initial source register created from the user brief, course handout, and verified public source records. |
+
+### SRC-035 — NLP and ONNX conversion libraries
+
+NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nltk.org/), [spaCy](https://spacy.io/), [Gensim](https://radimrehurek.com/gensim/), and [skl2onnx](https://onnx.ai/sklearn-onnx/). **Use:** optional token normalization/lemmatization, embedding utilities, and scikit-learn-to-ONNX conversion support. **Files:** `requirements.txt`, `src/features/`, and `src/serving/export.py`. **Accessed:** 2026-08-20. **Terms:** record each installed package version and follow its license.
+
+## Audit change log
+
+| Date | Audit finding and resolution |
+|---|---|
+| 2026-08-20 | Dependency dry-run found `gensim==4.3.3` requires SciPy below 1.14; corrected `requirements.txt` to `scipy==1.13.1`. |
+| 2026-08-20 | BERT defaults were aligned to the brief’s exact `bert-base-uncased` identifier. |
+| 2026-08-20 | Added SRC-035 for optional NLP and ONNX conversion libraries discovered during dependency/source audit. |
