@@ -48,8 +48,10 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `data/` | Raw, processed, external, and reproducibility placeholders; raw data is not committed by default | CO1/M1 |
 | `notebooks/` | EDA, unsupervised analysis, model comparison, deep-learning experiments, and evaluation evidence | CO1–CO5 / M1–M5 |
 | `src/data/ingestion.py` | ISOT/WELFake adapters, validation, canonical schema, split manifests | CO1/M1 |
-| `src/features/` | Cleaning, TF-IDF, GloVe, tokenization, SBERT, and feature contracts | CO1/M1, CO4/M4 |
-| `src/models/unsupervised.py` | K-Means, hierarchical clustering, DBSCAN, PCA, t-SNE, UMAP, Isolation Forest | CO4/M4 |
+| `src/features/` | Cleaning, tokenization, text statistics/readability, TF-IDF, GloVe, Word2Vec, SBERT, imputation, encoding, scaling, and feature contracts | CO1/M1, CO2/M2, CO4/M4 |
+| `src/features/preprocessing.py` | Mean/median/KNN/iterative imputation, MissingIndicator, One-Hot/Ordinal/target encoding, StandardScaler, and MinMaxScaler | CO2/M2 |
+| `src/features/unsupervised_features.py` | Train-fitted cluster/anomaly feature synthesis with stable schema | CO4/M4 |
+| `src/models/unsupervised.py` | K-Means++, Mini-Batch K-Means, hierarchical clustering, DBSCAN, PCA, t-SNE, UMAP, Isolation Forest | CO4/M4 |
 | `src/models/classical.py` | Logistic, Decision Tree, Random Forest, XGBoost, LightGBM | CO2/M2, CO3/M3 |
 | `src/models/lstm.py` | GloVe-initialized BiLSTM classifier | CO1/M1, CO5/M5 |
 | `src/models/bert.py` | `bert-base-uncased` fine-tuning path | CO1/M1, CO5/M5 |

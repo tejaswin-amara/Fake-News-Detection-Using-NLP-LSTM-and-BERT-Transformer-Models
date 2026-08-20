@@ -1,8 +1,8 @@
-"""Embedding and tokenizer utilities.
+"""Embedding, tokenizer, and provenance utilities.
 
-References: SRC-011 (GloVe), SRC-013 (Transformers), and SRC-014 (Sentence
-Transformers). Heavy pretrained assets are downloaded only when explicitly
-requested by the caller and are never committed automatically.
+References: SRC-011 (GloVe), SRC-013 (Transformers), SRC-014 (Sentence
+Transformers), and SRC-035 (Gensim). Heavy pretrained assets are downloaded
+only when explicitly requested by the caller and are never committed automatically.
 """
 
 from __future__ import annotations
@@ -10,8 +10,11 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import numpy as np
+
+from src.features.text import process_tokens
 
 
 def load_glove_vectors(
@@ -51,6 +54,57 @@ def build_embedding_matrix(
     return matrix
 
 
+def train_word2vec(
+    texts: Iterable[str],
+    *,
+    vector_size: int = 100,
+    window: int = 5,
+    min_count: int = 1,
+    epochs: int = 5,
+    workers: int = 1,
+    seed: int = 42,
+):
+    """Train Word2Vec on the supplied training texts only."""
+    try:
+        from gensim.models import Word2Vec  # type: ignore
+    except ImportError as exc:
+        raise RuntimeError("Install gensim to train Word2Vec embeddings") from exc
+    sentences = [process_tokens(text, stop_words=None) for text in texts]
+    if not sentences or not any(sentences):
+        raise ValueError("Word2Vec requires at least one non-empty tokenized sentence")
+    return Word2Vec(
+        sentences=sentences,
+        vector_size=vector_size,
+        window=window,
+        min_count=min_count,
+        workers=workers,
+        seed=seed,
+        epochs=epochs,
+    )
+
+
+def load_word2vec(path: str | Path, binary: bool = True):
+    """Load a Word2Vec/KeyedVectors file without changing its vocabulary."""
+    try:
+        from gensim.models import KeyedVectors  # type: ignore
+    except ImportError as exc:
+        raise RuntimeError("Install gensim to load Word2Vec embeddings") from exc
+    return KeyedVectors.load_word2vec_format(str(path), binary=binary)
+
+
+def average_word2vec(texts: Iterable[str], model: Any) -> np.ndarray:
+    """Create deterministic mean Word2Vec vectors; unknown tokens are ignored."""
+    dimension = int(model.vector_size)
+    # Materialize once so generators are not consumed twice.
+    materialized = list(texts)
+    output = np.zeros((len(materialized), dimension), dtype=np.float32)
+    for row, text in enumerate(materialized):
+        vectors = [model.wv[token] for token in process_tokens(text, stop_words=None) if token in model.wv]
+        if vectors:
+            output[row] = np.mean(vectors, axis=0)
+    return output
+
+
 def file_sha256(path: str | Path, chunk_size: int = 1024 * 1024) -> str:
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
@@ -59,7 +113,7 @@ def file_sha256(path: str | Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def build_transformer_tokenizer(model_name: str = "google-bert/bert-base-uncased"):
+def build_transformer_tokenizer(model_name: str = "bert-base-uncased"):
     """Load a Hugging Face tokenizer lazily so classical paths remain CPU-light."""
     from transformers import AutoTokenizer  # type: ignore
 

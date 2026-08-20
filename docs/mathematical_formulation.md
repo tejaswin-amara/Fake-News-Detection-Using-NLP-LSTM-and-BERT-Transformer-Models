@@ -108,3 +108,19 @@ PSI compares reference and current bin proportions:
 \]
 
 where `p_i` and `q_i` are reference and current proportions with a small floor for empty bins.
+
+## Phase 2 feature-engineering contracts
+
+For a feature value `x`, mean and median imputation replace missing values with statistics computed from the training partition only. KNN and iterative imputation likewise fit their neighbor/model parameters on training rows only. A MissingIndicator adds a binary coordinate `m_j = 1[x_j is missing]` so missingness remains observable without using held-out distributions.
+
+Standard scaling uses `z_j = (x_j - μ_j) / σ_j`, where `μ_j` and `σ_j` are training-only statistics. Min-max scaling uses `x'_j = (x_j - min_j) / (max_j - min_j)` with training-only bounds. One-hot and ordinal encoders learn category vocabularies on training data; unknown validation/test categories follow the configured unknown-category policy.
+
+Smoothed target encoding for category `c` uses `TE(c) = (n_c μ_c + α μ) / (n_c + α)`, where `μ_c` and `n_c` are category-specific training statistics, `μ` is the training global target mean, and `α` is the smoothing strength. Training rows receive out-of-fold estimates so their own labels do not directly determine their encoded values; validation/test rows use the full-training mapping and never their own labels.
+
+## Phase 2 unsupervised contracts
+
+K-Means minimizes `Σ_i ||x_i - μ_{z_i}||²`; K-Means++ initializes centroids with distance-aware sampling, while Mini-Batch K-Means approximates the same objective using batches. The elbow diagnostic records inertia as a function of `K`, and the silhouette score compares within-cluster cohesion with nearest-cluster separation.
+
+PCA on standardized training features decomposes the covariance structure into orthogonal components. The explained-variance ratio for component `k` is `λ_k / Σ_j λ_j`; validation/test rows are projected through the fitted training scaler and PCA basis without refitting. t-SNE and UMAP coordinates are visualization-only manifold projections and are not interpreted as factual or causal representations.
+
+DBSCAN identifies dense regions using `ε` neighborhoods and `min_samples`; points not assigned to a dense region receive the noise label `-1`. For held-out feature synthesis, the implementation assigns a row to the nearest fitted core point only when it lies within the fitted `ε`; otherwise it remains noise. Isolation Forest anomaly severity is reported as the negated `score_samples` value, so larger values indicate stronger anomaly evidence relative to the fitted training reference.

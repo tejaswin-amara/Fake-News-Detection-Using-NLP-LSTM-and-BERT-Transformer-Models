@@ -185,7 +185,7 @@ Python Packaging Authority. [Packaging User Guide](https://packaging.python.org/
 
 ### SRC-035 — NLP and ONNX conversion libraries
 
-NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nltk.org/), [spaCy](https://spacy.io/), [Gensim](https://radimrehurek.com/gensim/), and [skl2onnx](https://onnx.ai/sklearn-onnx/). **Use:** optional token normalization/lemmatization, embedding utilities, and scikit-learn-to-ONNX conversion support. **Files:** `requirements.txt`, `src/features/`, and `src/serving/export.py`. **Accessed:** 2026-08-20. **Terms:** record each installed package version and follow its license.
+NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nltk.org/), [spaCy](https://spacy.io/), [Gensim](https://radimrehurek.com/gensim/), and [skl2onnx](https://onnx.ai/sklearn-onnx/). **Use:** optional token normalization/lemmatization, Word2Vec training/loading, embedding utilities, and scikit-learn-to-ONNX conversion. **Files:** `requirements.txt`, `src/features/`, and `src/serving/export.py`. **Accessed:** 2026-08-20. **Terms:** record each installed package version and follow its license.
 
 ## Audit change log
 
@@ -197,4 +197,4 @@ NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nlt
 
 ### SRC-036 — DVC data versioning
 
-[DVC documentation](https://dvc.org/doc), [DVC repository](https://github.com/iterative/dvc), and [DVC package metadata](https://pypi.org/project/dvc/). **Use:** `.dvc/`, `.dvcignore`, `dvc.yaml`, `requirements.txt`, `pyproject.toml`, and reproducible data/model/evaluation stages. **Accessed:** 2026-08-20. **Terms:** DVC is open-source software; retain the package license and record the selected DVC version in reproducibility metadata.
+[DVC documentation](https://dvc.org/doc), [DVC repository](https://github.com/iterative/dvc), and [DVC package metadata](https://pypi.org/project/dvc/). **Use:** `.dvc/`, `.dvcignore`, `dvc.yaml`, `params.yaml`, `requirements.txt`, and `pyproject.toml`. **Accessed:** 2026-08-20. **Terms:** DVC is open-source software; retain the package license and record the selected DVC version in reproducibility metadata.

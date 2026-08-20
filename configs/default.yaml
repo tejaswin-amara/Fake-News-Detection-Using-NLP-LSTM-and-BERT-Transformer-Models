@@ -25,6 +25,13 @@ split:
 text:
   title_weight: 1.0
   body_weight: 1.0
+  tokenization:
+    stop_words: english
+    stemming: false
+    lemmatization: false
+  statistics:
+    enabled: true
+    readability: true
   lowercase: true
   normalize_unicode: true
   remove_urls: true
@@ -47,10 +54,29 @@ text:
     model_name: bert-base-uncased
     max_length: 512
     dynamic_padding: true
+  embeddings:
+    word2vec_vector_size: 100
+    word2vec_window: 5
+    word2vec_min_count: 1
+    glove_dimension: 100
+    sbert_model: sentence-transformers/all-MiniLM-L6-v2
+
+preprocessing:
+  numeric_imputation: median
+  add_missing_indicators: true
+  knn_neighbors: 5
+  categorical_encoding: onehot
+  target_encoding_smoothing: 10.0
+  target_encoding_folds: 5
+  scaling: standard
 
 unsupervised:
   representation: tfidf
   pca_components: 50
+  standardize_before_pca: true
+  projection_dimensions: [2, 3]
+  include_minibatch_kmeans: true
+  include_dbscan_features: true
   kmeans_k_values: [2, 3, 4, 5, 6, 8, 10]
   dbscan_eps_values: [0.20, 0.35, 0.50, 0.75]
   dbscan_min_samples_values: [5, 10, 20]
