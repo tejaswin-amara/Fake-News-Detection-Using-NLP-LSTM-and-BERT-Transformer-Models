@@ -4,6 +4,14 @@ classical:
     penalties: [l1, l2, elasticnet]
     C_values: [0.1, 1.0, 10.0]
     max_iter: 2000
+    multi_class: [auto, multinomial]
+  ridge:
+    alpha_values: [0.01, 0.1, 1.0, 10.0]
+  lasso:
+    alpha_values: [0.0001, 0.001, 0.01]
+  elasticnet:
+    alpha_values: [0.0001, 0.001, 0.01]
+    l1_ratio: [0.25, 0.5, 0.75]
   decision_tree:
     criterion: [gini, entropy]
     ccp_alpha: [0.0, 0.0001, 0.001, 0.01]
@@ -13,16 +21,35 @@ classical:
   xgboost:
     n_estimators: [100, 300]
     max_depth: [4, 6, 8]
+    tree_method: [hist]
   lightgbm:
     n_estimators: [100, 300]
     num_leaves: [15, 31, 63]
+    boosting_type: [gbdt]
+    max_depth: [-1, 8, 16]
+
+explainability:
+  permutation_repeats: 5
+  shap_max_samples: 1000
 
 lstm:
   embedding_dimensions: [100, 300]
   epochs: [3, 5, 10]
   batch_sizes: [32, 64]
+  smoke_epochs: 1
+  smoke_batch_size: 4
 
 bert:
   model_name: bert-base-uncased
   epochs: [3, 4, 5]
   learning_rates: [0.00001, 0.00002, 0.00005]
+  smoke_epochs: 1
+  smoke_batch_size: 4
+
+search:
+  default_type: grid
+  cv_folds: 5
+  inner_folds: 3
+  random_iterations: 20
+  bayesian_trials: 25
+  scoring: average_precision

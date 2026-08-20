@@ -5,8 +5,25 @@ import pytest
 from scipy import sparse
 
 from src.config import load_config
-from src.evaluation.metrics import calibrate_probabilities, evaluate_predictions, mcnemar_test
-from src.models.classical import build_logistic_model, build_random_forest
+from src.evaluation.metrics import (
+    calibrate_probabilities,
+    evaluate_predictions,
+    mcnemar_test,
+    paired_bootstrap_regression,
+    regression_metrics,
+)
+from src.evaluation.search import grid_search, search_result
+from src.models.classical import (
+    build_elasticnet_model,
+    build_lasso_model,
+    build_lightgbm,
+    build_logistic_model,
+    build_random_forest,
+    build_ridge_model,
+    build_xgboost,
+    permutation_importance_table,
+    shap_values,
+)
 from src.models.unsupervised import UnsupervisedAnalyzer
 from src.monitoring.drift import monitor_features, population_stability_index
 from src.tracking import initialize_tracking
@@ -106,3 +123,87 @@ def test_drift_monitoring_detects_shift():
     assert report["features"]["f1"]["psi"] > 0.0
     assert report["drift_detected"] is True
     assert population_stability_index(reference["f2"], current["f2"]) == 0.0
+
+
+def test_phase3_linear_models_and_optional_boosting_configuration():
+    X, y = fixture_matrix()
+    for builder in (build_ridge_model, build_lasso_model, build_elasticnet_model):
+        model = builder()
+        model.fit(X, y.astype(float))
+        assert model.predict(X).shape == (len(y),)
+    pytest.importorskip("xgboost")
+    xgb = build_xgboost(n_estimators=5, max_depth=2)
+    assert xgb.get_params()["tree_method"] == "hist"
+    pytest.importorskip("lightgbm")
+    lgbm = build_lightgbm(n_estimators=5)
+    assert lgbm.get_params()["boosting_type"] == "gbdt"
+
+
+def test_search_result_and_train_only_search_contract():
+    X, y = fixture_matrix()
+    fitted = grid_search(build_logistic_model("l2", max_iter=200), {"classifier__C": [0.5, 1.0]}, X, y, cv_folds=2)
+    result = search_result(fitted, "grid", 2, "average_precision", 42)
+    assert result.test_data_used is False
+    assert result.best_params
+    assert result.trials is not None
+
+
+def test_regression_metrics_and_paired_bootstrap_are_deterministic():
+    actual = np.asarray([1.0, 2.0, 3.0, 4.0])
+    prediction_a = np.asarray([1.1, 1.9, 3.2, 3.8])
+    prediction_b = np.asarray([1.5, 2.5, 2.5, 3.5])
+    metrics = regression_metrics(actual, prediction_a)
+    assert set(metrics) == {"rmse", "mae", "mape", "r2"}
+    first = paired_bootstrap_regression(actual, prediction_a, prediction_b, n_bootstrap=100, random_state=42)
+    second = paired_bootstrap_regression(actual, prediction_a, prediction_b, n_bootstrap=100, random_state=42)
+    assert first == second
+    assert first["ci_low"] <= first["ci_high"]
+
+
+def test_mcnemar_exact_probability_matches_paired_binomial():
+    y = np.asarray([0, 0, 0, 0])
+    model_a = np.asarray([[0.4, 0.6], [0.4, 0.6], [0.4, 0.6], [0.6, 0.4]])
+    model_b = np.asarray([[0.6, 0.4], [0.6, 0.4], [0.6, 0.4], [0.4, 0.6]])
+    result = mcnemar_test(y, model_a, model_b)
+    assert result["discordant_pairs"] == 4
+    assert result["exact_binomial_p_value"] == pytest.approx(0.625)
+
+
+def test_validation_and_calibration_plot_artifacts(tmp_path):
+    from src.evaluation.plots import plot_reliability_comparison, plot_validation_curve
+
+    y = np.asarray([0, 1, 0, 1])
+    probabilities = np.asarray([[0.8, 0.2], [0.2, 0.8], [0.7, 0.3], [0.3, 0.7]])
+    assert plot_reliability_comparison(y, {"model": probabilities}, tmp_path / "reliability.png").exists()
+    assert plot_validation_curve([1, 2], [[0.8, 0.9], [0.7, 0.8]], [[0.6, 0.7], [0.5, 0.6]], tmp_path / "validation.png").exists()
+
+
+def test_nested_cv_search_uses_outer_training_fold_only():
+    from src.evaluation.metrics import nested_stratified_cross_validate
+
+    X, y = fixture_matrix()
+    observed_sizes = []
+
+    def factory(estimator, X_inner, y_inner, folds, seed):
+        observed_sizes.append(len(y_inner))
+        return grid_search(estimator, {"classifier__C": [0.5, 1.0]}, X_inner, y_inner, cv_folds=folds, random_state=seed)
+
+    report = nested_stratified_cross_validate(
+        build_logistic_model("l2", max_iter=200), factory, X, y, outer_folds=2, inner_folds=2
+    )
+    assert report["test_data_used_for_selection"] is False
+    assert len(report["folds"]) == 2
+    assert observed_sizes == [4, 4]
+    assert report["mean_score"] >= 0.0
+
+
+def test_tree_explainability_outputs_have_feature_schema():
+    X, y = fixture_matrix()
+    forest = build_random_forest(n_estimators=20, random_state=42).fit(X.toarray(), y)
+    names = np.asarray(["f0", "f1", "f2"])
+    permutation = permutation_importance_table(forest, X.toarray(), y, names, n_repeats=2)
+    assert list(permutation.columns) == ["feature", "importance_mean", "importance_std"]
+    pytest.importorskip("shap")
+    shap_frame = shap_values(forest, X.toarray(), names, max_samples=8)
+    assert list(shap_frame.columns) == ["feature", "mean_abs_shap"]
+    assert len(shap_frame) == X.shape[1]

@@ -201,3 +201,114 @@ def benchmark_row(
     model_name: str, y_true: Any, probabilities: Any, threshold: float = 0.5
 ) -> dict[str, Any]:
     return {"model": model_name, **evaluate_with_macro_weighted(y_true, probabilities, threshold)}
+
+
+def regression_metrics(y_true: Any, predictions: Any, zero_tolerance: float = 1e-12) -> dict[str, float]:
+    """Return RMSE, MAE, MAPE, and R-squared for generic regression fixtures."""
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+    actual = np.asarray(y_true, dtype=float).reshape(-1)
+    predicted = np.asarray(predictions, dtype=float).reshape(-1)
+    if actual.shape != predicted.shape:
+        raise ValueError("y_true and predictions must have identical one-dimensional shapes")
+    denominator = np.maximum(np.abs(actual), zero_tolerance)
+    return {
+        "rmse": float(np.sqrt(mean_squared_error(actual, predicted))),
+        "mae": float(mean_absolute_error(actual, predicted)),
+        "mape": float(np.mean(np.abs((actual - predicted) / denominator)) * 100.0),
+        "r2": float(r2_score(actual, predicted)),
+    }
+
+
+def nested_stratified_cross_validate(
+    estimator: Any,
+    search_factory: Any,
+    X: Any,
+    y: Any,
+    outer_folds: int = 5,
+    inner_folds: int = 3,
+    random_state: int = 42,
+    scoring: str = "average_precision",
+) -> dict[str, Any]:
+    """Estimate generalization with outer folds and fit hyperparameters only inside each inner fold."""
+    from sklearn.base import clone
+    from sklearn.model_selection import StratifiedKFold
+
+    values = np.asarray(y).astype(int)
+    outer = StratifiedKFold(n_splits=outer_folds, shuffle=True, random_state=random_state)
+    fold_rows: list[dict[str, Any]] = []
+    for fold, (train_idx, test_idx) in enumerate(outer.split(X, values)):
+        X_inner = X[train_idx] if hasattr(X, "__getitem__") else np.asarray(X)[train_idx]
+        X_outer = X[test_idx] if hasattr(X, "__getitem__") else np.asarray(X)[test_idx]
+        y_inner, y_outer = values[train_idx], values[test_idx]
+        candidate = clone(estimator)
+        search = search_factory(candidate, X_inner, y_inner, inner_folds, random_state + fold)
+        if not hasattr(search, "best_estimator_") and not isinstance(search, dict):
+            search.fit(X_inner, y_inner)
+        best = search.get("best_estimator", search) if isinstance(search, dict) else getattr(search, "best_estimator_", search)
+        proba = best.predict_proba(X_outer) if hasattr(best, "predict_proba") else best.predict(X_outer)
+        if np.asarray(proba).ndim == 1:
+            proba = np.column_stack([1.0 - np.asarray(proba), np.asarray(proba)])
+        metrics = evaluate_with_macro_weighted(y_outer, proba)
+        fold_rows.append(
+            {
+                "outer_fold": fold,
+                "inner_folds": inner_folds,
+                "best_params": getattr(search, "best_params_", {}),
+                "score": float(metrics.get("pr_auc") or metrics.get("accuracy", 0.0)),
+                "metrics": metrics,
+            }
+        )
+    scores = np.asarray([row["score"] for row in fold_rows], dtype=float)
+    return {
+        "outer_folds": outer_folds,
+        "inner_folds": inner_folds,
+        "scoring": scoring,
+        "random_state": random_state,
+        "folds": fold_rows,
+        "mean_score": float(scores.mean()),
+        "std_score": float(scores.std(ddof=1)) if len(scores) > 1 else 0.0,
+        "test_data_used_for_selection": False,
+    }
+
+
+def paired_bootstrap_regression(
+    y_true: Any,
+    predictions_a: Any,
+    predictions_b: Any,
+    n_bootstrap: int = 2000,
+    random_state: int = 42,
+    metric: str = "rmse",
+    confidence_level: float = 0.95,
+) -> dict[str, float | int | str]:
+    """Estimate a paired bootstrap CI for the difference in two regression metrics."""
+    actual = np.asarray(y_true, dtype=float).reshape(-1)
+    first = np.asarray(predictions_a, dtype=float).reshape(-1)
+    second = np.asarray(predictions_b, dtype=float).reshape(-1)
+    if actual.shape != first.shape or actual.shape != second.shape:
+        raise ValueError("Paired bootstrap inputs must have identical shapes")
+    if n_bootstrap < 10 or not 0.0 < confidence_level < 1.0:
+        raise ValueError("n_bootstrap must be at least 10 and confidence_level must lie in (0, 1)")
+    if metric not in {"rmse", "mae", "mape", "r2"}:
+        raise ValueError("metric must be rmse, mae, mape, or r2")
+    rng = np.random.default_rng(random_state)
+
+    def score(target: np.ndarray, pred: np.ndarray) -> float:
+        return regression_metrics(target, pred)[metric]
+
+    observed = score(actual, first) - score(actual, second)
+    differences = np.empty(n_bootstrap, dtype=float)
+    for index in range(n_bootstrap):
+        sample = rng.integers(0, len(actual), size=len(actual))
+        differences[index] = score(actual[sample], first[sample]) - score(actual[sample], second[sample])
+    alpha = (1.0 - confidence_level) / 2.0
+    low, high = np.quantile(differences, [alpha, 1.0 - alpha])
+    return {
+        "metric": metric,
+        "observed_difference_a_minus_b": float(observed),
+        "ci_low": float(low),
+        "ci_high": float(high),
+        "confidence_level": float(confidence_level),
+        "n_bootstrap": int(n_bootstrap),
+        "random_state": int(random_state),
+    }

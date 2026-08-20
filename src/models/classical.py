@@ -1,12 +1,12 @@
-"""Classical supervised baselines for CO2/M2 and CO3/M3.
+"""Classical supervised models and explainability utilities for CO2/M2 and CO3/M3.
 
-The pipelines intentionally separate the TF-IDF fit from model fitting so callers
-can enforce the train-only fitting rule. References SRC-004 through SRC-006 and
-SRC-021 through SRC-023 in docs/sources.md.
+References SRC-004 through SRC-006 and SRC-021 through SRC-023. Learned text and
+feature transforms must be fit inside the caller's training/CV pipeline only.
 """
 
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 from typing import Any
 
@@ -14,24 +14,44 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import ElasticNet, Lasso, LogisticRegression, Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
 
-def build_logistic_model(
-    penalty: str = "l2", C: float = 1.0, max_iter: int = 2000, random_state: int = 42
-) -> Pipeline:
-    """Build L1/L2/ElasticNet Logistic Regression.
+def _sparse_scaler() -> StandardScaler:
+    return StandardScaler(with_mean=False)
 
-    Compliant with M2: Linear Models. Scaling uses ``with_mean=False`` to preserve
-    sparse TF-IDF matrices while maintaining numerical feature-scale compatibility.
-    """
+
+def build_ridge_model(alpha: float = 1.0, random_state: int = 42) -> Pipeline:
+    return Pipeline([("scaler", _sparse_scaler()), ("regressor", Ridge(alpha=alpha))])
+
+
+def build_lasso_model(alpha: float = 0.001, random_state: int = 42) -> Pipeline:
+    return Pipeline([("scaler", _sparse_scaler()), ("regressor", Lasso(alpha=alpha, max_iter=5000))])
+
+
+def build_elasticnet_model(
+    alpha: float = 0.001, l1_ratio: float = 0.5, random_state: int = 42
+) -> Pipeline:
+    return Pipeline(
+        [("scaler", _sparse_scaler()), ("regressor", ElasticNet(alpha=alpha, l1_ratio=l1_ratio, max_iter=5000, random_state=random_state))]
+    )
+
+
+def build_logistic_model(
+    penalty: str = "l2",
+    C: float = 1.0,
+    max_iter: int = 2000,
+    random_state: int = 42,
+    multi_class: str = "auto",
+) -> Pipeline:
+    """Build binary or multinomial Logistic Regression for sparse TF-IDF."""
     if penalty not in {"l1", "l2", "elasticnet"}:
         raise ValueError("penalty must be l1, l2, or elasticnet")
-    solver = "saga" if penalty in {"l1", "elasticnet"} else "liblinear"
-    classifier_kwargs = {
+    solver = "saga" if penalty in {"l1", "elasticnet"} or multi_class == "multinomial" else "liblinear"
+    classifier_kwargs: dict[str, Any] = {
         "penalty": penalty,
         "C": C,
         "solver": solver,
@@ -39,18 +59,24 @@ def build_logistic_model(
         "random_state": random_state,
         "class_weight": "balanced",
     }
+    if "multi_class" in inspect.signature(LogisticRegression).parameters:
+        classifier_kwargs["multi_class"] = multi_class
     if penalty == "elasticnet":
         classifier_kwargs["l1_ratio"] = 0.5
     classifier = LogisticRegression(**classifier_kwargs)
-    return Pipeline([("scaler", StandardScaler(with_mean=False)), ("classifier", classifier)])
+    return Pipeline([("scaler", _sparse_scaler()), ("classifier", classifier)])
 
 
 def build_decision_tree(
-    max_depth: int | None = None, ccp_alpha: float = 0.0, random_state: int = 42
+    max_depth: int | None = None,
+    ccp_alpha: float = 0.0,
+    criterion: str = "gini",
+    random_state: int = 42,
 ) -> DecisionTreeClassifier:
-    """Build a prunable Decision Tree compliant with M3/CO3."""
+    if criterion not in {"gini", "entropy", "log_loss"}:
+        raise ValueError("criterion must be gini, entropy, or log_loss")
     return DecisionTreeClassifier(
-        criterion="gini",
+        criterion=criterion,
         max_depth=max_depth,
         ccp_alpha=ccp_alpha,
         min_samples_leaf=2,
@@ -62,7 +88,6 @@ def build_decision_tree(
 def build_random_forest(
     n_estimators: int = 300, max_depth: int | None = None, random_state: int = 42
 ) -> RandomForestClassifier:
-    """Build a bagged forest with OOB error enabled."""
     return RandomForestClassifier(
         n_estimators=n_estimators,
         max_depth=max_depth,
@@ -74,43 +99,47 @@ def build_random_forest(
     )
 
 
-def build_xgboost(random_state: int = 42) -> Any:
-    """Build XGBoost lazily so classical linear paths do not require it at import time."""
+def build_xgboost(random_state: int = 42, **overrides: Any) -> Any:
     try:
         from xgboost import XGBClassifier  # type: ignore
     except ImportError as exc:
         raise RuntimeError("Install the xgboost optional dependency to use XGBoost") from exc
-    return XGBClassifier(
-        n_estimators=300,
-        max_depth=6,
-        learning_rate=0.08,
-        subsample=0.9,
-        colsample_bytree=0.8,
-        objective="binary:logistic",
-        eval_metric="logloss",
-        tree_method="hist",
-        random_state=random_state,
-        n_jobs=-1,
-    )
+    params = {
+        "n_estimators": 300,
+        "max_depth": 6,
+        "learning_rate": 0.08,
+        "subsample": 0.9,
+        "colsample_bytree": 0.8,
+        "objective": "binary:logistic",
+        "eval_metric": "logloss",
+        "tree_method": "hist",
+        "random_state": random_state,
+        "n_jobs": -1,
+    }
+    params.update(overrides)
+    return XGBClassifier(**params)
 
 
-def build_lightgbm(random_state: int = 42) -> Any:
-    """Build LightGBM lazily and expose a compatible classifier interface."""
+def build_lightgbm(random_state: int = 42, **overrides: Any) -> Any:
     try:
         from lightgbm import LGBMClassifier  # type: ignore
     except ImportError as exc:
         raise RuntimeError("Install the lightgbm optional dependency to use LightGBM") from exc
-    return LGBMClassifier(
-        n_estimators=300,
-        num_leaves=31,
-        learning_rate=0.05,
-        subsample=0.9,
-        colsample_bytree=0.8,
-        objective="binary",
-        random_state=random_state,
-        n_jobs=-1,
-        verbosity=-1,
-    )
+    params = {
+        "n_estimators": 300,
+        "num_leaves": 31,
+        "max_depth": -1,
+        "learning_rate": 0.05,
+        "subsample": 0.9,
+        "colsample_bytree": 0.8,
+        "boosting_type": "gbdt",
+        "objective": "binary",
+        "random_state": random_state,
+        "n_jobs": -1,
+        "verbosity": -1,
+    }
+    params.update(overrides)
+    return LGBMClassifier(**params)
 
 
 def train_estimator(estimator: Any, X_train: Any, y_train: Any) -> Any:
@@ -118,10 +147,30 @@ def train_estimator(estimator: Any, X_train: Any, y_train: Any) -> Any:
     return estimator
 
 
+def model_metadata(model: Any) -> dict[str, Any]:
+    return {
+        "estimator_class": model.__class__.__name__,
+        "has_predict_proba": bool(hasattr(model, "predict_proba")),
+        "has_feature_importances": bool(hasattr(model, "feature_importances_")),
+        "parameters": model.get_params(deep=True) if hasattr(model, "get_params") else {},
+    }
+
+
+def _validate_feature_names(feature_names: np.ndarray, width: int) -> np.ndarray:
+    names = np.asarray(feature_names, dtype=object)
+    if len(names) != width:
+        raise ValueError(f"Feature-name count {len(names)} does not match model width {width}")
+    return names
+
+
 def coefficient_table(model: Pipeline, feature_names: np.ndarray) -> pd.DataFrame:
-    classifier = model.named_steps["classifier"]
-    coefficients = np.asarray(classifier.coef_).reshape(-1)
-    frame = pd.DataFrame({"feature": feature_names, "coefficient": coefficients})
+    classifier = model.named_steps.get("classifier", model.named_steps.get("regressor"))
+    coefficients = np.asarray(classifier.coef_ if hasattr(classifier, "coef_") else classifier.coef_)
+    if coefficients.ndim > 1:
+        coefficients = coefficients.mean(axis=0)
+    coefficients = coefficients.reshape(-1)
+    names = _validate_feature_names(feature_names, len(coefficients))
+    frame = pd.DataFrame({"feature": names, "coefficient": coefficients})
     frame["absolute_coefficient"] = frame["coefficient"].abs()
     return frame.sort_values("absolute_coefficient", ascending=False).reset_index(drop=True)
 
@@ -129,12 +178,11 @@ def coefficient_table(model: Pipeline, feature_names: np.ndarray) -> pd.DataFram
 def gini_importance_table(model: Any, feature_names: np.ndarray) -> pd.DataFrame:
     if not hasattr(model, "feature_importances_"):
         raise TypeError("Estimator does not expose feature_importances_")
-    values = np.asarray(model.feature_importances_)
-    return (
-        pd.DataFrame({"feature": feature_names, "importance": values})
-        .sort_values("importance", ascending=False)
-        .reset_index(drop=True)
-    )
+    values = np.asarray(model.feature_importances_).reshape(-1)
+    names = _validate_feature_names(feature_names, len(values))
+    return pd.DataFrame({"feature": names, "importance": values}).sort_values(
+        "importance", ascending=False
+    ).reset_index(drop=True)
 
 
 def permutation_importance_table(
@@ -145,26 +193,15 @@ def permutation_importance_table(
     random_state: int = 42,
     n_repeats: int = 5,
 ) -> pd.DataFrame:
+    values = X.toarray() if hasattr(X, "toarray") else np.asarray(X)
     result = permutation_importance(
-        model,
-        X,
-        y,
-        n_repeats=n_repeats,
-        random_state=random_state,
-        scoring="average_precision",
-        n_jobs=-1,
+        model, values, y, n_repeats=n_repeats, random_state=random_state,
+        scoring="average_precision", n_jobs=-1,
     )
-    return (
-        pd.DataFrame(
-            {
-                "feature": feature_names,
-                "importance_mean": result.importances_mean,
-                "importance_std": result.importances_std,
-            }
-        )
-        .sort_values("importance_mean", ascending=False)
-        .reset_index(drop=True)
-    )
+    names = _validate_feature_names(feature_names, len(result.importances_mean))
+    return pd.DataFrame(
+        {"feature": names, "importance_mean": result.importances_mean, "importance_std": result.importances_std}
+    ).sort_values("importance_mean", ascending=False).reset_index(drop=True)
 
 
 def shap_values(
@@ -175,17 +212,21 @@ def shap_values(
         import shap  # type: ignore
     except ImportError as exc:
         raise RuntimeError("Install shap to generate TreeExplainer outputs") from exc
-    sample = X[:max_samples]
+    sample = X[:max_samples].toarray() if hasattr(X[:max_samples], "toarray") else np.asarray(X[:max_samples])
     explainer = shap.TreeExplainer(model)
     values = explainer.shap_values(sample)
     if isinstance(values, list):
         values = values[-1]
-    mean_abs = np.asarray(np.abs(values).mean(axis=0)).reshape(-1)
-    return (
-        pd.DataFrame({"feature": feature_names, "mean_abs_shap": mean_abs})
-        .sort_values("mean_abs_shap", ascending=False)
-        .reset_index(drop=True)
-    )
+    if hasattr(values, "values"):
+        values = values.values
+    values_array = np.asarray(values)
+    if values_array.ndim == 3:
+        values_array = values_array[:, :, -1]
+    mean_abs = np.abs(values_array).mean(axis=0).reshape(-1)
+    names = _validate_feature_names(feature_names, len(mean_abs))
+    return pd.DataFrame({"feature": names, "mean_abs_shap": mean_abs}).sort_values(
+        "mean_abs_shap", ascending=False
+    ).reset_index(drop=True)
 
 
 def save_importance_table(frame: pd.DataFrame, path: str | Path) -> None:

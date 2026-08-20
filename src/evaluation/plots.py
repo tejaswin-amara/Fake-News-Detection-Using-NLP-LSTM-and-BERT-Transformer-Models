@@ -72,3 +72,48 @@ def plot_learning_curve(
     ax.set(xlabel="Training examples", ylabel="Score", title="Learning curve")
     ax.legend()
     return _save(fig, output_path)
+
+
+def plot_validation_curve(
+    parameter_values: Any,
+    train_scores: Any,
+    validation_scores: Any,
+    output_path: str | Path,
+    parameter_name: str = "parameter",
+) -> Path:
+    """Plot mean and spread of training/validation scores across a parameter grid."""
+    values = np.asarray(parameter_values)
+    train = np.asarray(train_scores)
+    validation = np.asarray(validation_scores)
+    if train.ndim == 1:
+        train = train[:, None]
+    if validation.ndim == 1:
+        validation = validation[:, None]
+    if len(values) != train.shape[0] or train.shape != validation.shape:
+        raise ValueError("Validation-curve arrays have incompatible shapes")
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(values, train.mean(axis=1), marker="o", label="training")
+    ax.plot(values, validation.mean(axis=1), marker="o", label="validation")
+    ax.fill_between(values, train.min(axis=1), train.max(axis=1), alpha=0.15)
+    ax.fill_between(values, validation.min(axis=1), validation.max(axis=1), alpha=0.15)
+    ax.set(xlabel=parameter_name, ylabel="Score", title="Validation curve")
+    ax.legend()
+    return _save(fig, output_path)
+
+
+def plot_reliability_comparison(
+    y_true: Any,
+    probability_map: dict[str, Any],
+    output_path: str | Path,
+    n_bins: int = 10,
+) -> Path:
+    """Plot multiple calibration methods against the perfect-calibration diagonal."""
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.plot([0, 1], [0, 1], "--", color="gray", label="perfect calibration")
+    for label, probabilities in probability_map.items():
+        positive = np.asarray(probabilities)[:, 1]
+        observed, predicted = calibration_curve(y_true, positive, n_bins=n_bins, strategy="uniform")
+        ax.plot(predicted, observed, marker="o", label=label)
+    ax.set(xlabel="Mean predicted probability", ylabel="Fraction of positives", title="Calibration comparison")
+    ax.legend()
+    return _save(fig, output_path)

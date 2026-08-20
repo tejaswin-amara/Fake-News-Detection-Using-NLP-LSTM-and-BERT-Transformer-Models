@@ -52,12 +52,13 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `src/features/preprocessing.py` | Mean/median/KNN/iterative imputation, MissingIndicator, One-Hot/Ordinal/target encoding, StandardScaler, and MinMaxScaler | CO2/M2 |
 | `src/features/unsupervised_features.py` | Train-fitted cluster/anomaly feature synthesis with stable schema | CO4/M4 |
 | `src/models/unsupervised.py` | K-Means++, Mini-Batch K-Means, hierarchical clustering, DBSCAN, PCA, t-SNE, UMAP, Isolation Forest | CO4/M4 |
-| `src/models/classical.py` | Logistic, Decision Tree, Random Forest, XGBoost, LightGBM | CO2/M2, CO3/M3 |
+| `src/models/classical.py` | Ridge, Lasso, ElasticNet, binary/multinomial Logistic, Decision Tree, Random Forest, histogram XGBoost, leaf-wise LightGBM, permutation and SHAP importance | CO2/M2, CO3/M3 |
 | `src/models/lstm.py` | GloVe-initialized BiLSTM classifier | CO1/M1, CO5/M5 |
 | `src/models/bert.py` | `bert-base-uncased` fine-tuning path | CO1/M1, CO5/M5 |
-| `src/evaluation/metrics.py` | Metrics, cross-validation, calibration, curves, and statistical tests | CO5/M5 |
-| `src/evaluation/plots.py` | Confusion, ROC/PR, learning, and reliability diagrams | CO5/M5 |
-| `src/evaluation/search.py` | Grid, random, and optional Bayesian search | CO5/M5 |
+| `src/evaluation/metrics.py` | Classification/regression metrics, stratified/nested CV, calibration, McNemar, paired bootstrap, and report schemas | CO5/M5 |
+| `src/evaluation/plots.py` | Confusion, ROC/PR, reliability, calibration comparison, learning, and validation curves | CO5/M5 |
+| `src/evaluation/search.py` | Grid/random/Bayesian search, result schemas, and serialization | CO5/M5 |
+| `src/train.py` and `src/evaluate.py` | Search orchestration, serving-safe packaging, held-out test reporting, calibration, plots, and optional MLflow logging | CO1/M1, CO5/M5, CO6/M6 |
 | `src/serving/app.py` | FastAPI health and prediction endpoints | CO6/M6 |
 | `src/serving/predictor.py` | Bound preprocessing-plus-model inference contract | CO1/M1, CO6/M6 |
 | `src/serving/export.py` | Native, ONNX, and TorchScript export helpers | CO6/M6 |
@@ -126,7 +127,7 @@ The configuration keys `dvc.enabled`, `dvc.cache_dir`, `tracking.enabled`, `trac
 
 ## Model and evaluation scope
 
-The classical benchmark will compare regularized Logistic Regression, Decision Tree, Random Forest, XGBoost, and LightGBM. The deep-learning benchmark will add a GloVe-initialized BiLSTM and fine-tuned BERT when the required resources are available. Evaluation will include accuracy, precision, recall, macro and weighted F1, ROC-AUC, PR-AUC, confusion matrices, ROC/PR curves, learning curves, validation curves, Platt scaling, isotonic regression, reliability diagrams, Brier scores, and McNemar’s test. The final benchmark table will distinguish cross-validation results, validation calibration results, and the untouched test-set results.
+The supervised benchmark compares Ridge, Lasso, ElasticNet, binary/multinomial Logistic Regression, Decision Tree, Random Forest, histogram-based XGBoost, and leaf-wise LightGBM. The deep-learning benchmark adds a GloVe/Word2Vec-initialized BiLSTM and fine-tuned `bert-base-uncased` when required resources are available. Evaluation includes accuracy, precision, recall, macro and weighted F1, ROC-AUC, PR-AUC, RMSE, MAE, MAPE, R², confusion matrices, ROC/PR curves, learning curves, validation curves, Platt scaling, isotonic regression, reliability diagrams, Brier scores, McNemar’s test, and paired-bootstrap utilities. The final benchmark distinguishes inner/outer CV results, validation calibration results, and the untouched test-set results; no full-dataset result is fabricated.
 
 ## Serving and monitoring scope
 

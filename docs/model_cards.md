@@ -26,3 +26,13 @@ Every reported model card must state the dataset source/version, split seed, tra
 ## Limitations
 
 The datasets may contain source, temporal, political, linguistic, and collection biases. Text-only models can learn stylistic and publisher artifacts. Performance on an external news distribution is not implied by in-dataset results. Probabilities may require calibration and still should not be interpreted as objective truth probabilities without a validated deployment population.
+
+## Phase 3 supervised-model additions
+
+The classical model family includes Ridge, Lasso, ElasticNet, binary and multinomial Logistic Regression, pruned Decision Trees, OOB Random Forests, histogram-based XGBoost, and leaf-wise LightGBM. Each model card must identify the exact estimator, hyperparameters or search result, training split, inner/outer CV settings, feature schema, random seed, and whether the reported score is cross-validation, validation, or final test performance.
+
+Permutation importance and Tree SHAP are interpretation aids rather than causal explanations. They must be generated from a declared evaluation partition, retain feature names, record optional-package versions, and report when an explainability dependency or model-specific explainer is unavailable.
+
+The BiLSTM and BERT paths remain resource-dependent. The BiLSTM consumes a declared GloVe/Word2Vec or trainable embedding configuration; BERT uses `bert-base-uncased` with a recorded model revision, tokenizer settings, maximum sequence length, optimizer, warmup, clipping, and hardware/precision configuration. Missing weights, tokenizers, TensorFlow, PyTorch, or Transformers dependencies must produce an explicit unavailable status rather than an unsupported benchmark value.
+
+Calibration maps are fit on training folds or the validation partition and are never fitted using final test labels. Platt and isotonic outputs must record their fit split, method, binning settings, Brier score, and artifact revision. The final test set is evaluated once after model, threshold, search, and calibration decisions are frozen.

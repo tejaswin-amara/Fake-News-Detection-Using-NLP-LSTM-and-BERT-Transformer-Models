@@ -124,3 +124,15 @@ K-Means minimizes `Σ_i ||x_i - μ_{z_i}||²`; K-Means++ initializes centroids w
 PCA on standardized training features decomposes the covariance structure into orthogonal components. The explained-variance ratio for component `k` is `λ_k / Σ_j λ_j`; validation/test rows are projected through the fitted training scaler and PCA basis without refitting. t-SNE and UMAP coordinates are visualization-only manifold projections and are not interpreted as factual or causal representations.
 
 DBSCAN identifies dense regions using `ε` neighborhoods and `min_samples`; points not assigned to a dense region receive the noise label `-1`. For held-out feature synthesis, the implementation assigns a row to the nearest fitted core point only when it lies within the fitted `ε`; otherwise it remains noise. Isolation Forest anomaly severity is reported as the negated `score_samples` value, so larger values indicate stronger anomaly evidence relative to the fitted training reference.
+
+## Phase 3 supervised evaluation
+
+For regression smoke fixtures, RMSE is `sqrt((1/n) Σ_i (y_i - ŷ_i)^2)`, MAE is `(1/n) Σ_i |y_i - ŷ_i|`, MAPE is `(100/n) Σ_i |(y_i - ŷ_i) / max(|y_i|, ε)|`, and `R² = 1 - Σ_i (y_i - ŷ_i)^2 / Σ_i (y_i - ȳ)^2`. MAPE uses a small denominator floor and is not used as a fake-news classification benchmark.
+
+Nested stratified cross-validation partitions the available training data into outer folds. For each outer fold, an inner search fits preprocessing and model parameters only on the outer-training portion; the selected estimator is then scored once on the outer holdout. The final test split is not passed to either inner search or outer model selection.
+
+Platt calibration fits a logistic mapping from a model score to a probability on the validation partition. Isotonic calibration fits a monotone mapping on the same permitted calibration partition. The final test set is scored only after the calibration map and threshold are frozen. Reliability diagrams compare empirical positive frequency with mean predicted probability in probability bins, and the Brier score remains `n⁻¹ Σ_i(p_i-y_i)^2`.
+
+For paired bootstrap regression comparison, each resample draws row indices with replacement from the same paired observations for both predictors. The reported confidence interval is formed from the empirical quantiles of `metric_A - metric_B`; the random seed, metric, number of draws, and confidence level are stored with the report.
+
+Permutation importance measures the decrease in a declared scoring function after a feature column is randomly permuted. Tree SHAP reports mean absolute local attribution values for a declared sample and is an interpretive diagnostic, not a causal explanation.
