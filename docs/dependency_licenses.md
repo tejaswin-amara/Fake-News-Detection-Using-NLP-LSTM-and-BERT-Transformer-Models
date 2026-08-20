@@ -14,6 +14,7 @@ This inventory complements `requirements.txt` and `docs/sources.md`. Exact insta
 | Serving | FastAPI, Uvicorn, Pydantic, HTTPX | MIT or package-specific permissive licenses; SRC-030 |
 | Export | ONNX, ONNX Runtime, ONNX Script, skl2onnx | Package-specific permissive licenses; SRC-031 and SRC-035 |
 | Tracking/search | MLflow, Optuna, statsmodels, psutil | Package-specific licenses; SRC-025, SRC-029, SRC-033 |
+| Data versioning | DVC | Open-source package; record selected version and license; SRC-036 |
 | Quality/operations | pytest, pytest-cov, Ruff, mypy, pre-commit | Package-specific permissive licenses; SRC-034 |
 
 ## Redistribution rules

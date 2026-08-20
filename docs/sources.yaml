@@ -264,3 +264,13 @@ sources:
     accessed: "2026-08-20"
     license_or_terms: "Record installed package versions and follow each package license."
     supports: [requirements.txt, src/features, src/serving/export.py]
+  - id: SRC-036
+    category: data_versioning
+    citation: "DVC documentation, repository, and package metadata."
+    urls:
+      - https://dvc.org/doc
+      - https://github.com/iterative/dvc
+      - https://pypi.org/project/dvc/
+    accessed: "2026-08-20"
+    license_or_terms: "Open-source software; retain package license and record the selected version."
+    supports: [.dvc/config, .dvcignore, dvc.yaml, params.yaml, requirements.txt, pyproject.toml]

@@ -70,6 +70,8 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `docs/sources.yaml` | Machine-readable source metadata used by audit tooling | All outcomes |
 | `docs/compliance_matrix.md` | Script/notebook/test/artifact traceability to every CO and module | All outcomes |
 | `docs/dependency_licenses.md` | Dependency and redistribution license inventory | CO6/M6 |
+| `.dvc/`, `.dvcignore`, `dvc.yaml`, `params.yaml` | DVC initialization, cache policy, reproducible pipeline stages, and pipeline parameters | CO1/M1, CO6/M6 |
+| `scripts/init_mlflow.py` | Idempotent local MLflow experiment initialization | CO1/M1, CO6/M6 |
 
 ## Data and label policy
 
@@ -96,6 +98,29 @@ pytest -q
 ```
 
 The foundational tranche includes this README, [`docs/sources.md`](docs/sources.md), [`docs/sources.yaml`](docs/sources.yaml), and [`requirements.txt`](requirements.txt). The classical fixture workflow has been exercised; full-dataset and deep-learning benchmark commands must be run only after the corresponding raw data and optional resources are available.
+
+## DVC and MLflow lifecycle infrastructure
+
+DVC is initialized under `.dvc/` and defines the reproducible `ingest`, `train`, and `evaluate` stages in [`dvc.yaml`](dvc.yaml). The ingest stage enforces the strict stratified 70/15/15 split before TF-IDF or any other learned transformation is fit. Configure a user-owned DVC remote without committing credentials, then reproduce the pipeline with:
+
+```bash
+python -m pip install -r requirements.txt
+dvc remote add -d storage <your-dvc-remote-url>
+dvc add data/raw/isot
+dvc repro
+dvc status
+```
+
+MLflow is disabled by default for lightweight runs. Initialize a local experiment and opt into tracking when needed:
+
+```bash
+python scripts/init_mlflow.py --tracking-uri mlruns --experiment-name fake-news-detection
+python -m src.train --mlflow --train data/processed/train.csv --output artifacts/models/logistic_l2.joblib
+python -m src.evaluate --mlflow --test data/processed/test.csv --artifact artifacts/models/logistic_l2.joblib --output reports/evaluation.json
+mlflow ui --backend-store-uri mlruns
+```
+
+The configuration keys `dvc.enabled`, `dvc.cache_dir`, `tracking.enabled`, `tracking.uri`, `tracking.artifact_location`, and `tracking.experiment_name` make the local lifecycle boundary explicit. DVC remote storage and hosted MLflow deployment remain environment-specific decisions.
 
 ## Model and evaluation scope
 
@@ -154,3 +179,4 @@ The repository began as an empty GitHub repository and is now implemented and au
 33. [MLflow Tracking documentation](https://mlflow.org/docs/latest/ml/tracking/) and [Model Registry documentation](https://mlflow.org/docs/latest/ml/model-registry/).
 34. [Python Packaging User Guide](https://packaging.python.org/en/latest/) and [PEP 621](https://peps.python.org/pep-0621/).
 35. [NLTK documentation](https://www.nltk.org/), [spaCy documentation](https://spacy.io/), [Gensim documentation](https://radimrehurek.com/gensim/), and [skl2onnx documentation](https://onnx.ai/sklearn-onnx/).
+36. [DVC documentation](https://dvc.org/doc), [DVC repository](https://github.com/iterative/dvc), and [DVC package metadata](https://pypi.org/project/dvc/).

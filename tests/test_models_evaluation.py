@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from scipy import sparse
 
 from src.config import load_config
@@ -8,6 +9,7 @@ from src.evaluation.metrics import calibrate_probabilities, evaluate_predictions
 from src.models.classical import build_logistic_model, build_random_forest
 from src.models.unsupervised import UnsupervisedAnalyzer
 from src.monitoring.drift import monitor_features, population_stability_index
+from src.tracking import initialize_tracking
 
 
 def fixture_matrix():
@@ -41,6 +43,28 @@ def test_configuration_uses_required_bert_identifier():
     config = load_config("configs/default.yaml")
     assert config.values["models"]["bert"]["model_name"] == "bert-base-uncased"
     assert config.values["text"]["transformer"]["model_name"] == "bert-base-uncased"
+
+
+def test_configuration_includes_dvc_and_tracking_flags():
+    config = load_config("configs/default.yaml")
+    assert config.values["dvc"]["pipeline_file"] == "dvc.yaml"
+    assert config.values["dvc"]["cache_dir"] == ".dvc/cache"
+    assert config.values["tracking"]["enabled"] is False
+    assert config.values["tracking"]["experiment_name"] == "fake-news-detection"
+
+
+def test_local_mlflow_initialization_is_idempotent(tmp_path):
+    pytest.importorskip("mlflow")
+    first = initialize_tracking(
+        tracking_uri=str(tmp_path / "mlruns"),
+        experiment_name="fixture-experiment",
+    )
+    second = initialize_tracking(
+        tracking_uri=str(tmp_path / "mlruns"),
+        experiment_name="fixture-experiment",
+    )
+    assert first["experiment_id"] == second["experiment_id"]
+    assert first["experiment_name"] == "fixture-experiment"
 
 
 def test_metrics_and_mcnemar_are_structured():

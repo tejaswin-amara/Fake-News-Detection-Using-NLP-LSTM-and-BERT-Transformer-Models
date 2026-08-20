@@ -1,0 +1,65 @@
+stages:
+  ingest:
+    cmd: >-
+      python -m src.data.ingestion
+      --dataset ${dvc.dataset}
+      --path ${dvc.input_path}
+      --output ${dvc.processed_path}
+      --seed ${split.random_seed}
+    deps:
+      - src/data/ingestion.py
+      - ${dvc.input_path}
+    params:
+      - dvc.dataset
+      - dvc.input_path
+      - dvc.processed_path
+      - split.train_size
+      - split.validation_size
+      - split.test_size
+      - split.random_seed
+    outs:
+      - data/processed/train.csv
+      - data/processed/validation.csv
+      - data/processed/test.csv
+      - data/processed/split_manifest.json
+
+  train:
+    cmd: >-
+      python -m src.train
+      --train data/processed/train.csv
+      --model ${dvc.model_name}
+      --output ${dvc.model_artifact}
+      --config configs/default.yaml
+    deps:
+      - src/train.py
+      - src/features/text.py
+      - src/models/classical.py
+      - src/serving/predictor.py
+      - src/serving/export.py
+      - data/processed/train.csv
+      - configs/default.yaml
+    params:
+      - dvc.model_name
+      - dvc.model_artifact
+      - text.tfidf
+      - models.classical
+    outs:
+      - artifacts/models/logistic_l2.joblib
+
+  evaluate:
+    cmd: >-
+      python -m src.evaluate
+      --test data/processed/test.csv
+      --artifact ${dvc.model_artifact}
+      --output ${dvc.evaluation_report}
+    deps:
+      - src/evaluate.py
+      - src/evaluation/metrics.py
+      - data/processed/test.csv
+      - ${dvc.model_artifact}
+    params:
+      - dvc.evaluation_report
+      - evaluation.primary_metric
+    metrics:
+      - reports/dvc_evaluation.json:
+          cache: false

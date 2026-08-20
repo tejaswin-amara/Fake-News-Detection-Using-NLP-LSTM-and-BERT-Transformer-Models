@@ -194,3 +194,7 @@ NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nlt
 | 2026-08-20 | Dependency dry-run found `gensim==4.3.3` requires SciPy below 1.14; corrected `requirements.txt` to `scipy==1.13.1`. |
 | 2026-08-20 | BERT defaults were aligned to the brief’s exact `bert-base-uncased` identifier. |
 | 2026-08-20 | Added SRC-035 for optional NLP and ONNX conversion libraries discovered during dependency/source audit. |
+
+### SRC-036 — DVC data versioning
+
+[DVC documentation](https://dvc.org/doc), [DVC repository](https://github.com/iterative/dvc), and [DVC package metadata](https://pypi.org/project/dvc/). **Use:** `.dvc/`, `.dvcignore`, `dvc.yaml`, `requirements.txt`, `pyproject.toml`, and reproducible data/model/evaluation stages. **Accessed:** 2026-08-20. **Terms:** DVC is open-source software; retain the package license and record the selected DVC version in reproducibility metadata.

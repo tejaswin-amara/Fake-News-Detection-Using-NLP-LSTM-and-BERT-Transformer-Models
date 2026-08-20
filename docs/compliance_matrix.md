@@ -9,7 +9,7 @@ This matrix is the project’s evidence index for the `25SC2107E` Machine Learni
 | CO3 / M3 | Decision trees, Gini/entropy, stopping/pruning, Random Forest, OOB error, boosting, XGBoost, LightGBM, feature importance and SHAP | `src/models/classical.py`, `configs/models.yaml` | Classical model comparison and explainability report | Tree/ensemble smoke tests; importance output checks | SRC-005, SRC-006, SRC-022, SRC-023 |
 | CO4 / M4 | K-Means/K-Means++, elbow/silhouette, hierarchical clustering/dendrogram, DBSCAN, PCA, t-SNE, UMAP, Isolation Forest, cluster labels as downstream features | `src/models/unsupervised.py`, `src/features/unsupervised_features.py` | `notebooks/02_unsupervised_analysis.ipynb` with 2D/3D figures | Shape, determinism, tuning, and no-test-fit tests | SRC-005, SRC-006, SRC-016–SRC-020 |
 | CO5 / M5 | 3-way split, stratified k-fold, nested-CV discussion, metrics, calibration, learning/validation curves, grid/random/Bayesian search, McNemar | `src/evaluation/metrics.py`, `configs/evaluation.yaml` | `notebooks/03_model_evaluation.ipynb`, benchmark and calibration reports | Hand-computed metric fixtures; calibration; McNemar; leakage tests | SRC-005, SRC-006, SRC-024–SRC-029 |
-| CO6 / M6 | Feature-store concept, skew avoidance, artifact packaging, ONNX, REST serving, batch/online inference, drift/performance monitoring, MLflow/DVC concepts | `src/serving/app.py`, `src/monitoring/drift.py`, `src/serving/export.py`, `Dockerfile`, `.github/workflows/ci.yml` | Deployment and monitoring documentation; architecture diagram | API, export conformance, KS/PSI, Docker, and CI smoke tests | SRC-008–SRC-010, SRC-030–SRC-034 |
+| CO6 / M6 | Feature-store concept, skew avoidance, artifact packaging, ONNX, REST serving, batch/online inference, drift/performance monitoring, MLflow/DVC concepts | `src/serving/app.py`, `src/monitoring/drift.py`, `src/serving/export.py`, `src/tracking.py`, `scripts/init_mlflow.py`, `.dvc/`, `dvc.yaml`, `Dockerfile`, `.github/workflows/ci.yml` | Deployment, DVC, MLflow, and monitoring documentation; architecture diagram | API, export conformance, KS/PSI, drift endpoint, DVC pipeline, MLflow initialization, Docker, and CI smoke tests | SRC-008–SRC-010, SRC-030–SRC-036 |
 
 ## Script-to-outcome index
 
@@ -31,6 +31,8 @@ This matrix is the project’s evidence index for the `25SC2107E` Machine Learni
 | `src/serving/export.py` | CO6/M6 | Native, ONNX, and TorchScript export helpers |
 | `src/monitoring/drift.py` | CO6/M6 | KS, PSI, performance and latency monitoring hooks |
 | `src/tracking.py` | CO6/M6 | Optional MLflow tracking and artifact logging |
+| `scripts/init_mlflow.py` | CO1/M1, CO6/M6 | Idempotent local MLflow experiment initialization |
+| `.dvc/config`, `.dvcignore`, `dvc.yaml` | CO1/M1, CO6/M6 | DVC initialization, cache policy, and ingest/train/evaluate pipeline |
 | `scripts/source_audit.py` | All outcomes | Source register and URL/citation consistency checks |
 
 ## Acceptance rule

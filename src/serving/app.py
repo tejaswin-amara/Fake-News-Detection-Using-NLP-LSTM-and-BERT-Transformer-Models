@@ -15,6 +15,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from src.monitoring.drift import monitor_features
 from src.serving.export import load_native_artifact
 
 
@@ -28,6 +29,13 @@ class PredictionRequest(BaseModel):
 
 class BatchPredictionRequest(BaseModel):
     requests: list[PredictionRequest] = Field(..., min_length=1, max_length=64)
+
+
+class DriftRequest(BaseModel):
+    reference: dict[str, list[float]] = Field(..., min_length=1)
+    current: dict[str, list[float]] = Field(..., min_length=1)
+    ks_alpha: float = Field(default=0.05, gt=0.0, lt=1.0)
+    psi_threshold: float = Field(default=0.20, ge=0.0)
 
 
 class PredictionResponse(BaseModel):
@@ -121,6 +129,18 @@ def create_app(service: ModelService | None = None) -> FastAPI:
             "artifact_path": str(model_service.artifact_path),
             "error": model_service.error,
         }
+
+    @application.post("/monitoring/drift")
+    def monitoring_drift(request: DriftRequest) -> dict[str, Any]:
+        try:
+            return monitor_features(
+                request.reference,
+                request.current,
+                ks_alpha=request.ks_alpha,
+                psi_threshold=request.psi_threshold,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=f"Drift monitoring failed: {exc}") from exc
 
     @application.post("/predict", response_model=PredictionResponse)
     def predict(request: PredictionRequest) -> PredictionResponse:

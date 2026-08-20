@@ -108,7 +108,22 @@ monitoring:
   reference_artifact: artifacts/monitoring/reference_features.npz
   report_directory: reports/monitoring
 
+dvc:
+  enabled: true
+  pipeline_file: dvc.yaml
+  cache_dir: .dvc/cache
+  dataset: isot
+  input_path: data/raw/isot
+  processed_path: data/processed
+  model_name: logistic_l2
+  model_artifact: artifacts/models/logistic_l2.joblib
+  evaluation_report: reports/dvc_evaluation.json
+  stages: [ingest, train, evaluate]
+
 tracking:
   enabled: false
   uri: mlruns
+  artifact_location: mlruns
   experiment_name: fake-news-detection
+  log_source_metadata: true
+  log_config: true

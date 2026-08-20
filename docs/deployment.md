@@ -44,3 +44,35 @@ MLflow integration is optional and disabled by default. When enabled, `src/track
 ## Security and privacy
 
 Do not log submitted article text by default. Apply payload size limits, authenticate the service at the deployment boundary, protect the model artifact, and restrict filesystem/network permissions. The sample local service is a teaching and project artifact, not a complete internet-facing security configuration.
+
+## DVC data versioning (SRC-036)
+
+DVC metadata is initialized under `.dvc/`, while the reproducible `ingest`, `train`, and `evaluate` stages are defined in `dvc.yaml`. The default pipeline enforces the repository’s stratified 70/15/15 split through `src.data.ingestion` before any learned feature transform is fit.
+
+```bash
+python -m pip install -r requirements.txt
+# Configure a user-owned remote; do not commit credentials.
+dvc remote add -d storage <your-dvc-remote-url>
+dvc add data/raw/isot
+dvc repro
+dvc status
+```
+
+Raw data and large generated artifacts remain outside ordinary Git commits. The remote URL, credentials, and dataset acquisition terms are environment-specific and must be configured by the operator.
+
+## Local MLflow tracking
+
+Initialize a local experiment without a hosted server, then enable tracking for training or evaluation:
+
+```bash
+python scripts/init_mlflow.py --tracking-uri mlruns --experiment-name fake-news-detection
+python -m src.train --mlflow --train data/processed/train.csv --output artifacts/models/logistic_l2.joblib
+python -m src.evaluate --mlflow --test data/processed/test.csv --artifact artifacts/models/logistic_l2.joblib --output reports/evaluation.json
+mlflow ui --backend-store-uri mlruns
+```
+
+The default configuration keeps tracking disabled for lightweight smoke tests. When enabled, parameters, metrics, configuration, model artifacts, and evaluation reports are logged to the selected local or hosted tracking URI.
+
+## ONNX verification and drift hook
+
+`src.serving.export.export_onnx_sklearn` exports compatible scikit-learn models, while `tests/test_serving.py` verifies ONNX Runtime inference when `skl2onnx` and `onnxruntime` are installed. Unsupported models retain the native joblib artifact as the authoritative fallback. The FastAPI endpoint `POST /monitoring/drift` delegates to the KS/PSI monitor and accepts reference/current feature arrays for an operational drift report.
