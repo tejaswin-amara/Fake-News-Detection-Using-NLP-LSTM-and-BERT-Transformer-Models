@@ -109,25 +109,48 @@ The FastAPI service will expose `/health`, `/predict`, and `/predict/batch` with
 
 **No external source may be used or referred to without an entry in the repository source register.** Every source entry records bibliographic metadata, URL or DOI, access date, version or commit where relevant, license or usage terms, and the exact repository files or claims it supports. Restricted sources are linked with complete metadata rather than redistributed. The final CI/source-audit step will check that cited source identifiers resolve to register entries and that external URLs found in tracked documentation are either registered or explicitly classified as project links.
 
-## Academic references
+## Complete academic and technical references
 
-The complete, file-mapped source register is [`docs/sources.md`](docs/sources.md). Key references are [1] [2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12].
+The complete bibliography is reproduced below so that the README is self-contained. The detailed, file-mapped source register remains in [`docs/sources.md`](docs/sources.md), and machine-readable provenance remains in [`docs/sources.yaml`](docs/sources.yaml). Those files additionally record source IDs, access dates, versions or revisions, checksums, license/usage terms, and exact repository-file mappings. The README list and both source-register files are intended to remain synchronized.
 
 ## Status
 
-The repository began as an empty GitHub repository. The implementation is being developed phase-by-phase with reproducibility, source governance, handout traceability, and test evidence treated as acceptance criteria rather than after-the-fact documentation.
+The repository began as an empty GitHub repository and is now implemented and audited. Reproducibility, source governance, handout traceability, and test evidence are treated as acceptance criteria rather than after-the-fact documentation.
 
 ## References
 
-[1]: https://doi.org/10.1002/spy2.9 "Ahmed, Traore, and Saad, Detecting opinion spams and fake news using text classification"
-[2]: https://doi.org/10.5281/zenodo.4561253 "WELFake dataset record"
-[3]: https://arxiv.org/abs/1810.04805 "Devlin et al., BERT"
-[4]: https://nlp.stanford.edu/projects/glove/ "Stanford GloVe project"
-[5]: https://scikit-learn.org/stable/user_guide.html "scikit-learn User Guide"
-[6]: https://xgboost.readthedocs.io/en/stable/ "XGBoost documentation"
-[7]: https://lightgbm.readthedocs.io/en/latest/ "LightGBM documentation"
-[8]: https://huggingface.co/docs/transformers/index "Hugging Face Transformers documentation"
-[9]: https://fastapi.tiangolo.com/ "FastAPI documentation"
-[10]: https://onnx.ai/onnx/ "ONNX documentation"
-[11]: https://mlflow.org/docs/latest/ml/tracking/ "MLflow Tracking documentation"
-[12]: https://docs.scipy.org/doc/scipy/reference/stats.html "SciPy statistical functions"
+[1]: https://doi.org/10.1002/spy2.9 "Ahmed H, Traore I, and Saad S. Detecting opinion spams and fake news using text classification."
+[2]: https://doi.org/10.5281/zenodo.4561253 "Verma PK, Agrawal P, and Prodan R. WELFake dataset for fake news detection in text data; associated paper DOI 10.1109/TCSS.2021.3068519."
+[3]: docs/references/MachineLearninghandout.pdf "Machine Learning, 25SC2107E, supplied course handout; public course page https://y25btech.klef.in."
+[4]: https://www.oreilly.com/library/view/hands-on-machine-learning/9781098125974/ "Géron A. Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow. 3rd ed. 2022."
+[5]: https://hastie.su.domains/ElemStatLearn/ "Hastie T, Tibshirani R, and Friedman J. The Elements of Statistical Learning. 2nd ed. 2017."
+[6]: https://www.statlearning.com/ "James G, Witten D, Hastie T, Tibshirani R, and Taylor J. An Introduction to Statistical Learning: With Applications in Python. 2023."
+[7]: https://link.springer.com/book/9780387310732 "Bishop CM. Pattern Recognition and Machine Learning. 2006."
+[8]: https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/ "Huyen C. Designing Machine Learning Systems. 2022."
+[9]: https://www.oreilly.com/library/view/building-machine-learning/9781492045106/ "Ameisen E. Building Machine Learning Powered Applications. 2020."
+[10]: https://www.mlebook.com/ "Burkov A. Machine Learning Engineering. 2020."
+[11]: https://nlp.stanford.edu/projects/glove/ "Pennington J, Socher R, and Manning CD. GloVe: Global Vectors for Word Representation. 2014."
+[12]: https://arxiv.org/abs/1810.04805 "Devlin J, Chang MW, Lee K, and Toutanova K. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding."
+[13]: https://huggingface.co/docs/transformers/index "Hugging Face Transformers documentation and the bert-base-uncased model card at https://huggingface.co/google-bert/bert-base-uncased."
+[14]: https://www.sbert.net/ "UKPLab Sentence Transformers documentation and repository at https://github.com/UKPLab/sentence-transformers."
+[15]: https://scikit-learn.org/stable/user_guide.html "The scikit-learn User Guide."
+[16]: https://doi.org/10.1109/TIT.1982.1056489 "Lloyd S. Least Squares Quantization in PCM; scikit-learn K-Means documentation at https://scikit-learn.org/stable/modules/clustering.html#k-means."
+[17]: https://arxiv.org/abs/1109.2378 "Müllner D. Modern hierarchical, agglomerative clustering algorithms; scikit-learn hierarchical-clustering documentation at https://scikit-learn.org/stable/modules/clustering.html#hierarchical-clustering."
+[18]: https://www.aaai.org/papers/kdd96-037-a-density-based-algorithm-for-discovering-clusters-in-large-spatial-databases-with-noise/ "Ester M, Kriegel HP, Sander J, and Xu X. A density-based algorithm for discovering clusters in large spatial databases with noise."
+[19]: https://doi.org/10.1080/14786440109462720 "Pearson PCA; t-SNE paper at https://www.jmlr.org/papers/v9/vandermaaten08a.html; UMAP paper at https://arxiv.org/abs/1802.03426."
+[20]: https://doi.org/10.1109/ICDM.2008.17 "Liu FT, Ting KM, and Zhou ZH. Isolation Forest."
+[21]: https://scikit-learn.org/stable/modules/linear_model.html "scikit-learn LogisticRegression and linear-model documentation."
+[22]: https://scikit-learn.org/stable/modules/tree.html "scikit-learn trees and ensembles; XGBoost documentation at https://xgboost.readthedocs.io/en/stable/; LightGBM documentation at https://lightgbm.readthedocs.io/en/latest/."
+[23]: https://arxiv.org/abs/1705.07874 "Lundberg SM and Lee SI. A Unified Approach to Interpreting Model Predictions; SHAP documentation at https://shap.readthedocs.io/."
+[24]: https://scikit-learn.org/stable/model_selection.html "scikit-learn model-selection and model-evaluation documentation at https://scikit-learn.org/stable/modules/model_evaluation.html."
+[25]: https://arxiv.org/abs/1206.2944 "Snoek J, Larochelle H, and Adams RP. Practical Bayesian Optimization of Machine Learning Algorithms."
+[26]: https://www.cs.cornell.edu/people/tj/publications/joachims_99a.pdf "Platt J. Probabilistic Outputs for Support Vector Machines; scikit-learn calibration documentation at https://scikit-learn.org/stable/modules/calibration.html."
+[27]: https://doi.org/10.1145/775047.775151 "Zadrozny B and Elkan C. Transforming Classifier Scores into Accurate Multiclass Probability Estimates."
+[28]: https://doi.org/10.1007/BF02295996 "McNemar Q. Note on the sampling error of the difference between correlated proportions or percentages."
+[29]: https://docs.scipy.org/doc/scipy/reference/stats.html "SciPy statistical-functions documentation."
+[30]: https://fastapi.tiangolo.com/ "FastAPI documentation."
+[31]: https://onnx.ai/onnx/ "ONNX documentation and ONNX Runtime documentation at https://onnxruntime.ai/docs/."
+[32]: https://docs.docker.com/reference/dockerfile/ "Dockerfile reference and Docker Python guide at https://docs.docker.com/guides/python/."
+[33]: https://mlflow.org/docs/latest/ml/tracking/ "MLflow Tracking and Model Registry documentation at https://mlflow.org/docs/latest/ml/model-registry/."
+[34]: https://packaging.python.org/en/latest/ "Python Packaging User Guide and PEP 621 at https://peps.python.org/pep-0621/."
+[35]: https://www.nltk.org/ "NLTK, spaCy at https://spacy.io/, Gensim at https://radimrehurek.com/gensim/, and skl2onnx at https://onnx.ai/sklearn-onnx/ official documentation."
