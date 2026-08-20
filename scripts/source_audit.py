@@ -11,7 +11,7 @@ SOURCE_ID_RE = re.compile(r"SRC-\d{3}")
 IGNORED_DIRS = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 TEXT_SUFFIXES = {".md", ".py", ".yaml", ".yml", ".toml", ".txt", ".json", ".ipynb"}
 RESERVED_FIXTURE_URLS = {"https://example.com"}
-LOCAL_OPERATIONAL_URL_RE = re.compile(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(?:/|$)")
+LOCAL_OPERATIONAL_URL_RE = re.compile(r"https?://(?:localhost|127\.0\.0\.1|api)(?::\d+)?(?:/|$)")
 
 
 def iter_text_files(root: Path):

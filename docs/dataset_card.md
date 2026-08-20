@@ -1,41 +1,87 @@
 # Dataset Card
 
-## Scope
+## 1. Dataset identity and motivation
 
-This project supports two text-classification sources through adapters: the ISOT Fake News Dataset and WELFake. The source register in [`sources.md`](sources.md) is authoritative for citations, URLs, access dates, checksums, and usage terms.
+This project supports two public fake-news text-classification sources through explicit adapters: the **ISOT Fake News Dataset** and **WELFake**. The purpose is to teach reproducible NLP ingestion, feature engineering, supervised/unsupervised learning, evaluation, packaging, and monitoring. The datasets are not a universal ground-truth corpus and are not a license to label real-world people, publishers, or articles automatically.
 
-## Canonical schema
+The source register in [`docs/sources.md`](sources.md) is authoritative for URLs, citations, access dates, checksums, licenses, and usage terms. Machine-readable provenance is maintained in [`docs/sources.yaml`](sources.yaml). Raw files are not committed by default.
 
-| Field | Type | Meaning |
-|---|---|---|
-| `id` | string | Stable content/source-derived identifier |
-| `title` | string | News title; may be empty |
-| `text` | string | Article body; may be empty in the raw source but is rejected if title and body are both empty |
-| `content` | string | Normalized title/body text used by features |
-| `label` | integer | Internal convention: `0 = real`, `1 = fake` |
-| `dataset` | string | Adapter provenance, e.g. `isot` or `welfake` |
-| `content_hash` | string | SHA-256 hash of normalized content for duplicate control |
+## 2. Supported composition and canonical schema
 
-## ISOT adapter
+| Field | Type | Description | Required invariant |
+|---|---|---|---|
+| `id` | string | Stable source/content-derived identifier | Deterministic within an ingestion run |
+| `title` | string | Original title, possibly empty | Preserved for provenance |
+| `text` | string | Original article body, possibly empty | Title plus body cannot both be empty |
+| `content` | string | Normalized title/body used for modeling | Unicode/whitespace normalized |
+| `label` | integer | Project label | `0 = real`, `1 = fake` |
+| `dataset` | string | Adapter provenance | `isot` or `welfake` |
+| `content_hash` | string | SHA-256 of normalized content | Used for exact duplicate control |
 
-The ISOT adapter expects a directory containing `Fake.csv` and `True.csv`. It assigns label `1` to `Fake.csv` rows and `0` to `True.csv` rows, then normalizes columns into the canonical schema. The primary publication and dataset provenance are recorded as SRC-001.
+The ingestion output records source provenance, class counts, split sizes, random seed, and label mapping in a split manifest. All downstream consumers use `content` and `label`, not an implicit source-specific column convention.
 
-## WELFake adapter
+## 3. ISOT source adapter
 
-The WELFake adapter accepts `WELFake_Dataset.csv` and requires `Title`, `Text`, and `Label` columns, case-insensitively. The Zenodo record describes the source convention as `0 = fake` and `1 = real`; the adapter explicitly inverts it to the project’s canonical `0 = real`, `1 = fake` convention and records that transformation in the code and metadata.
+The ISOT adapter expects a directory containing `Fake.csv` and `True.csv`. Rows from `Fake.csv` are assigned project label `1`; rows from `True.csv` are assigned project label `0`. Columns are normalized into the canonical schema, missing title/body values are handled deterministically, and exact duplicate normalized content is controlled before splitting. ISOT provenance and the associated publication/source references are registered as SRC-001.
 
-## Quality controls
+## 4. WELFake source adapter
 
-The ingestion stage normalizes Unicode, removes HTML/URLs/email addresses for the canonical content hash, collapses whitespace, rejects empty content and invalid labels, reports class counts, and removes exact normalized-content duplicates before splitting. The split manifest records the seed, sizes, class counts, and source path. Near-duplicate detection beyond exact normalized hashes is a planned extension and must not be claimed as executed unless its report exists.
+The WELFake adapter accepts `WELFake_Dataset.csv` and requires `Title`, `Text`, and `Label` columns case-insensitively. The source convention described by the registered dataset record is `0 = fake` and `1 = real`. The adapter explicitly inverts it to the project convention: **source 0 becomes project 1, and source 1 becomes project 0**. The transformation is recorded in code and artifact metadata so a downstream consumer cannot silently reverse the target semantics. WELFake provenance is registered as SRC-002.
 
-## Split and leakage policy
+## 5. Acquisition, licensing, and governance
 
-The default split is stratified 70% train, 15% validation, and 15% test. No TF-IDF vocabulary, tokenizer vocabulary, scaler, dimensionality reducer, clusterer, anomaly detector, calibration map, or threshold may be fit on validation or test rows. Final test results are reported only after all model and calibration decisions are fixed.
+Operators must acquire each dataset from a registered source, inspect the applicable license/terms, record the downloaded file checksum, and place the files under `data/raw/` or `data/external/` according to adapter instructions. Credentials and restricted data must not be committed. DVC metadata versions the input path and processed split outputs; a configured remote is operator-owned.
 
-## Limitations and ethics
+No source URL, pretrained-model reference, framework reference, statistical-method reference, or deployment reference used by this project may remain undocumented. The source-audit script checks external URLs and SRC identifiers against the repository registers. Local operational endpoint examples are not dataset sources.
 
-Dataset labels encode the source construction and may reflect source, temporal, political, linguistic, and annotation bias. Text-based classifiers can learn stylistic or publisher artifacts instead of factuality. The output is a probabilistic screening signal and is not a fact-checking verdict.
+## 6. Data quality and preprocessing
 
-## Acquisition
+The ingestion stage performs the following controls before any learned transform is fit:
 
-Raw files are intentionally not committed by default. Use the source URLs in [`sources.md`](sources.md), verify the applicable license/terms, record the downloaded file checksum, and place files under `data/raw/` or `data/external/` according to the adapter instructions. Do not include restricted raw data in commits.
+1. Validate required columns and source-specific label values.
+2. Normalize Unicode and whitespace and create a deterministic content hash after removing HTML/URLs/email-address noise for the canonical hash representation.
+3. Reject rows with empty title and body, invalid labels, or unusable identifiers.
+4. Report source and class counts.
+5. Remove exact normalized-content duplicates before splitting.
+6. Preserve raw title/body fields while constructing normalized `content`.
+7. Write a split manifest with seed, proportions, row counts, class counts, source paths, and label mapping.
+
+Near-duplicate or semantic-duplicate detection beyond exact normalized hashes is not claimed unless a corresponding executed report exists. Missing-value handling, encoders, scalers, TF-IDF, clusterers, anomaly detectors, tokenizers, and calibration maps are train-fitted only.
+
+## 7. Split and leakage policy
+
+The default protocol is a stratified three-way split:
+
+| Partition | Default share | Role |
+|---|---:|---|
+| Train | 70% | Fit model parameters and train-only feature transforms |
+| Validation | 15% | Hyperparameter, threshold, and optional calibration decisions |
+| Test | 15% | One final held-out evaluation after all decisions are frozen |
+
+The random seed is 42 by default and is recorded in the manifest. No vocabulary, scaler, imputer, target encoder, dimensionality reducer, clusterer, anomaly detector, calibrator, threshold, or feature-selection decision may use validation/test rows before its permitted stage. Final test results are never used for model selection.
+
+## 8. Representational limitations and bias
+
+The sources may overrepresent particular publishers, time periods, topics, political contexts, English-language conventions, collection procedures, and label-generation rules. Models can learn publisher or stylistic artifacts instead of factual status. The source distributions may not represent local news, international news, multilingual content, satire, social-media fragments, transcripts, scientific reporting, or future events. Performance can change under temporal, topic, publisher, language, and platform shift.
+
+Labels should be interpreted as dataset annotations/source construction, not objective truth. Dataset artifacts can encode social and political bias. Users must not infer that a high model score proves deception or that a low score proves reliability.
+
+## 9. Privacy, ethics, and security
+
+The data may contain names, locations, organizations, quotations, contact details, or other potentially identifying text. Operators should minimize copies, restrict access, avoid logging raw article content, protect DVC/MLflow stores, and follow the applicable source terms. The serving API validates payload size and the deployment boundary must provide authentication, TLS, rate limiting, network controls, and retention policy.
+
+Use is limited to education, reproducible research, model-development evaluation, and human-reviewed triage. Out-of-scope uses include automated censorship, publication blocking, political targeting, legal or reputational judgments, employment/credit/insurance/housing decisions, law-enforcement decisions, and any fully automated accusation or sanction.
+
+## 10. Monitoring and retraining implications
+
+Approved reference distributions must be generated from an appropriate training/reference window, never from the final test partition. The monitoring layer measures numeric KS/PSI drift, prediction-probability drift, text lengths/lexical statistics, and OOV rate. A drift report is a non-mutating review signal. It does not prove degradation, retrain a model, or promote a replacement.
+
+Retraining requires human review of data quality, delayed labels, source/temporal shift, cooldown and sample-count policy, DVC versioning, a new MLflow run, leakage checks, calibration, ONNX/native parity, serving tests, shadow/canary evidence, and rollback readiness.
+
+## 11. Reproducibility record
+
+The complete lifecycle is defined by `dvc.yaml`, `params.yaml`, `configs/default.yaml`, `scripts/run_pipeline.sh`, the MLflow experiment, the split manifest, package manifest, report manifest, source registers, and pinned dependencies. The lifecycle runner fails clearly if governed raw inputs or a DVC remote are unavailable; it does not substitute synthetic data for official training or benchmark claims.
+
+## 12. Course alignment
+
+This card covers CO1/M1 data provenance and problem framing; CO2/M2 preprocessing, missing values, encoding, and scaling; CO3/M3 supervised target integrity; CO4/M4 clustering/anomaly feature boundaries; CO5/M5 stratified splits and held-out evaluation; and CO6/M6 DVC, MLflow, packaging, API monitoring, CI/CD, security, and retraining governance.

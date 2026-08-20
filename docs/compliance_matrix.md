@@ -1,46 +1,67 @@
 # CO/M Module Compliance Matrix
 
-This matrix is the project’s evidence index for the `25SC2107E` Machine Learning handout. It will be updated whenever a script, notebook, test, report, or deployment artifact is added or renamed.
+This matrix is the project’s evidence index for the `25SC2107E` Machine Learning (`25SC2107E`) handout. **All six course outcomes and all six modules are implemented in the repository and covered by executable code, documentation, tests, or generated artifacts.** Completion means the implementation and verification gates exist; it does not permit unexecuted full-dataset benchmark claims.
 
-| Course outcome / module | Required topics from handout | Code and configuration evidence | Notebook/report evidence | Test/evidence artifact | Sources |
+| Course outcome / module | Required topics from handout | Code, automation, and configuration evidence | Documentation/report evidence | Test/evidence gate | Sources |
 |---|---|---|---|---|---|
-| CO1 / M1 | Lifecycle from raw data through features, training, evaluation, deployment, monitoring, and retraining; trace one prediction request; supervised versus unsupervised boundary; training-serving boundary | `src/data/ingestion.py`, `src/features/`, `src/models/`, `src/evaluation/`, `src/serving/app.py`, `src/monitoring/`, `configs/default.yaml` | `notebooks/01_eda.ipynb`, lifecycle diagram, request-trace section in README | Data-to-API smoke test; artifact round trip; `/health`, `/predict`, `/predict/batch` tests | SRC-003, SRC-004, SRC-008, SRC-009, SRC-010 |
-| CO2 / M2 | Linear regression context, ridge/lasso/ElasticNet regularization, logistic regression, binary/multinomial sigmoid/softmax, feature scaling, categorical/missing-value handling, coefficient interpretation | `src/models/classical.py`, `src/features/text.py`, `src/features/preprocessing.py`, `configs/models.yaml` | Regularization, text-statistics, imputation, encoding, scaling, and coefficient reports | Linear/logistic fitting, imputation, encoding, scaling, and leakage tests | SRC-004, SRC-005, SRC-006, SRC-021 |
-| CO3 / M3 | Decision trees, Gini/entropy, stopping/pruning, Random Forest, OOB error, boosting, XGBoost, LightGBM, feature importance and SHAP | `src/models/classical.py`, `configs/models.yaml` | Classical model comparison and explainability report | Tree/ensemble smoke tests; importance output checks | SRC-005, SRC-006, SRC-022, SRC-023 |
-| CO4 / M4 | K-Means/K-Means++, Mini-Batch K-Means, elbow/silhouette, hierarchical clustering/dendrogram, DBSCAN, PCA, t-SNE, UMAP, Isolation Forest, cluster labels as downstream features | `src/models/unsupervised.py`, `src/features/unsupervised_features.py`, `configs/default.yaml` | `notebooks/02_unsupervised_analysis.ipynb` with elbow, silhouette, dendrogram, scree, t-SNE, UMAP, and feature-synthesis figures | Shape, determinism, linkage, tuning, projection dimensions, and no-test-fit tests | SRC-005, SRC-006, SRC-016–SRC-020 |
-| CO5 / M5 | 3-way split, stratified k-fold, nested CV, classification/regression metrics, calibration, learning/validation curves, grid/random/Bayesian search, McNemar, paired bootstrap | `src/evaluation/metrics.py`, `src/evaluation/search.py`, `src/evaluation/plots.py`, `src/train.py`, `src/evaluate.py`, `configs/evaluation.yaml` | `notebooks/03_model_evaluation.ipynb`, benchmark, search, calibration, and statistical reports | Metric correctness, nested-CV separation, calibration, McNemar, paired bootstrap, search, plot, and CLI tests | SRC-005, SRC-006, SRC-024–SRC-029 |
-| CO6 / M6 | Feature-store concept, skew avoidance, native/ONNX packaging and parity, REST serving, online/batch inference, health/readiness, calibrated outputs, feature/probability/text drift, retraining hooks, rootless container, MLflow/DVC concepts | `src/serving/app.py`, `src/serving/predictor.py`, `src/monitoring/drift.py`, `src/serving/export.py`, `src/tracking.py`, `scripts/init_mlflow.py`, `.dvc/`, `dvc.yaml`, `Dockerfile`, `.dockerignore`, `.env.example`, `.github/workflows/ci.yml` | Deployment trace, curl examples, package manifest, parity report, monitoring/retraining policy, DVC/MLflow and container documentation | API schema/readiness/error tests, ONNX parity `<1e-5`, KS/PSI/text/OOV tests, retraining signal, DVC, MLflow, Docker, and CI checks | SRC-008–SRC-010, SRC-030–SRC-036 |
+| CO1 / M1 | Problem framing; raw data lifecycle; supervised versus unsupervised learning; feature/model boundary; deployment and monitoring trace | `src/data/ingestion.py`, `src/features/`, `src/models/`, `src/evaluation/`, `src/serving/`, `src/monitoring/`, `scripts/run_pipeline.sh`, `docker-compose.yml`, `configs/default.yaml` | `README.md` lifecycle trace, `docs/dataset_card.md`, `docs/model_cards.md`, `docs/deployment.md`, `docs/mathematical_formulation.md` | Ingestion/split tests, artifact round trip, API smoke tests, CI quality gate | SRC-003, SRC-004, SRC-008, SRC-009, SRC-010 |
+| CO2 / M2 | Linear regression context; ridge/lasso/ElasticNet; logistic sigmoid/softmax; scaling; missing values; categorical handling; coefficient interpretation | `src/models/classical.py`, `src/features/text.py`, `src/features/preprocessing.py`, `configs/models.yaml`, `src/train.py` | Mathematical objectives, preprocessing contracts, model-card architecture/evaluation sections | Linear/logistic, imputation, encoding, scaling, and leakage tests | SRC-004, SRC-005, SRC-006, SRC-021 |
+| CO3 / M3 | Decision trees; Gini/entropy; pruning; Random Forest/OOB; boosting; XGBoost; LightGBM; importance and SHAP | `src/models/classical.py`, `configs/models.yaml`, `src/evaluation/plots.py`, `scripts/generate_reports.py` | Model cards, mathematical tree/boosting/SHAP formulations, MLflow report manifest | Tree/ensemble smoke tests and explainability output checks | SRC-005, SRC-006, SRC-022, SRC-023 |
+| CO4 / M4 | K-Means++; MiniBatch; elbow/silhouette; hierarchical clustering; DBSCAN density reachability; PCA; t-SNE; UMAP; Isolation Forest; engineered cluster features | `src/models/unsupervised.py`, `src/features/unsupervised_features.py`, `configs/default.yaml` | `notebooks/02_unsupervised_analysis.ipynb`, dataset/model cards, complete mathematical appendix | Shape, determinism, linkage, projection, anomaly, feature-synthesis, and no-test-fit tests | SRC-005, SRC-006, SRC-016–SRC-020 |
+| CO5 / M5 | Stratified 3-way split; stratified/nested CV; classification/regression metrics; calibration; learning/validation curves; grid/random/Bayesian search; McNemar; paired bootstrap | `src/evaluation/metrics.py`, `src/evaluation/search.py`, `src/evaluation/plots.py`, `src/train.py`, `src/evaluate.py`, `configs/evaluation.yaml` | `notebooks/03_model_evaluation.ipynb`, model card metric provenance, MLflow report bundle, mathematical appendix | Metric, nested-CV, calibration, statistical, search, plot, CLI, and held-out test controls | SRC-005, SRC-006, SRC-024–SRC-029 |
+| CO6 / M6 | Training-serving boundary; native/ONNX packaging and parity; REST serving; online/batch inference; readiness; calibration metadata; drift; retraining governance; rootless containers; MLflow/DVC; CI/CD and orchestration | `src/serving/app.py`, `src/serving/predictor.py`, `src/monitoring/drift.py`, `src/serving/export.py`, `src/tracking.py`, `scripts/init_mlflow.py`, `scripts/export_onnx.py`, `scripts/generate_reports.py`, `scripts/run_pipeline.sh`, `scripts/synthetic_traffic.py`, `.dvc/`, `dvc.yaml`, `Dockerfile`, `.dockerignore`, `.env.example`, `docker-compose.yml`, `.github/workflows/ci.yml` | `docs/deployment.md`, `docs/model_cards.md`, `docs/dataset_card.md`, `README.md`, package/report manifests | API/readiness/error tests, ONNX parity `<1e-5`, KS/PSI/text/OOV tests, retraining signal, MLflow report tests, CI/DVC/YAML checks, container build/scan gates | SRC-008–SRC-010, SRC-030–SRC-036 |
 
 ## Script-to-outcome index
 
-| Planned script | Primary outcome/module | Required evidence |
+| Planned or implemented file | Primary outcome/module | Evidence |
 |---|---|---|
-| `src/data/ingestion.py` | CO1/M1 | Dataset adapters, validation, split manifest, provenance metadata |
-| `src/features/text.py` | CO1/M1, CO2/M2 | Cleaning, token processing, text statistics, readability, and TF-IDF fit/transform contracts |
-| `src/features/embeddings.py` | CO1/M1, CO4/M4 | GloVe, Word2Vec, transformer tokenization, SBERT preparation, and model provenance |
-| `src/features/preprocessing.py` | CO2/M2 | Imputation, MissingIndicator, One-Hot/Ordinal/target encoding, and scaling contracts |
-| `src/features/unsupervised_features.py` | CO4/M4 | K-Means/Mini-Batch/DBSCAN/anomaly augmentation without test leakage |
-| `src/models/unsupervised.py` | CO4/M4 | All required clustering, reduction, and anomaly methods |
-| `src/models/classical.py` | CO2/M2, CO3/M3 | Ridge/Lasso/ElasticNet, binary/multinomial Logistic, tree, forest, XGBoost, LightGBM, permutation and SHAP reports |
-| `src/models/lstm.py` | CO1/M1, CO5/M5 | GloVe BiLSTM training/inference and smoke configuration |
-| `src/models/bert.py` | CO1/M1, CO5/M5 | BERT fine-tuning, dynamic padding, warmup, clipping, FP16 |
-| `src/evaluation/metrics.py` | CO5/M5 | Classification/regression metrics, nested CV, calibration, McNemar, paired bootstrap, and report schemas |
-| `src/evaluation/plots.py` | CO5/M5 | Confusion, ROC/PR, learning, validation, reliability, and calibration comparison curves |
-| `src/evaluation/search.py` | CO5/M5 | Grid, random, Bayesian, nested-search result, and serialization helpers |
-| `src/train.py`, `src/evaluate.py` | CO1/M1, CO5/M5, CO6/M6 | Search/training orchestration, held-out evaluation, calibration, report generation, and MLflow artifact logging |
-| `src/serving/app.py` | CO1/M1, CO6/M6 | FastAPI `/health`, `/ready`, `/predict`, `/predict/batch`, `/monitoring/drift`, schemas, readiness, metadata, and latency |
+| `src/data/ingestion.py` | CO1/M1 | ISOT/WELFake adapters, validation, duplicate control, stratified split manifest, provenance metadata |
+| `src/features/text.py` | CO1/M1, CO2/M2 | Normalization, token processing, text statistics, readability-compatible measures, TF-IDF fit/transform |
+| `src/features/embeddings.py` | CO1/M1, CO4/M4 | GloVe, Word2Vec, transformer tokenization, SBERT preparation, model provenance |
+| `src/features/preprocessing.py` | CO2/M2 | Imputation, MissingIndicator, One-Hot/Ordinal/target encoding, scaling |
+| `src/features/unsupervised_features.py` | CO4/M4 | K-Means/MiniBatch/DBSCAN/anomaly augmentation without test leakage |
+| `src/models/unsupervised.py` | CO4/M4 | Required clustering, reduction, and anomaly methods |
+| `src/models/classical.py` | CO2/M2, CO3/M3 | Regularized linear/logistic, tree/forest, XGBoost, LightGBM, permutation importance, SHAP |
+| `src/models/lstm.py` | CO1/M1, CO5/M5 | GloVe-compatible BiLSTM training/inference and smoke configuration |
+| `src/models/bert.py` | CO1/M1, CO5/M5 | `bert-base-uncased` fine-tuning, dynamic padding, warmup, clipping, FP16 path |
+| `src/evaluation/metrics.py` | CO5/M5 | Classification/regression metrics, nested CV, calibration, McNemar, paired bootstrap |
+| `src/evaluation/plots.py` | CO5/M5 | Confusion, ROC/PR, learning, validation, reliability, calibration comparison |
+| `src/evaluation/search.py` | CO5/M5 | Grid, random, Bayesian, nested-search result and serialization helpers |
+| `src/train.py`, `src/evaluate.py` | CO1/M1, CO5/M5, CO6/M6 | Training/search orchestration, held-out evaluation, calibration, MLflow artifact logging |
+| `src/serving/app.py` | CO1/M1, CO6/M6 | `/health`, `/ready`, `/predict`, `/predict/batch`, `/monitoring/drift`, validation and metadata |
+| `src/serving/predictor.py` | CO1/M1, CO6/M6 | Bound preprocessing-plus-estimator inference contract |
+| `src/serving/export.py`, `scripts/export_onnx.py` | CO6/M6 | Package manifests, checksums, native fallback, ONNX Runtime parity `<1e-5` |
+| `src/monitoring/drift.py` | CO6/M6 | KS/PSI feature/probability drift, text/OOV monitoring, non-mutating retraining signals |
+| `src/tracking.py`, `scripts/init_mlflow.py` | CO6/M6 | Idempotent local/remote MLflow experiment and artifact tracking |
+| `scripts/generate_reports.py` | CO5/M5, CO6/M6 | Finalized-run selection, real artifact downloads, stable plots, checksums, provenance manifest |
+| `scripts/synthetic_traffic.py` | CO6/M6 | Configurable prediction/drift traffic, finite test mode, signal-aware shutdown |
+| `scripts/run_pipeline.sh` | CO1/M1, CO5/M5, CO6/M6 | One-command validation, DVC repro, MLflow evaluation, ONNX export, tests, reports |
+| `docker-compose.yml` | CO6/M6 | API, MLflow, and traffic services with healthchecks, volumes, network, and dependencies |
+| `.github/workflows/ci.yml` | CO6/M6 | Pull-request/main CI, pinned install, Ruff, DVC, MLflow server, tests, build, Trivy scan |
+| `Dockerfile`, `.dockerignore`, `.env.example` | CO6/M6 | Rootless multi-stage runtime, exclusion policy, deployment configuration |
+| `docs/model_cards.md`, `docs/dataset_card.md` | CO1–CO6 | Provenance, metrics policy, bias, ethics, limitations, intended/out-of-scope use |
+| `docs/mathematical_formulation.md` | M1–M6 | Mathematical definitions for all implemented model and monitoring families |
+| `scripts/source_audit.py` | All outcomes | Source-register and URL/SRC consistency audit |
 
-| `src/serving/predictor.py` | CO1/M1, CO6/M6 | Bound preprocessing-plus-model inference contract |
-| `src/serving/export.py` | CO6/M6 | Native package manifests, checksums, ONNX/TorchScript export, ONNX Runtime parity helpers |
+## Phase 5 completion matrix
 
-| `src/monitoring/drift.py` | CO6/M6 | KS/PSI feature and probability drift, text/OOV monitoring, JSON reports, and non-mutating retraining signals |
+| Phase 5 requirement | Implemented evidence | Completion status |
+|---|---|---|
+| Pull-request and main-branch CI | `.github/workflows/ci.yml` | Complete |
+| Full pinned dependency installation and Ruff | CI `Install pinned dependencies` and `Ruff lint` steps | Complete |
+| DVC pipeline validation | CI `dvc stage list`; `scripts/run_pipeline.sh` `dvc repro` | Complete |
+| Local MLflow startup and initialization | CI background `mlflow server`; `scripts/init_mlflow.py` | Complete |
+| Complete automated tests | CI `python -m pytest -q`; repository tests | Complete |
+| Rootless image build and vulnerability scan | CI Docker build and Trivy gate; `Dockerfile` | Complete |
+| FastAPI/MLflow/traffic Compose stack | `docker-compose.yml`, `scripts/synthetic_traffic.py` | Complete |
+| One-command lifecycle | `scripts/run_pipeline.sh` | Complete |
+| ONNX export and native parity | `scripts/export_onnx.py`, `src/serving/export.py` | Complete |
+| MLflow best-run report bundle | `scripts/generate_reports.py`, `reports/report_manifest.json` contract | Complete |
+| Mitchell-style model and dataset cards | `docs/model_cards.md`, `docs/dataset_card.md` | Complete |
+| Full mathematical formulation | `docs/mathematical_formulation.md` | Complete |
+| Source governance | `docs/sources.md`, `docs/sources.yaml`, `scripts/source_audit.py` | Complete |
+| No fabricated metrics or autonomous retraining | Model/dataset cards, deployment policy, signal-only implementation | Complete |
 
-| `src/tracking.py` | CO6/M6 | Optional MLflow tracking and artifact logging |
-| `scripts/init_mlflow.py` | CO1/M1, CO6/M6 | Idempotent local MLflow experiment initialization |
-| `.dvc/config`, `.dvcignore`, `dvc.yaml`, `Dockerfile`, `.dockerignore`, `.env.example` | CO1/M1, CO6/M6 | DVC initialization, pipeline, rootless multi-stage container, build exclusions, and runtime configuration |
+## Completion and truthfulness rule
 
-| `scripts/source_audit.py` | All outcomes | Source register and URL/citation consistency checks |
-
-## Acceptance rule
-
-A row is complete only when its code path, documentation path, and executable test or generated evidence artifact are present. A source citation alone is not treated as implementation evidence, and an implementation without a source-to-file mapping is not treated as source-governed.
+A row is complete only when its code path, documentation path, and executable test or generated evidence artifact are present. A source citation alone is not implementation evidence, and implementation without a source-to-file mapping is not source-governed. A dynamic metric is reportable only when it comes from an executed artifact; unavailable full-data results remain explicitly unavailable rather than being represented by an unexecuted stand-in or invented benchmark.

@@ -1,4 +1,4 @@
-name: ci
+name: fake-news-detection-ci
 
 on:
   push:
@@ -6,31 +6,145 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  PYTHONPATH: ${{ github.workspace }}
+  MLFLOW_TRACKING_URI: http://127.0.0.1:5000
+  MLFLOW_EXPERIMENT_NAME: fake-news-detection-ci
+
 jobs:
-  test:
+  quality-and-tests:
+    name: Quality, DVC, MLflow, and tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: Install test dependencies
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install pinned dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest fastapi httpx scikit-learn pandas scipy pyyaml joblib
-      - name: Lint
-        run: python -m pip install ruff && ruff check src scripts tests
-      - name: Compile Python
-        run: python -m compileall -q src scripts
-      - name: Source audit
-        run: python scripts/source_audit.py --root .
-      - name: Tests
-        run: pytest -q
+          python -m pip install -r requirements.txt
 
-  docker:
+      - name: Validate configuration and DVC graph
+        run: |
+          python -c "import yaml; yaml.safe_load(open('configs/default.yaml', encoding='utf-8')); print('default.yaml: valid')"
+          python -c "import yaml; yaml.safe_load(open('docker-compose.yml', encoding='utf-8')); print('docker-compose.yml: valid')"
+          dvc stage list
+          python scripts/source_audit.py --root .
+          git diff --check
+
+      - name: Ruff lint
+        run: ruff check src scripts tests
+
+      - name: Compile Python
+        run: python -m compileall -q src scripts tests
+
+      - name: Start local MLflow server
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p .ci/mlflow/artifacts
+          python -m mlflow server \
+            --host 127.0.0.1 \
+            --port 5000 \
+            --backend-store-uri sqlite:///.ci/mlflow/mlflow.db \
+            --default-artifact-root "${GITHUB_WORKSPACE}/.ci/mlflow/artifacts" \
+            > .ci/mlflow/server.log 2>&1 &
+          echo $! > .ci/mlflow/server.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5000/health >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent http://127.0.0.1:5000/health >/dev/null
+          python scripts/init_mlflow.py --tracking-uri "$MLFLOW_TRACKING_URI" --experiment-name "$MLFLOW_EXPERIMENT_NAME"
+
+      - name: Run complete test suite
+        run: python -m pytest -q
+
+      - name: Generate report bundle from finalized MLflow smoke run
+        env:
+          REPORT_TRACKING_URI: ${{ runner.temp }}/mlflow-report-store
+        run: |
+          python - <<'PY'
+          import mlflow
+          from pathlib import Path
+
+          mlflow.set_tracking_uri(Path("${{ runner.temp }}") / "mlflow-report-store")
+          mlflow.set_experiment("fake-news-detection-report-ci")
+          with mlflow.start_run(run_name="fixture-report"):
+              mlflow.log_metric("pr_auc", 1.0)
+              mlflow.log_param("model", "fixture-logistic-l2")
+              mlflow.log_param("test_data_used_for_selection", "false")
+              mlflow.log_artifact("reports/fixture_evaluation.json")
+          PY
+          python scripts/generate_reports.py \
+            --tracking-uri "$REPORT_TRACKING_URI" \
+            --experiment-name fake-news-detection-report-ci \
+            --output-dir reports/ci-report \
+            --primary-metric pr_auc
+
+      - name: Stop local MLflow server
+        if: always()
+        run: |
+          if [ -f .ci/mlflow/server.pid ]; then
+            kill "$(cat .ci/mlflow/server.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload test and MLflow logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-test-and-mlflow-logs
+          path: |
+            .ci/mlflow/server.log
+            reports/
+          if-no-files-found: ignore
+
+  container-build-and-scan:
+    name: Rootless container build and scan
     runs-on: ubuntu-latest
-    needs: test
+    needs: quality-and-tests
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build --tag fake-news-detection:ci .
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build rootless multi-stage image
+        run: docker build --tag fake-news-detection:${{ github.sha }} .
+
+      - name: Scan image for high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: fake-news-detection:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Export image metadata
+        if: always()
+        run: docker image inspect fake-news-detection:${{ github.sha }} > image-inspect.json
+
+      - name: Upload image metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-image-metadata
+          path: image-inspect.json

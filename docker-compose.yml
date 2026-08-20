@@ -1,0 +1,108 @@
+name: fake-news-detection
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: "3.11"
+    image: fake-news-detection:phase5
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      MODEL_ARTIFACT: /app/artifacts/models/logistic_l2.joblib
+      SERVING_MODE: native
+      READINESS_REQUIRES_MODEL: "true"
+      MAX_BATCH_SIZE: "64"
+      MAX_TEXT_CHARACTERS: "50000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./configs:/app/configs:ro
+    networks:
+      - fake-news-net
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          response = urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3);
+          raise SystemExit(0 if response.status == 200 else 1)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: "3.11"
+    image: fake-news-detection:phase5
+    command:
+      - mlflow
+      - server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --backend-store-uri
+      - sqlite:////app/mlflow/mlflow.db
+      - --default-artifact-root
+      - /app/mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/app/mlflow
+    networks:
+      - fake-news-net
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          response = urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3);
+          raise SystemExit(0 if response.status == 200 else 1)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  traffic:
+    image: fake-news-detection:phase5
+    command:
+      - python
+      - scripts/synthetic_traffic.py
+      - --base-url
+      - http://api:8000
+      - --interval
+      - ${TRAFFIC_INTERVAL_SECONDS:-5}
+      - --drift-every
+      - ${TRAFFIC_DRIFT_EVERY:-10}
+      - --timeout
+      - ${TRAFFIC_TIMEOUT_SECONDS:-5}
+      - --log-level
+      - ${TRAFFIC_LOG_LEVEL:-INFO}
+    depends_on:
+      api:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    networks:
+      - fake-news-net
+    restart: unless-stopped
+
+networks:
+  fake-news-net:
+    driver: bridge
+
+volumes:
+  mlflow_data:
+    name: fake-news-detection-mlflow

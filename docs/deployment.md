@@ -104,3 +104,77 @@ python -m src.train --mlflow --train data/processed/train.csv --output artifacts
 python -m src.evaluate --mlflow --test data/processed/test.csv --artifact artifacts/models/logistic_l2.joblib --output reports/evaluation/final_metrics.json
 mlflow ui --backend-store-uri mlruns
 ```
+
+## Phase 5 one-command lifecycle
+
+The master runner is `scripts/run_pipeline.sh`. It resolves the repository root, enables strict shell failure behavior, validates YAML/source/DVC contracts, initializes or reuses local MLflow, runs `dvc repro`, performs a separate MLflow-backed held-out evaluation, exports ONNX when the estimator supports it and native parity is below the configured epsilon, executes the complete pytest suite, and generates the report bundle.
+
+```bash
+chmod +x scripts/run_pipeline.sh
+./scripts/run_pipeline.sh
+```
+
+The runner uses `MLFLOW_TRACKING_URI`, `MLFLOW_EXPERIMENT_NAME`, `MODEL_ARTIFACT`, `TRAINING_DATA`, `ONNX_PATH`, `PACKAGE_MANIFEST`, and `REPORT_DIR` when supplied. It fails clearly if governed raw data or a configured DVC remote is unavailable. It never substitutes synthetic data for ISOT/WELFake training and never silently converts failed ONNX parity into an ONNX-verified status.
+
+## Docker Compose orchestration
+
+`docker-compose.yml` defines three health-aware services on an isolated bridge network:
+
+| Service | Role | Persistent state and boundary |
+|---|---|---|
+| `api` | Rootless FastAPI serving image | Read-only `artifacts/` and `configs/` mounts; `/ready` healthcheck; port 8000 |
+| `mlflow` | Local MLflow tracking server | Named `fake-news-detection-mlflow` volume under the appuser-owned `/app/mlflow`; port 5000 |
+| `traffic` | Synthetic prediction/drift generator | No data volume; logs statuses/latency only; depends on API and MLflow health |
+
+Start and stop the complete local stack:
+
+```bash
+cp .env.example .env
+docker compose up --build
+docker compose ps
+curl -s http://localhost:8000/ready
+curl -s http://localhost:5000/health
+docker compose down
+```
+
+The traffic service invokes `/predict` at `TRAFFIC_INTERVAL_SECONDS` and `/monitoring/drift` every `TRAFFIC_DRIFT_EVERY` requests. It can be run as a finite smoke test outside Compose:
+
+```bash
+python scripts/synthetic_traffic.py \
+  --base-url http://localhost:8000 \
+  --interval 0 \
+  --drift-every 2 \
+  --max-requests 5
+```
+
+Synthetic traffic contains no user article text and does not trigger retraining, model replacement, or deployment. SIGINT/SIGTERM stops the loop cleanly.
+
+## CI/CD gates
+
+`.github/workflows/ci.yml` runs on pull requests and pushes to `main`. The quality job installs the pinned requirements, validates configuration and DVC stages, runs the source audit, Ruff, compilation, starts a local MLflow server, initializes the CI experiment, and runs `python -m pytest -q`. The container job builds the rootless multi-stage image and scans it with Trivy for high and critical vulnerabilities, failing on actionable findings. Logs, reports, and image metadata are uploaded as CI artifacts without including raw data or secrets.
+
+The workflow does not claim a full-dataset benchmark when CI lacks governed raw inputs. DVC graph validation and the deterministic fixture/integration tests remain separate from a data-dependent `dvc repro` invocation.
+
+## MLflow report bundle
+
+`scripts/generate_reports.py` queries only `FINISHED` MLflow runs in the selected experiment and selects the best run by the declared metric and direction. It downloads all logged artifacts recursively and writes:
+
+- `reports/best_model_summary.json` with run ID, model name, metrics, parameters, tags, selection direction, provenance, and test-selection policy.
+- Stable plot names for reliability, calibration comparison, ROC/PR, confusion, and SHAP images when the selected run logged them.
+- `reports/mlflow_runs/<run_id>/` containing the downloaded source artifacts.
+- `reports/report_manifest.json` containing SHA-256 checksums, run IDs, plot availability, and summary path.
+
+A missing plot is recorded as `unavailable` with a reason; no stand-in image or fabricated metric is generated. The command fails when no finalized run contains the configured primary metric or when MLflow provenance cannot be resolved.
+
+```bash
+python scripts/generate_reports.py \
+  --tracking-uri mlruns \
+  --experiment-name fake-news-detection \
+  --output-dir reports \
+  --primary-metric pr_auc \
+  --direction maximize
+```
+
+## Phase 5 acceptance evidence
+
+The repository acceptance gate includes YAML parsing for workflow/Compose/configuration, DVC stage parsing, source-register audit, shell syntax, Ruff, compilation, the complete test suite, dependency resolution, MLflow report selection/download checks, ONNX parity checks, API/drift checks, and CI Docker build/scan. A local Docker build is environment-dependent; the authoritative image build and vulnerability scan run in GitHub Actions.

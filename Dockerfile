@@ -40,7 +40,7 @@ COPY README.md pyproject.toml ./
 # Runtime artifacts and monitoring baselines should be mounted at deployment time.
 RUN addgroup --system appgroup \
     && adduser --system --ingroup appgroup --home /nonexistent --no-create-home appuser \
-    && mkdir -p /app/artifacts /app/reports \
+    && mkdir -p /app/artifacts /app/reports /app/mlflow \
     && chown -R appuser:appgroup /app
 
 USER appuser

@@ -6,7 +6,7 @@ A modular, reproducible, production-style fake-news classification system aligne
 
 ## Compliance status
 
-The repository is being implemented against the attached `MachineLearninghandout.pdf`. Every module, script, notebook, experiment, and operational artifact will be mapped to a course outcome and syllabus module in [`docs/compliance_matrix.md`](docs/compliance_matrix.md). Inline comments in the required implementation modules identify the relevant syllabus coverage; the source register provides the academic and technical references behind those comments.
+The repository is **100% implemented across CO1–CO6 and Modules M1–M6** against the attached `MachineLearninghandout.pdf`. Every module, script, notebook, experiment, operational artifact, CI gate, and orchestration service is mapped to a course outcome and syllabus module in [`docs/compliance_matrix.md`](docs/compliance_matrix.md). Inline compliance comments and the source register provide the academic and technical traceability behind the implementation. Completion means the code paths and verification gates exist; full-data metrics are reported only after governed data are actually executed.
 
 | Handout area | Repository evidence |
 |---|---|
@@ -15,7 +15,7 @@ The repository is being implemented against the attached `MachineLearninghandout
 | **CO3 / M3**: tree models | Pruned Decision Tree, OOB Random Forest, XGBoost, LightGBM, Gini/permutation/SHAP importance |
 | **CO4 / M4**: unsupervised learning | K-Means, elbow/silhouette, hierarchical clustering, DBSCAN, PCA, t-SNE, UMAP, Isolation Forest, feature augmentation |
 | **CO5 / M5**: evaluation and selection | 70/15/15 split, stratified 5-fold CV, grid/random/Bayesian-search path, metrics, learning/validation curves, calibration, Brier score, McNemar test |
-| **CO6 / M6**: ML engineering | Configuration, versioned artifacts, skew prevention, ONNX/TorchScript where supported, FastAPI, Docker, CI, MLflow, KS/PSI drift monitoring |
+| **CO6 / M6**: ML engineering | Configuration, versioned artifacts, skew prevention, native/ONNX parity, FastAPI readiness and batch serving, Docker Compose, rootless Docker, GitHub Actions, MLflow, DVC, synthetic traffic, report generation, KS/PSI/text drift, and human-approved retraining signals |
 
 ## Architecture and lifecycle
 
@@ -45,7 +45,7 @@ A single online request follows the path **HTTP validation → text normalizatio
 
 | Path | Responsibility | Handout mapping |
 |---|---|---|
-| `data/` | Raw, processed, external, and reproducibility placeholders; raw data is not committed by default | CO1/M1 |
+| `data/` | Raw, processed, external, and reproducibility directories; raw data is not committed by default | CO1/M1 |
 | `notebooks/` | EDA, unsupervised analysis, model comparison, deep-learning experiments, and evaluation evidence | CO1–CO5 / M1–M5 |
 | `src/data/ingestion.py` | ISOT/WELFake adapters, validation, canonical schema, split manifests | CO1/M1 |
 | `src/features/` | Cleaning, tokenization, text statistics/readability, TF-IDF, GloVe, Word2Vec, SBERT, imputation, encoding, scaling, and feature contracts | CO1/M1, CO2/M2, CO4/M4 |
@@ -77,6 +77,12 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `docs/dependency_licenses.md` | Dependency and redistribution license inventory | CO6/M6 |
 | `.dvc/`, `.dvcignore`, `dvc.yaml`, `params.yaml` | DVC initialization, cache policy, reproducible pipeline stages, and pipeline parameters | CO1/M1, CO6/M6 |
 | `scripts/init_mlflow.py` | Idempotent local MLflow experiment initialization | CO1/M1, CO6/M6 |
+| `scripts/export_onnx.py` | ONNX export, native probability parity, package manifest, and native-only fallback | CO6/M6 |
+| `scripts/generate_reports.py` | Best finalized MLflow run selection, artifact download, plot normalization, checksums, and report manifest | CO5/M5, CO6/M6 |
+| `scripts/synthetic_traffic.py` | Configurable prediction and drift traffic with finite test mode and signal-aware shutdown | CO6/M6 |
+| `scripts/run_pipeline.sh` | One-command validation, DVC repro, MLflow evaluation, ONNX export, tests, and report generation | CO1/M1, CO5/M5, CO6/M6 |
+| `docker-compose.yml` | FastAPI, MLflow, and synthetic traffic orchestration with healthchecks and named volumes | CO6/M6 |
+| `.github/workflows/ci.yml` | Pull-request/main CI, pinned dependencies, DVC validation, MLflow startup, tests, image build, and Trivy scan | CO6/M6 |
 
 ## Data and label policy
 
@@ -90,16 +96,24 @@ The default split is stratified **70% training, 15% validation, and 15% test** w
 
 Every trained artifact records its configuration, random seed, dataset identity, source checksum where available, software versions, feature schema, model family, and training timestamp. Results are reported only for experiments actually executed; optional models that cannot run because of missing hardware or dependencies are marked as unavailable rather than assigned invented scores.
 
-## Planned commands
+## Executable lifecycle commands
 
-The executable workflow is:
+The complete lifecycle is available through one command after the governed ISOT/WELFake input is present or a DVC remote is configured:
 
 ```bash
-python -m src.data.ingestion --dataset isot --path data/raw/isot --output data/processed
-python -m src.train --train data/processed/train.csv --model logistic_l2 --output artifacts/models/logistic_l2.joblib
-python -m src.evaluate --test data/processed/test.csv --artifact artifacts/models/logistic_l2.joblib
-uvicorn src.serving.app:app --host 0.0.0.0 --port 8000
-pytest -q
+python -m pip install -r requirements.txt
+chmod +x scripts/run_pipeline.sh
+./scripts/run_pipeline.sh
+```
+
+The runner validates configuration and source governance, initializes MLflow, runs `dvc repro`, performs held-out MLflow evaluation, exports ONNX only when parity is verified, executes the complete test suite, and generates `reports/best_model_summary.json` and `reports/report_manifest.json`. It fails clearly when official raw inputs are unavailable rather than fabricating data or results.
+
+For local orchestration after artifacts exist:
+
+```bash
+docker compose up --build
+curl -s http://localhost:8000/ready
+curl -s http://localhost:5000/health
 ```
 
 The foundational tranche includes this README, [`docs/sources.md`](docs/sources.md), [`docs/sources.yaml`](docs/sources.yaml), and [`requirements.txt`](requirements.txt). The classical fixture workflow has been exercised; full-dataset and deep-learning benchmark commands must be run only after the corresponding raw data and optional resources are available.
@@ -143,13 +157,15 @@ The FastAPI service will expose `/health`, `/predict`, and `/predict/batch` with
 
 The complete bibliography is reproduced below so that the README is self-contained. The detailed, file-mapped source register remains in [`docs/sources.md`](docs/sources.md), and machine-readable provenance remains in [`docs/sources.yaml`](docs/sources.yaml). Those files additionally record source IDs, access dates, versions or revisions, checksums, license/usage terms, and exact repository-file mappings. The README list and both source-register files are intended to remain synchronized.
 
-## Phase 4 production trace
+## Final Phase 5 completion trace
 
-The production path is **HTTP payload → Pydantic validation → fitted text transformation/tokenization → native or parity-verified ONNX inference → calibrated/raw probability and nullable uncertainty fields → model/version/latency response metadata → KS/PSI/text/OOV drift logging → human-reviewed retraining signal**. `/health` exposes process and artifact diagnostics; `/ready` returns HTTP 200 only when a prediction-capable artifact is loaded. `docs/deployment.md` contains curl examples, mounted-artifact guidance, parity tolerance, rootless container commands, and the retraining trigger policy.
+The final production path is **governed raw data → DVC ingest/train/evaluate → MLflow run and held-out plots → native package and optional ONNX parity `<1e-5` → rootless API container → HTTP validation → fitted text transformation/tokenization → inference → calibrated/raw response metadata → probability/text/feature drift logging → signal-only retraining review**. GitHub Actions runs pinned dependency installation, Ruff, compilation, YAML/source/DVC validation, a local MLflow server, the complete test suite, rootless image build, and Trivy high/critical vulnerability scanning. Docker Compose starts FastAPI, MLflow, and synthetic traffic with healthchecks and read-only artifact/config mounts.
+
+`docs/compliance_matrix.md` declares completion across all CO1–CO6 and M1–M6 requirements. `docs/model_cards.md`, `docs/dataset_card.md`, and `docs/mathematical_formulation.md` provide the final model, data, ethics, provenance, and mathematical evidence. `docs/deployment.md` remains the operational request-to-monitoring guide.
 
 ## Status
 
-The repository began as an empty GitHub repository and is now implemented and audited through Phase 4. Reproducibility, source governance, handout traceability, production packaging, monitoring boundaries, and test evidence are treated as acceptance criteria rather than after-the-fact documentation.
+The repository is **Complete through Phase 5**. Reproducibility, source governance, handout traceability, production packaging, orchestration, CI/CD, monitoring boundaries, report provenance, and test evidence are treated as acceptance criteria rather than after-the-fact documentation. The final test suite is executed by CI with `python -m pytest -q`; it is not restricted to a hard-coded historical test count.
 
 ## References
 

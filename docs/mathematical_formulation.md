@@ -1,138 +1,360 @@
-# Mathematical Formulations
+# Mathematical Formulation
 
-This appendix records the mathematical definitions used by the implementation. The textbook and algorithm references are listed in [`sources.md`](sources.md), especially SRC-004 through SRC-007 and SRC-021 through SRC-029.
+This appendix defines the mathematical objects implemented in the repository. It distinguishes general mathematical definitions from implementation choices such as train-only fitting, finite precision, solver settings, and artifact contracts. The source register maps the underlying algorithms and frameworks to SRC-004–SRC-029, SRC-031, SRC-033, and SRC-034.
 
-## TF-IDF
+## 1. Data, labels, and split discipline — CO1/M1 and CO5/M5
 
-For term `t` in document `d`, the implementation uses a sublinear term-frequency variant and inverse document frequency:
-
-\[
-\mathrm{tfidf}(t,d) = (1 + \log \mathrm{tf}(t,d)) \times \log\left(\frac{1 + N}{1 + \mathrm{df}(t)}\right) + 1,
-\]
-
-where `N` is the number of training documents and `df(t)` is the number of training documents containing `t`. The vectorizer is fit only on training text.
-
-## Logistic regression
-
-The binary probability is the sigmoid of a linear score:
+Let the canonical dataset be
 
 \[
-P(y=1\mid x)=\sigma(w^Tx+b)=\frac{1}{1+e^{-(w^Tx+b)}}.
+\mathcal D = \{(x_i, y_i)\}_{i=1}^{n}, \qquad y_i \in \{0,1\},
 \]
 
-The binary cross-entropy objective is:
+where `0` means real and `1` means fake. The ingestion protocol creates disjoint stratified sets
 
 \[
-\mathcal{L}(w,b)=-\frac{1}{n}\sum_{i=1}^n [y_i\log p_i+(1-y_i)\log(1-p_i)].
+\mathcal D = \mathcal D_{train} \dot\cup \mathcal D_{val} \dot\cup \mathcal D_{test},
+\qquad (|D_{train}|,|D_{val}|,|D_{test}|) \approx (0.70n,0.15n,0.15n).
 \]
 
-The regularized objectives add `L1`, `L2`, or a convex ElasticNet combination:
+For every learned transform \(T\),
 
 \[
-\mathcal{L}_{L1}=\mathcal{L}+\lambda\lVert w\rVert_1,\quad
-\mathcal{L}_{L2}=\mathcal{L}+\frac{\lambda}{2}\lVert w\rVert_2^2,
+T \leftarrow \operatorname{fit}(\mathcal D_{train}) \quad\text{or}\quad
+T \leftarrow \operatorname{fit}(\mathcal D_{train}\cup\mathcal D_{val})
+\]
+
+only when the declared evaluation stage permits it. The final test rows are not used for model selection, threshold selection, calibration fitting, vocabulary fitting, clustering, anomaly fitting, or preprocessing parameter estimation.
+
+## 2. Text normalization and TF-IDF — CO1/M1 and CO2/M2
+
+After Unicode and whitespace normalization, let \(t_{i,j}\) denote token \(j\) in document \(i\). The term frequency is
+
+\[
+\operatorname{tf}(t,d) = \frac{\#(t\text{ in }d)}{\sum_{u}\#(u\text{ in }d)}.
+\]
+
+With document frequency \(df(t)\), number of documents \(N\), and optional sublinear scaling,
+
+\[
+\operatorname{tf}_{sub}(t,d) = 1 + \log(\#(t\text{ in }d)) \quad\text{if the count is positive},
+\]
+
+and the inverse document frequency is
+
+\[
+\operatorname{idf}(t) = \log\left(\frac{1+N}{1+df(t)}\right)+1.
+\]
+
+The TF-IDF coordinate is
+
+\[
+v_{d,t} = \operatorname{tf}(t,d)\operatorname{idf}(t),
+\]
+
+followed by optional \(\ell_2\) normalization \(\hat v_d=v_d/\|v_d\|_2\). The vocabulary is pruned using train-fitted `min_df`, `max_df`, and `max_features` rules. Validation/test text is transformed with the frozen vocabulary and IDF values.
+
+Text-statistic features include token count, character count, sentence count, lexical diversity, punctuation ratio, uppercase ratio, digit ratio, and length-derived readability-compatible measures. These descriptive features do not themselves establish factuality.
+
+## 3. Missing values, encoders, and scaling — CO2/M2
+
+For a numeric feature \(x_j\), mean and median imputation are
+
+\[
+\tilde x_{ij}=\begin{cases}
+ x_{ij},&x_{ij}\text{ observed},\\
+ \mu_j=\frac{1}{|I_j|}\sum_{i\in I_j}x_{ij},&\text{mean},\\
+ \operatorname{median}(\{x_{ij}:i\in I_j\}),&\text{median}.
+\end{cases}
+\]
+
+A missingness indicator is \(m_{ij}=1\) when the original value is missing and 0 otherwise. KNN/model-based imputers estimate the missing value from a train-fitted neighborhood or predictive model.
+
+For a categorical value \(c\), one-hot encoding is \(\mathbf 1[c=k]\); ordinal encoding maps categories to an ordered integer; target encoding uses a smoothed training estimate
+
+\[
+TE(c)=\frac{n_c\bar y_c+\lambda\bar y}{n_c+\lambda},
+\]
+
+where \(n_c\) and \(\bar y_c\) are category count and target mean, \(\bar y\) is the global training mean, and \(\lambda>0\) controls shrinkage. Out-of-fold target estimates prevent a row from using its own target directly.
+
+Standard scaling is
+
+\[
+z_{ij}=\frac{x_{ij}-\mu_j}{\sigma_j},
+\]
+
+and min-max scaling is
+
+\[
+x'_{ij}=\frac{x_{ij}-\min_j}{\max_j-\min_j}.
+\]
+
+All statistics are estimated on the permitted fit split only.
+
+## 4. Linear and logistic models — CO2/M2
+
+For a linear prediction \(\hat y=X\beta+b\), ridge, lasso, and elastic-net objectives are respectively
+
+\[
+\min_{\beta,b}\frac{1}{2n}\|y-X\beta-b\mathbf1\|_2^2+\lambda\|\beta\|_2^2,
 \]
 
 \[
-\mathcal{L}_{EN}=\mathcal{L}+\lambda[\alpha\lVert w\rVert_1+(1-\alpha)\lVert w\rVert_2^2/2].
+\min_{\beta,b}\frac{1}{2n}\|y-X\beta-b\mathbf1\|_2^2+\lambda\|\beta\|_1,
 \]
 
-## Tree splitting and Random Forests
-
-For a node with class proportions `p_k`, Gini impurity is:
+and
 
 \[
-G=1-\sum_k p_k^2.
+\min_{\beta,b}\frac{1}{2n}\|y-X\beta-b\mathbf1\|_2^2+\lambda\left[\rho\|\beta\|_1+(1-\rho)\|\beta\|_2^2\right].
 \]
 
-A split is selected by maximizing impurity reduction. Random Forests reduce estimator variance by averaging decorrelated bootstrap trees and random feature subsets; out-of-bag rows provide an internal validation estimate.
+For binary logistic regression,
 
-## K-Means and PCA
+\[
+z_i=x_i^T\beta+b, \qquad p_i=P(y_i=1\mid x_i)=\sigma(z_i)=\frac{1}{1+e^{-z_i}},
+\]
+
+with negative log-likelihood
+
+\[
+\mathcal L(\beta,b)=-\frac1n\sum_i \left[y_i\log p_i+(1-y_i)\log(1-p_i)\right].
+\]
+
+The regularized objective is \(\mathcal L+\lambda\|\beta\|_1\), \(\mathcal L+\lambda\|\beta\|_2^2\), or the elastic-net combination above. Multinomial logistic regression uses softmax
+
+\[
+P(y_i=k\mid x_i)=\frac{e^{x_i^T\beta_k+b_k}}{\sum_{r=1}^{K}e^{x_i^T\beta_r+b_r}}.
+\]
+
+## 5. Trees, Random Forest, boosting, permutation importance, and SHAP — CO3/M3
+
+For a node with class proportions \(p_k\), Gini impurity and entropy are
+
+\[
+G=1-\sum_k p_k^2, \qquad H=-\sum_k p_k\log p_k.
+\]
+
+A split is selected by impurity reduction, and cost-complexity pruning minimizes
+
+\[
+R_\alpha(T)=R(T)+\alpha|\widetilde T|,
+\]
+
+where \(R(T)\) is empirical tree error and \(|\widetilde T|\) is the number of leaves. A Random Forest averages bootstrapped tree predictors:
+
+\[
+\hat f_{RF}(x)=\frac1B\sum_{b=1}^{B}\hat f_b(x),
+\]
+
+while OOB observations estimate error using trees whose bootstrap samples omitted the observation.
+
+Gradient boosting builds
+
+\[
+F_M(x)=F_0(x)+\sum_{m=1}^{M}\eta h_m(x),
+\]
+
+where \(h_m\) approximates the negative gradient of the loss at iteration \(m\). XGBoost adds regularization over tree leaves and split complexity; LightGBM grows leaves according to gain under its configured leaf-wise constraints. Exact implementation parameters are recorded in `configs/models.yaml` and artifacts.
+
+Permutation importance for feature \(j\) is the score decrease
+
+\[
+I_j=S(X,y)-S(\pi_j(X),y),
+\]
+
+where \(\pi_j\) randomly permutes feature \(j\) on a declared evaluation partition. SHAP values \(\phi_j\) satisfy the additive explanation
+
+\[
+f(x)=\phi_0+\sum_{j=1}^{p}\phi_j,
+\]
+
+with Shapley values computed from marginal contributions across feature coalitions. They describe model behavior, not causal effects.
+
+## 6. BiLSTM — CO3/M3 and CO5/M5
+
+For input embedding \(x_t\), previous hidden state \(h_{t-1}\), and previous cell state \(c_{t-1}\), an LSTM computes
+
+\[
+f_t=\sigma(W_f x_t+U_f h_{t-1}+b_f),
+\]
+\[
+i_t=\sigma(W_i x_t+U_i h_{t-1}+b_i),
+\]
+\[
+\tilde c_t=\tanh(W_c x_t+U_c h_{t-1}+b_c),
+\]
+\[
+c_t=f_t\odot c_{t-1}+i_t\odot\tilde c_t,
+\]
+\[
+o_t=\sigma(W_o x_t+U_o h_{t-1}+b_o),
+\]
+\[
+h_t=o_t\odot\tanh(c_t).
+\]
+
+A bidirectional LSTM computes forward and reverse states and concatenates them:
+
+\[
+h_t^{bi}=[h_t^{\rightarrow};h_t^{\leftarrow}].
+\]
+
+A binary classification head may use \(p=\sigma(w^Th+b)\). GloVe initialization supplies a trainable or frozen embedding matrix according to configuration; the pretrained revision and checksum belong in the artifact provenance.
+
+## 7. BERT self-attention — CO3/M3 and CO5/M5
+
+The supported transformer identifier is **`bert-base-uncased`**. For token position \(i\), the input representation is the sum of token, position, and segment embeddings:
+
+\[
+h_i^0=e_i^{token}+e_i^{position}+e_i^{segment}.
+\]
+
+For one attention head,
+
+\[
+Q=HW_Q,\qquad K=HW_K,\qquad V=HW_V,
+\]
+
+and scaled dot-product attention is
+
+\[
+\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^T}{\sqrt{d_k}}+M\right)V,
+\]
+
+where mask \(M\) suppresses padding or disallowed positions. Multi-head attention is
+
+\[
+\operatorname{MultiHead}(H)=\operatorname{Concat}(head_1,\ldots,head_h)W_O.
+\]
+
+A transformer block applies residual connections and layer normalization around attention and the position-wise feed-forward network:
+
+\[
+U=\operatorname{LayerNorm}(H+\operatorname{MultiHead}(H)),
+\]
+\[
+\operatorname{FFN}(U)=\phi(UW_1+b_1)W_2+b_2,
+\]
+\[
+H'=\operatorname{LayerNorm}(U+\operatorname{FFN}(U)).
+\]
+
+A classification head uses the pooled `[CLS]` representation \(h_{CLS}\), for example \(p=\sigma(w^Th_{CLS}+b)\). Tokenizer revision, maximum sequence length, optimizer, warmup, clipping, precision, hardware, and checkpoint are required provenance fields.
+
+## 8. K-Means, hierarchical clustering, DBSCAN, PCA, t-SNE, UMAP, and Isolation Forest — CO4/M4
 
 K-Means minimizes within-cluster squared distance:
 
 \[
-\min_{C_1,\ldots,C_K}\sum_{k=1}^K\sum_{x_i\in C_k}\lVert x_i-\mu_k\rVert_2^2.
+\min_{\{C_k,\mu_k\}_{k=1}^{K}}\sum_{k=1}^{K}\sum_{x_i\in C_k}\|x_i-\mu_k\|_2^2,
+\qquad \mu_k=\frac1{|C_k|}\sum_{x_i\in C_k}x_i.
 \]
 
-PCA selects orthogonal directions maximizing projected variance. The explained-variance ratio for component `j` is its eigenvalue divided by the sum of all retained eigenvalues.
+K-Means++ selects initial centers with probability proportional to squared distance from the nearest existing center. MiniBatch K-Means approximates the same objective using small batches. Elbow analysis compares inertia and silhouette analysis compares within/between-cluster separation.
 
-## Classification metrics
+Agglomerative clustering starts from singleton clusters and repeatedly merges the closest pair under single, complete, average, or Ward linkage. Ward merging minimizes the increase in within-cluster sum of squares.
 
-For true positives `TP`, true negatives `TN`, false positives `FP`, and false negatives `FN`:
+For DBSCAN with radius \(\varepsilon\) and minimum count `min_samples`, define
 
 \[
-\mathrm{accuracy}=\frac{TP+TN}{TP+TN+FP+FN},\quad
-\mathrm{precision}=\frac{TP}{TP+FP},\quad
-\mathrm{recall}=\frac{TP}{TP+FN},
+N_\varepsilon(p)=\{q:d(p,q)\le\varepsilon\}.
 \]
+
+A point is core when \(|N_\varepsilon(p)|\ge\text{min\_samples}\). Point \(q\) is directly density-reachable from core point \(p\) when \(q\in N_\varepsilon(p)\). Density reachability is the transitive closure of direct reachability through core points. A cluster is a maximal density-connected set; points not assigned to a cluster are noise/outliers.
+
+PCA centers \(X\), computes covariance \(S=X^TX/(n-1)\), and solves
 
 \[
-F1=2\frac{\mathrm{precision}\cdot\mathrm{recall}}{\mathrm{precision}+\mathrm{recall}}.
+Sv_j=\lambda_jv_j,
+\qquad \lambda_1\ge\cdots\ge\lambda_p.
 \]
 
-ROC-AUC summarizes ranking across false-positive thresholds; PR-AUC emphasizes positive-class precision and recall and can be more informative under imbalance.
+The projection onto the first \(r\) components is \(Z=XV_r\), and explained-variance ratio is \(\lambda_j/\sum_k\lambda_k\). t-SNE constructs a low-dimensional embedding by minimizing a KL divergence between high-dimensional and low-dimensional neighborhood probabilities; it is a visualization method with stochastic and perplexity-sensitive behavior. UMAP builds a fuzzy neighborhood graph and optimizes a low-dimensional graph cross-entropy; its random state and neighborhood parameters must be recorded.
 
-## Calibration and Brier score
-
-A reliability diagram groups predicted probabilities and compares mean predicted probability with empirical positive frequency. The Brier score is:
+Isolation Forest recursively partitions data with random splits. If a point has average path length \(E[h(x)]\) over \(t\) trees and \(c(n)\) is the expected unsuccessful-search path length in a binary search tree,
 
 \[
-\mathrm{Brier}=\frac{1}{n}\sum_{i=1}^n(p_i-y_i)^2.
+c(n)=2H(n-1)-\frac{2(n-1)}{n},
 \]
 
-Platt scaling fits a logistic map over a model score; isotonic regression fits a monotonic nonparametric map. Both calibration maps are fit on validation data or cross-validation folds, never on the final test set.
+where \(H(m)\) is the harmonic number. The anomaly score is commonly
 
-## McNemar’s test
+\[
+s(x,n)=2^{-E[h(x)]/c(n)}.
+\]
 
-For two classifiers evaluated on identical cases, let `b` count cases correct only for model A and `c` cases correct only for model B. The continuity-corrected statistic is:
+Short paths imply isolation and higher anomaly score. The repository’s severity convention is derived from the fitted estimator score and is recorded in the unsupervised feature contract. Cluster labels and anomaly scores can be appended as train-fitted downstream features; no test rows may fit the unsupervised components.
+
+## 9. Metrics, calibration, and statistical comparisons — CO5/M5
+
+Given positive-class probability \(p_i\), threshold \(\tau\), and prediction \(\hat y_i=\mathbf1[p_i\ge\tau]\), accuracy, precision, recall, and F1 are
+
+\[
+\operatorname{Accuracy}=\frac{TP+TN}{TP+TN+FP+FN},
+\]
+\[
+\operatorname{Precision}=\frac{TP}{TP+FP},\qquad
+\operatorname{Recall}=\frac{TP}{TP+FN},
+\]
+\[
+F1=\frac{2\operatorname{Precision}\operatorname{Recall}}{\operatorname{Precision}+\operatorname{Recall}}.
+\]
+
+ROC-AUC ranks positive scores against negative scores; PR-AUC summarizes precision-recall behavior and is often more informative under imbalance. The Brier score is
+
+\[
+\operatorname{BS}=\frac1n\sum_{i=1}^{n}(p_i-y_i)^2.
+\]
+
+Platt calibration fits
+
+\[
+\tilde p=\sigma(ap+b)
+\]
+
+on permitted validation/training-fold predictions. Isotonic calibration fits a nondecreasing piecewise-constant function \(g\) and returns \(\tilde p=g(p)\). Reliability diagrams compare empirical event frequency with mean predicted probability within bins.
+
+McNemar compares paired predictions through the discordant counts \(b\) and \(c\), often using
 
 \[
 \chi^2=\frac{(|b-c|-1)^2}{b+c}.
 \]
 
-The implementation reports the discordant counts and a chi-square survival-function p-value; the test compares paired predictions, not independent accuracy estimates.
+A paired bootstrap samples paired rows with replacement, recomputes a metric difference \(\Delta^{(b)}\), and reports empirical quantiles for a declared confidence level. Nested cross-validation fits selection only inside inner folds and evaluates outer folds without using the final test partition. Regression smoke metrics are \(RMSE=\sqrt{n^{-1}\sum_i(y_i-\hat y_i)^2}\), \(MAE=n^{-1}\sum_i|y_i-\hat y_i|\), and \(R^2=1-\sum_i(y_i-\hat y_i)^2/\sum_i(y_i-\bar y)^2\); they are not fake-news classification benchmarks.
 
-## Drift
+## 10. Drift and production signals — CO6/M6
 
-The two-sample KS statistic is the maximum absolute difference between empirical cumulative distribution functions:
-
-\[
-D_{n,m}=\sup_x|F_n(x)-G_m(x)|.
-\]
-
-PSI compares reference and current bin proportions:
+The two-sample Kolmogorov–Smirnov statistic is
 
 \[
-\mathrm{PSI}=\sum_i (p_i-q_i)\ln\left(\frac{p_i}{q_i}\right),
+D_{n,m}=\sup_x|F_n(x)-G_m(x)|,
 \]
 
-where `p_i` and `q_i` are reference and current proportions with a small floor for empty bins.
+with a drift decision based on a declared significance level \(\alpha\). Population Stability Index over bins \(b\) is
 
-## Phase 2 feature-engineering contracts
+\[
+PSI=\sum_b(q_b-p_b)\ln\left(\frac{q_b}{p_b}\right),
+\]
 
-For a feature value `x`, mean and median imputation replace missing values with statistics computed from the training partition only. KNN and iterative imputation likewise fit their neighbor/model parameters on training rows only. A MissingIndicator adds a binary coordinate `m_j = 1[x_j is missing]` so missingness remains observable without using held-out distributions.
+where \(p_b\) and \(q_b\) are reference/current bin proportions with a numerical floor for empty bins. Text monitoring applies analogous distribution comparisons to length, lexical, punctuation, digit, uppercase, and OOV statistics.
 
-Standard scaling uses `z_j = (x_j - μ_j) / σ_j`, where `μ_j` and `σ_j` are training-only statistics. Min-max scaling uses `x'_j = (x_j - min_j) / (max_j - min_j)` with training-only bounds. One-hot and ordinal encoders learn category vocabularies on training data; unknown validation/test categories follow the configured unknown-category policy.
+A retraining signal is a structured record
 
-Smoothed target encoding for category `c` uses `TE(c) = (n_c μ_c + α μ) / (n_c + α)`, where `μ_c` and `n_c` are category-specific training statistics, `μ` is the training global target mean, and `α` is the smoothing strength. Training rows receive out-of-fold estimates so their own labels do not directly determine their encoded values; validation/test rows use the full-training mapping and never their own labels.
+\[
+S=(\text{triggered},\text{drifted features},\text{baseline revision},\text{window ID},\text{reason},\text{cooldown key},\text{approval required},\text{side effects}),
+\]
 
-## Phase 2 unsupervised contracts
+with `side_effects = none` and human approval required. It is a review event, not an optimization step, retraining command, model replacement, or deployment decision.
 
-K-Means minimizes `Σ_i ||x_i - μ_{z_i}||²`; K-Means++ initializes centroids with distance-aware sampling, while Mini-Batch K-Means approximates the same objective using batches. The elbow diagnostic records inertia as a function of `K`, and the silhouette score compares within-cluster cohesion with nearest-cluster separation.
+## 11. Production parity and artifact semantics — CO6/M6
 
-PCA on standardized training features decomposes the covariance structure into orthogonal components. The explained-variance ratio for component `k` is `λ_k / Σ_j λ_j`; validation/test rows are projected through the fitted training scaler and PCA basis without refitting. t-SNE and UMAP coordinates are visualization-only manifold projections and are not interpreted as factual or causal representations.
+For native probability matrix \(P\) and ONNX probability matrix \(\widehat P\), parity requires equal shape and
 
-DBSCAN identifies dense regions using `ε` neighborhoods and `min_samples`; points not assigned to a dense region receive the noise label `-1`. For held-out feature synthesis, the implementation assigns a row to the nearest fitted core point only when it lies within the fitted `ε`; otherwise it remains noise. Isolation Forest anomaly severity is reported as the negated `score_samples` value, so larger values indicate stronger anomaly evidence relative to the fitted training reference.
+\[
+\max_{i,k}|P_{ik}-\widehat P_{ik}|<\varepsilon,
+\qquad \varepsilon<10^{-5}.
+\]
 
-## Phase 3 supervised evaluation
-
-For regression smoke fixtures, RMSE is `sqrt((1/n) Σ_i (y_i - ŷ_i)^2)`, MAE is `(1/n) Σ_i |y_i - ŷ_i|`, MAPE is `(100/n) Σ_i |(y_i - ŷ_i) / max(|y_i|, ε)|`, and `R² = 1 - Σ_i (y_i - ŷ_i)^2 / Σ_i (y_i - ȳ)^2`. MAPE uses a small denominator floor and is not used as a fake-news classification benchmark.
-
-Nested stratified cross-validation partitions the available training data into outer folds. For each outer fold, an inner search fits preprocessing and model parameters only on the outer-training portion; the selected estimator is then scored once on the outer holdout. The final test split is not passed to either inner search or outer model selection.
-
-Platt calibration fits a logistic mapping from a model score to a probability on the validation partition. Isotonic calibration fits a monotone mapping on the same permitted calibration partition. The final test set is scored only after the calibration map and threshold are frozen. Reliability diagrams compare empirical positive frequency with mean predicted probability in probability bins, and the Brier score remains `n⁻¹ Σ_i(p_i-y_i)^2`.
-
-For paired bootstrap regression comparison, each resample draws row indices with replacement from the same paired observations for both predictors. The reported confidence interval is formed from the empirical quantiles of `metric_A - metric_B`; the random seed, metric, number of draws, and confidence level are stored with the report.
-
-Permutation importance measures the decrease in a declared scoring function after a feature column is randomly permuted. Tree SHAP reports mean absolute local attribution values for a declared sample and is an interpretive diagnostic, not a causal explanation.
+The package manifest records model, preprocessing revision, calibration revision, label mapping, source IDs, runtime metadata, and SHA-256 checksums. Native serving is authoritative when an operation cannot be exported without changing the mathematical prediction function.
