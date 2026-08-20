@@ -1,0 +1,5 @@
+id,title,text,label,dataset,content,content_hash
+101,Real report,The verified agency published a documented report,0,fixture,Real report The verified agency published a documented report,fixture101
+102,Fake claim,An unsupported fabricated story spreads online,1,fixture,Fake claim An unsupported fabricated story spreads online,fixture102
+103,Real research,Researchers confirmed measured results in a controlled study,0,fixture,Real research Researchers confirmed measured results in a controlled study,fixture103
+104,Fake hoax,A sensational hoax repeats an invented allegation,1,fixture,Fake hoax A sensational hoax repeats an invented allegation,fixture104

@@ -1,0 +1,31 @@
+split:
+  train: 0.70
+  validation: 0.15
+  test: 0.15
+  seed: 42
+
+cross_validation:
+  strategy: stratified_k_fold
+  folds: 5
+  shuffle: true
+  random_state: 42
+
+search:
+  methods: [grid, random, bayesian]
+  scoring: average_precision
+  random_iterations: 20
+  bayesian_trials: 25
+
+metrics:
+  classification: [accuracy, precision, recall, f1_macro, f1_weighted, roc_auc, pr_auc]
+  calibration: [brier_score, reliability_diagram, platt_scaling, isotonic_regression]
+  significance:
+    mcnemar_alpha: 0.05
+    comparisons: [baseline_vs_bilstm, baseline_vs_bert, bilstm_vs_bert]
+
+artifacts:
+  directory: reports/evaluation
+  benchmark_csv: reports/evaluation/benchmark.csv
+  reliability_png: reports/evaluation/reliability.png
+  roc_pr_png: reports/evaluation/roc_pr.png
+  confusion_png: reports/evaluation/confusion_matrix.png

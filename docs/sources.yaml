@@ -1,0 +1,255 @@
+schema_version: "1.0"
+project: "Fake News Detection Using NLP, BiLSTM, and BERT"
+last_reviewed: "2026-08-20"
+policy: "Every external source used or referred to must appear here and in docs/sources.md. Restricted materials are linked with metadata rather than redistributed."
+sources:
+  - id: SRC-001
+    category: dataset_and_primary_publication
+    citation: "Ahmed H, Traore I, Saad S. Detecting opinion spams and fake news using text classification. Security and Privacy. 2018;1:e9."
+    url: https://doi.org/10.1002/spy2.9
+    accessed: "2026-08-20"
+    version: "publisher record; first published 2017-12-29; issue Jan/Feb 2018"
+    license_or_terms: "Publisher and dataset redistribution terms must be checked; raw data is not committed by default."
+    supports: [README.md, src/data/ingestion.py, docs/dataset_card.md, notebooks/01_eda.ipynb]
+  - id: SRC-002
+    category: dataset
+    citation: "Verma PK, Agrawal P, Prodan R. WELFake dataset for fake news detection in text data. Zenodo, v0.1, 2021."
+    url: https://doi.org/10.5281/zenodo.4561253
+    accessed: "2026-08-20"
+    version: "0.1"
+    checksum: "WELFake_Dataset.csv md5 73c9675a4b3d09f86a6933d0b8d7d908"
+    license_or_terms: "CC BY 4.0 for the Zenodo record; review downstream component terms."
+    supports: [README.md, src/data/ingestion.py, docs/dataset_card.md]
+  - id: SRC-003
+    category: course_handout
+    citation: "Machine Learning, 25SC2107E, MachineLearninghandout.pdf, supplied by the project owner, 2026-08-20."
+    url: https://y25btech.klef.in
+    local_copy: docs/references/MachineLearninghandout.pdf
+    accessed: "2026-08-20"
+    license_or_terms: "User-provided course material; local project reference only."
+    supports: [README.md, docs/compliance_matrix.md, src, tests, notebooks]
+  - id: SRC-004
+    category: textbook
+    citation: "Géron A. Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow. 3rd ed. O'Reilly; 2022."
+    url: https://www.oreilly.com/library/view/hands-on-machine-learning/9781098125974/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, notebooks, src, reports]
+  - id: SRC-005
+    category: textbook
+    citation: "Hastie T, Tibshirani R, Friedman J. The Elements of Statistical Learning. 2nd ed. Springer; 2017."
+    url: https://hastie.su.domains/ElemStatLearn/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference and publisher-hosted web edition only."
+    supports: [README.md, docs/compliance_matrix.md, src/models, src/evaluation]
+  - id: SRC-006
+    category: textbook
+    citation: "James G, Witten D, Hastie T, Tibshirani R, Taylor J. An Introduction to Statistical Learning: With Applications in Python. Springer; 2023."
+    url: https://www.statlearning.com/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, notebooks, reports]
+  - id: SRC-007
+    category: textbook
+    citation: "Bishop CM. Pattern Recognition and Machine Learning. Springer; 2006."
+    url: https://link.springer.com/book/9780387310732
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, reports, docs/mathematical_formulation.md]
+  - id: SRC-008
+    category: textbook
+    citation: "Huyen C. Designing Machine Learning Systems. O'Reilly; 2022."
+    url: https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, src/serving, src/monitoring, docs/deployment.md]
+  - id: SRC-009
+    category: textbook
+    citation: "Ameisen E. Building Machine Learning Powered Applications. O'Reilly; 2020."
+    url: https://www.oreilly.com/library/view/building-machine-learning/9781492045106/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, notebooks, src/evaluation, src/serving]
+  - id: SRC-010
+    category: textbook
+    citation: "Burkov A. Machine Learning Engineering. True Positive Inc.; 2020."
+    url: https://www.mlebook.com/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, tests, docs/deployment.md, src/monitoring]
+  - id: SRC-011
+    category: embeddings
+    citation: "Pennington J, Socher R, Manning CD. GloVe: Global Vectors for Word Representation. EMNLP; 2014."
+    url: https://nlp.stanford.edu/projects/glove/
+    paper_url: https://nlp.stanford.edu/pubs/glove.pdf
+    accessed: "2026-08-20"
+    license_or_terms: "Code Apache-2.0; pretrained vector terms vary by release."
+    supports: [src/features, src/models/lstm.py, docs/model_cards.md]
+  - id: SRC-012
+    category: transformer_paper
+    citation: "Devlin J, Chang MW, Lee K, Toutanova K. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. arXiv:1810.04805; 2019 version."
+    url: https://arxiv.org/abs/1810.04805
+    accessed: "2026-08-20"
+    version: "v2"
+    license_or_terms: "arXiv distribution terms; model weights have model-card terms."
+    supports: [src/models/bert.py, README.md, docs/model_cards.md]
+  - id: SRC-013
+    category: model_and_library_documentation
+    citation: "Hugging Face Transformers documentation and google-bert/bert-base-uncased model card."
+    url: https://huggingface.co/docs/transformers/index
+    model_url: https://huggingface.co/google-bert/bert-base-uncased
+    accessed: "2026-08-20"
+    license_or_terms: "Documentation/model-card/weight terms must be followed; record selected revision and checksum."
+    supports: [src/models/bert.py, requirements.txt, configs]
+  - id: SRC-014
+    category: embeddings_library
+    citation: "UKPLab Sentence Transformers documentation and repository."
+    url: https://www.sbert.net/
+    repository: https://github.com/UKPLab/sentence-transformers
+    accessed: "2026-08-20"
+    license_or_terms: "Project and selected model licenses must be checked."
+    supports: [src/features, src/models/unsupervised.py]
+  - id: SRC-015
+    category: library_documentation
+    citation: "scikit-learn User Guide."
+    url: https://scikit-learn.org/stable/user_guide.html
+    accessed: "2026-08-20"
+    license_or_terms: "BSD-3-Clause for scikit-learn."
+    supports: [src/features, src/models, src/evaluation, tests]
+  - id: SRC-016
+    category: unsupervised_algorithm
+    citation: "Lloyd S. Least Squares Quantization in PCM. IEEE Transactions on Information Theory; 1982."
+    url: https://doi.org/10.1109/TIT.1982.1056489
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-017
+    category: unsupervised_algorithm
+    citation: "Müllner D. Modern hierarchical, agglomerative clustering algorithms. arXiv:1109.2378; 2011."
+    url: https://arxiv.org/abs/1109.2378
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-018
+    category: unsupervised_algorithm
+    citation: "Ester M, Kriegel HP, Sander J, Xu X. A density-based algorithm for discovering clusters in large spatial databases with noise. KDD; 1996."
+    url: https://www.aaai.org/papers/kdd96-037-a-density-based-algorithm-for-discovering-clusters-in-large-spatial-databases-with-noise/
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-019
+    category: dimensionality_reduction
+    citation: "Pearson 1901 PCA; van der Maaten and Hinton 2008 t-SNE; McInnes, Healy, and Melville 2018 UMAP."
+    urls:
+      - https://doi.org/10.1080/14786440109462720
+      - https://www.jmlr.org/papers/v9/vandermaaten08a.html
+      - https://arxiv.org/abs/1802.03426
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py, notebooks]
+  - id: SRC-020
+    category: anomaly_detection
+    citation: "Liu FT, Ting KM, Zhou ZH. Isolation Forest. IEEE ICDM; 2008."
+    url: https://doi.org/10.1109/ICDM.2008.17
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-021
+    category: linear_models
+    citation: "scikit-learn LogisticRegression and linear-model documentation."
+    url: https://scikit-learn.org/stable/modules/linear_model.html
+    accessed: "2026-08-20"
+    supports: [src/models/classical.py, notebooks]
+  - id: SRC-022
+    category: tree_and_boosting
+    citation: "scikit-learn trees/ensembles, XGBoost, and LightGBM documentation."
+    urls:
+      - https://scikit-learn.org/stable/modules/tree.html
+      - https://scikit-learn.org/stable/modules/ensemble.html
+      - https://xgboost.readthedocs.io/en/stable/
+      - https://lightgbm.readthedocs.io/en/latest/
+    accessed: "2026-08-20"
+    license_or_terms: "scikit-learn BSD-3-Clause; XGBoost Apache-2.0; LightGBM MIT."
+    supports: [src/models/classical.py, notebooks, reports]
+  - id: SRC-023
+    category: explainability
+    citation: "Lundberg SM, Lee SI. A Unified Approach to Interpreting Model Predictions. NeurIPS; 2017."
+    url: https://arxiv.org/abs/1705.07874
+    documentation: https://shap.readthedocs.io/
+    accessed: "2026-08-20"
+    supports: [src/models/classical.py, reports]
+  - id: SRC-024
+    category: evaluation_and_model_selection
+    citation: "scikit-learn model selection and model evaluation documentation."
+    urls:
+      - https://scikit-learn.org/stable/model_selection.html
+      - https://scikit-learn.org/stable/modules/model_evaluation.html
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, notebooks, reports]
+  - id: SRC-025
+    category: Bayesian_optimization
+    citation: "Snoek J, Larochelle H, Adams RP. Practical Bayesian Optimization of Machine Learning Algorithms. NeurIPS; 2012."
+    url: https://arxiv.org/abs/1206.2944
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, configs]
+  - id: SRC-026
+    category: calibration
+    citation: "Platt J. Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods. 1999."
+    url: https://www.cs.cornell.edu/people/tj/publications/joachims_99a.pdf
+    documentation: https://scikit-learn.org/stable/modules/calibration.html
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, reports]
+  - id: SRC-027
+    category: calibration
+    citation: "Zadrozny B, Elkan C. Transforming Classifier Scores into Accurate Multiclass Probability Estimates. KDD; 2002."
+    url: https://doi.org/10.1145/775047.775151
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py]
+  - id: SRC-028
+    category: statistical_test
+    citation: "McNemar Q. Note on the sampling error of the difference between correlated proportions or percentages. Psychometrika; 1947;12:153-157."
+    url: https://doi.org/10.1007/BF02295996
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, reports]
+  - id: SRC-029
+    category: statistical_library
+    citation: "SciPy statistical functions documentation."
+    url: https://docs.scipy.org/doc/scipy/reference/stats.html
+    accessed: "2026-08-20"
+    license_or_terms: "BSD-3-Clause."
+    supports: [src/evaluation, src/monitoring]
+  - id: SRC-030
+    category: serving
+    citation: "FastAPI documentation."
+    url: https://fastapi.tiangolo.com/
+    accessed: "2026-08-20"
+    license_or_terms: "MIT."
+    supports: [src/serving/app.py, tests]
+  - id: SRC-031
+    category: packaging_and_runtime
+    citation: "ONNX and ONNX Runtime documentation."
+    urls:
+      - https://onnx.ai/onnx/
+      - https://onnxruntime.ai/docs/
+    accessed: "2026-08-20"
+    supports: [src/serving, tests]
+  - id: SRC-032
+    category: deployment
+    citation: "Dockerfile reference and Docker Python guide."
+    urls:
+      - https://docs.docker.com/reference/dockerfile/
+      - https://docs.docker.com/guides/python/
+    accessed: "2026-08-20"
+    supports: [Dockerfile, docs/deployment.md, .github/workflows]
+  - id: SRC-033
+    category: experiment_tracking
+    citation: "MLflow Tracking and Model Registry documentation."
+    urls:
+      - https://mlflow.org/docs/latest/ml/tracking/
+      - https://mlflow.org/docs/latest/ml/model-registry/
+    accessed: "2026-08-20"
+    license_or_terms: "Apache-2.0."
+    supports: [src/models, src/evaluation, docs/deployment.md]
+  - id: SRC-034
+    category: packaging
+    citation: "Python Packaging Authority Packaging User Guide and PEP 621."
+    urls:
+      - https://packaging.python.org/en/latest/
+      - https://peps.python.org/pep-0621/
+    accessed: "2026-08-20"
+    supports: [pyproject.toml, requirements.txt, docs/deployment.md]
