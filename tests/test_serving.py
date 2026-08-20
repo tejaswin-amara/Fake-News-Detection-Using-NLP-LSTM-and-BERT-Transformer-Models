@@ -5,9 +5,14 @@ import pytest
 from fastapi.testclient import TestClient
 from sklearn.linear_model import LogisticRegression
 
-from src.monitoring.drift import monitor_features
+from src.monitoring.drift import (
+    build_retraining_signal,
+    monitor_features,
+    monitor_prediction_probabilities,
+    monitor_text_batch,
+)
 from src.serving.app import create_app
-from src.serving.export import export_onnx_sklearn
+from src.serving.export import assert_onnx_parity, export_onnx_sklearn, onnx_predict_proba
 
 
 class FakeService:
@@ -89,3 +94,89 @@ def test_onnx_packaging_verification(tmp_path):
     outputs = session.run(None, {input_name: features[:2]})
     assert outputs
     assert len(outputs[0]) == 2
+
+
+def test_readiness_and_extended_response_schema():
+    client = TestClient(create_app(FakeService()))
+    ready = client.get("/ready")
+    assert ready.status_code == 200
+    assert ready.json()["status"] == "ready"
+    response = client.post("/predict", json={"text": "fake report"})
+    payload = response.json()
+    assert payload["raw_probability_fake"] == payload["probability_fake"]
+    assert payload["calibrated_probability_fake"] == payload["probability_fake"]
+    assert payload["confidence_interval_low"] is None
+    assert payload["confidence_interval_high"] is None
+    assert payload["calibration_status"] == "not_available"
+
+
+def test_serving_rejects_whitespace_and_malformed_batch():
+    client = TestClient(create_app(FakeService()))
+    assert client.post("/predict", json={"text": "   "}).status_code == 422
+    assert client.post("/predict/batch", json={"requests": []}).status_code == 422
+    assert client.post("/predict/batch", json={"requests": [{"text": " "}]}).status_code == 422
+    assert client.post("/predict", json={"text": "x" * 50_001}).status_code == 422
+
+
+def test_probability_text_drift_and_retraining_signal():
+    probability = monitor_prediction_probabilities([0.1] * 50 + [0.9] * 50, [0.99] * 100, psi_threshold=0.01)
+    assert probability["drift_detected"] is True
+    text = monitor_text_batch(
+        ["short real report" for _ in range(20)],
+        ["very long unseen phrase " * 10 for _ in range(20)],
+        oov_threshold=0.01,
+        length_threshold=0.01,
+    )
+    assert text["drift_detected"] is True
+    signal = build_retraining_signal({"drift_detected": True, "drifted_features": ["oov_rate"]}, "baseline-v1", "window-1")
+    assert signal["triggered"] is True
+    assert signal["requires_human_approval"] is True
+    assert signal["side_effects"] == "none"
+
+
+def test_onnx_runtime_parity_is_below_tolerance(tmp_path):
+    pytest.importorskip("skl2onnx")
+    pytest.importorskip("onnxruntime")
+    features = np.asarray([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], dtype=np.float32)
+    labels = np.asarray([0, 0, 1, 1])
+    model = LogisticRegression(max_iter=1000).fit(features, labels)
+    output = export_onnx_sklearn(model, tmp_path / "model.onnx", features)
+    onnx_probabilities = onnx_predict_proba(output, features)
+    report = assert_onnx_parity(model.predict_proba(features), onnx_probabilities, epsilon=1e-5)
+    assert report["passed"] is True
+    assert report["max_absolute_error"] < 1e-5
+
+
+def test_readiness_fails_when_artifact_is_missing(tmp_path):
+    from src.serving.app import ModelService
+
+    client = TestClient(create_app(ModelService(tmp_path / "missing.joblib")))
+    assert client.get("/health").json()["status"] == "degraded"
+    assert client.get("/ready").status_code == 503
+
+
+def test_drift_endpoint_accepts_probability_and_text_payloads():
+    client = TestClient(create_app(FakeService()))
+    probability_response = client.post(
+        "/monitoring/drift",
+        json={
+            "reference_probabilities": [0.1] * 20,
+            "current_probabilities": [0.9] * 20,
+            "psi_threshold": 0.01,
+            "baseline_revision": "fixture-v1",
+            "window_id": "window-1",
+        },
+    )
+    assert probability_response.status_code == 200
+    assert probability_response.json()["probability"]["drift_detected"] is True
+    text_response = client.post(
+        "/monitoring/drift",
+        json={
+            "reference_texts": ["short known report"] * 20,
+            "current_texts": ["unseen phrase " * 10] * 20,
+            "oov_threshold": 0.01,
+            "length_threshold": 0.01,
+        },
+    )
+    assert text_response.status_code == 200
+    assert text_response.json()["text"]["drift_detected"] is True

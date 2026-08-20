@@ -59,13 +59,15 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `src/evaluation/plots.py` | Confusion, ROC/PR, reliability, calibration comparison, learning, and validation curves | CO5/M5 |
 | `src/evaluation/search.py` | Grid/random/Bayesian search, result schemas, and serialization | CO5/M5 |
 | `src/train.py` and `src/evaluate.py` | Search orchestration, serving-safe packaging, held-out test reporting, calibration, plots, and optional MLflow logging | CO1/M1, CO5/M5, CO6/M6 |
-| `src/serving/app.py` | FastAPI health and prediction endpoints | CO6/M6 |
+| `src/serving/app.py` | FastAPI `/health`, `/ready`, `/predict`, `/predict/batch`, and `/monitoring/drift` with schema validation and latency headers | CO6/M6 |
 | `src/serving/predictor.py` | Bound preprocessing-plus-model inference contract | CO1/M1, CO6/M6 |
-| `src/serving/export.py` | Native, ONNX, and TorchScript export helpers | CO6/M6 |
-| `src/monitoring/drift.py` | KS and PSI drift checks plus monitoring reports | CO6/M6 |
+| `src/serving/export.py` | Native package manifests, checksums, ONNX/TorchScript export, ONNX Runtime parity | CO6/M6 |
+| `src/monitoring/drift.py` | KS/PSI feature and probability drift, text/OOV monitoring, retraining signals | CO6/M6 |
 | `src/tracking.py` | Optional MLflow experiment and artifact tracking | CO6/M6 |
 | `src/train.py` | Reproducible classical training entry point | CO1/M1, CO2/M2, CO3/M3 |
 | `src/evaluate.py` | Held-out artifact evaluation entry point | CO5/M5 |
+| `Dockerfile`, `.dockerignore`, `.env.example` | Rootless multi-stage serving image, build exclusions, and runtime configuration | CO6/M6 |
+| `docs/deployment.md` | End-to-end request trace, container operation, monitoring, retraining, and security boundary | CO6/M6 |
 | `scripts/source_audit.py` | Source-register and URL consistency audit | All outcomes |
 | `configs/` | `default.yaml`, `models.yaml`, and `evaluation.yaml` for data, models, evaluation, serving, and monitoring | CO1/M1, CO5/M5, CO6/M6 |
 | `tests/` | Unit, integration, leakage, serialization, export, and API tests | CO1–CO6 |
@@ -141,9 +143,13 @@ The FastAPI service will expose `/health`, `/predict`, and `/predict/batch` with
 
 The complete bibliography is reproduced below so that the README is self-contained. The detailed, file-mapped source register remains in [`docs/sources.md`](docs/sources.md), and machine-readable provenance remains in [`docs/sources.yaml`](docs/sources.yaml). Those files additionally record source IDs, access dates, versions or revisions, checksums, license/usage terms, and exact repository-file mappings. The README list and both source-register files are intended to remain synchronized.
 
+## Phase 4 production trace
+
+The production path is **HTTP payload → Pydantic validation → fitted text transformation/tokenization → native or parity-verified ONNX inference → calibrated/raw probability and nullable uncertainty fields → model/version/latency response metadata → KS/PSI/text/OOV drift logging → human-reviewed retraining signal**. `/health` exposes process and artifact diagnostics; `/ready` returns HTTP 200 only when a prediction-capable artifact is loaded. `docs/deployment.md` contains curl examples, mounted-artifact guidance, parity tolerance, rootless container commands, and the retraining trigger policy.
+
 ## Status
 
-The repository began as an empty GitHub repository and is now implemented and audited. Reproducibility, source governance, handout traceability, and test evidence are treated as acceptance criteria rather than after-the-fact documentation.
+The repository began as an empty GitHub repository and is now implemented and audited through Phase 4. Reproducibility, source governance, handout traceability, production packaging, monitoring boundaries, and test evidence are treated as acceptance criteria rather than after-the-fact documentation.
 
 ## References
 

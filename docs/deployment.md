@@ -1,78 +1,106 @@
 # Deployment and Operations
 
-## Training-serving boundary
+## End-to-end prediction trace
 
-Training produces a versioned artifact containing the fitted text feature transform, estimator weights, feature schema, label mapping, seed, software metadata, and dataset provenance. Serving loads that artifact rather than reconstructing preprocessing from configuration. This is the primary defense against training-serving skew.
+The production boundary is deliberately explicit:
 
-## Local API
+> **HTTP payload → Pydantic validation → packaged text transformation/tokenization → native or parity-verified ONNX inference → calibrated probability/uncertainty output → response metadata and latency → probability/text/feature drift logging → non-mutating retraining signal.**
 
-Start the service after producing a native artifact:
+Training creates an immutable artifact containing the fitted text pipeline, estimator, label mapping, feature schema, model/config/source metadata, artifact version, calibration status, and optional confidence-interval manifest. Serving loads that artifact rather than reconstructing preprocessing from configuration. This is the primary defense against notebook-to-production training-serving skew.
+
+## Local API and probes
+
+Start native serving after producing a model artifact:
 
 ```bash
 MODEL_ARTIFACT=artifacts/models/logistic_l2.joblib \
+  SERVING_MODE=native \
   uvicorn src.serving.app:app --host 0.0.0.0 --port 8000
 ```
 
-The endpoints are:
+The production-compatible container supports the same command and can use Gunicorn workers:
+
+```bash
+docker build -t fake-news-api:phase4 .
+docker run --rm -p 8000:8000 \
+  -e MODEL_ARTIFACT=/mounted/models/logistic_l2.joblib \
+  -v "$PWD/artifacts:/mounted/artifacts:ro" \
+  fake-news-api:phase4
+```
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/health` | GET | Readiness and artifact-load status |
-| `/predict` | POST | One title/body request |
-| `/predict/batch` | POST | Bounded batch of requests |
+| `/health` | GET | Process and artifact-load diagnostics; degraded status is allowed when the artifact is absent |
+| `/ready` | GET | Strict readiness probe; returns 200 only when a prediction-capable artifact is loaded |
+| `/predict` | POST | One validated title/body request |
+| `/predict/batch` | POST | Bounded ordered batch of requests |
+| `/monitoring/drift` | POST | Numeric, prediction-probability, and text-domain drift reports plus retraining signal |
 
-Every response exposes model name and artifact version. Responses also include `X-Process-Time-Ms` for a basic latency signal. The API validates text length and batch size through Pydantic models.
+Every prediction response contains label, label name, real/fake probabilities, raw and calibrated probability fields, nullable confidence-interval bounds, model name, artifact version, calibration status, and serving mode. Every HTTP response exposes `X-Process-Time-Ms`. Confidence intervals remain `null` unless a validated uncertainty manifest is included; the service never fabricates uncertainty.
 
-## Portable exports
-
-The native artifact is the fallback because not every estimator or preprocessing operation is exportable to ONNX or TorchScript. `src/serving/export.py` provides ONNX export for compatible scikit-learn estimators and TorchScript tracing for compatible PyTorch modules. Every export must be compared against native predictions on a conformance fixture before deployment.
-
-## Docker (SRC-032)
-
-The Docker image installs the pinned base requirements, copies source and configuration files, and starts Uvicorn. Dataset files, model weights, secrets, and generated artifacts should be mounted or supplied through a secure artifact store rather than baked into the image.
-
-## Monitoring
-
-`src/monitoring/drift.py` computes a two-sample Kolmogorov–Smirnov statistic and Population Stability Index for reference/current feature arrays. Reference arrays must be generated from an approved training/reference window. The default PSI alert threshold is 0.20 and the default KS significance threshold is 0.05; these are monitoring defaults, not universal guarantees.
-
-Operational monitoring should also record latency, throughput, request errors, prediction volume, delayed-label performance, and label distribution. Concept drift cannot be directly measured without trustworthy delayed labels. Drift alerts produce a review signal; they do not silently retrain or replace a deployed model.
-
-## MLflow
-
-MLflow integration is optional and disabled by default. When enabled, `src/tracking.py` logs parameters, metrics, plots, and artifacts to the configured tracking URI. Model promotion remains a human-reviewed operation.
-
-## Security and privacy
-
-Do not log submitted article text by default. Apply payload size limits, authenticate the service at the deployment boundary, protect the model artifact, and restrict filesystem/network permissions. The sample local service is a teaching and project artifact, not a complete internet-facing security configuration.
-
-## DVC data versioning (SRC-036)
-
-DVC metadata is initialized under `.dvc/`, while the reproducible `ingest`, `train`, and `evaluate` stages are defined in `dvc.yaml`. The default pipeline enforces the repository’s stratified 70/15/15 split through `src.data.ingestion` before any learned feature transform is fit.
+### Curl examples
 
 ```bash
-python -m pip install -r requirements.txt
-# Configure a user-owned remote; do not commit credentials.
-dvc remote add -d storage <your-dvc-remote-url>
-dvc add data/raw/isot
-dvc repro
-dvc status
+curl -s http://localhost:8000/health
+curl -i http://localhost:8000/ready
+
+curl -s -X POST http://localhost:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Example headline","text":"Example article body."}'
+
+curl -s -X POST http://localhost:8000/predict/batch \
+  -H 'Content-Type: application/json' \
+  -d '{"requests":[{"text":"First article."},{"text":"Second article."}]}'
+
+curl -s -X POST http://localhost:8000/monitoring/drift \
+  -H 'Content-Type: application/json' \
+  -d '{"reference_probabilities":[0.1,0.2,0.3,0.4],"current_probabilities":[0.8,0.9,0.9,0.95],"baseline_revision":"training-reference-v1","window_id":"2026-08-20"}'
 ```
 
-Raw data and large generated artifacts remain outside ordinary Git commits. The remote URL, credentials, and dataset acquisition terms are environment-specific and must be configured by the operator.
+Empty or whitespace-only text, oversized text, empty batches, malformed JSON, and invalid probability/reference arrays are rejected with validation errors. `/ready` returns 503 when the configured model artifact cannot be loaded.
 
-## Local MLflow tracking
+## Native and ONNX packaging
 
-Initialize a local experiment without a hosted server, then enable tracking for training or evaluation:
+`src/serving/export.py` creates package manifests with model name, artifact version, preprocessing revision, calibration revision, label map, runtime metadata, source IDs, and native/ONNX SHA-256 values. Native joblib packaging is authoritative when a tokenizer, vectorizer, neural layer, or custom operation cannot be represented safely by the selected converter.
+
+Compatible sklearn/tree estimators can be exported with `export_onnx_sklearn`, executed with ONNX Runtime, and checked with `assert_onnx_parity`. Deployment acceptance requires matching output shapes and maximum absolute probability error below `1e-5` on the conformance fixture. Unsupported operations must fail explicitly or use the native fallback; the system must not claim ONNX support merely because an output file can be produced.
+
+TorchScript/ONNX neural export remains optional and resource-dependent. BERT tokenization, dynamic padding, custom layers, and pretrained weights must be included in the model manifest when an adapter supports them. No private model weights, raw datasets, credentials, or DVC/MLflow remotes are committed.
+
+## Configuration and runtime mounts
+
+`.env.example` and `configs/default.yaml` define native/ONNX artifact paths, serving mode, calibration and package manifests, readiness behavior, batch/text limits, MLflow URI, drift baselines, drift thresholds, and retraining-hook policy. Baselines and model artifacts should be mounted read-only or retrieved through an approved artifact store at deployment time rather than baked into an image.
+
+## Monitoring and drift policy
+
+`src/monitoring/drift.py` provides:
+
+- **KS tests** for continuous feature and text-statistic distributions, including sample counts, p-values, alpha, and drift decisions.
+- **PSI** for numeric features and prediction-probability distributions, with configurable alert thresholds.
+- **Text-domain monitoring** for character/token/sentence lengths, lexical diversity, punctuation, uppercase/digit ratios, readability-compatible length features, and OOV rate against the approved reference vocabulary.
+- **Structured retraining signals** containing drifted features, baseline revision, window ID, reason, cooldown key, suggested action, approval requirement, and explicit `side_effects: none`.
+
+Reference distributions must be created from an approved training/reference window and never from the final test split. Monitoring is observational: the endpoint does not train, deploy, replace, or mutate a model.
+
+### Retraining trigger policy
+
+A drift signal is a request for review, not an autonomous deployment action. An operator should require a minimum observation window and sample count, apply the configured cooldown/de-duplication key, review data quality and delayed labels, version the new data with DVC, run a new MLflow experiment, reproduce the train/validation/test split, rerun ONNX/native parity and serving tests, perform shadow/canary validation, obtain human approval, and retain a rollback artifact before promotion. Concept drift requires trustworthy delayed labels; feature/probability drift alone does not establish model degradation.
+
+## Container security and operations
+
+The multi-stage Dockerfile builds dependencies separately from the runtime image, excludes compilers from the final stage, runs as a non-root user, exposes only port 8000, and supports Uvicorn or Gunicorn/Uvicorn-worker execution. `.dockerignore` excludes raw data, processed data, DVC cache, MLflow stores, reports, notebooks, tests, secrets, model caches, and local build artifacts. Authentication, TLS, rate limiting, network policy, and secret management remain deployment-boundary responsibilities.
+
+## Notebook-to-production remediation
+
+The repository closes the notebook-to-production gap through train-only fitted transforms, immutable packaged artifacts, explicit validation-only calibration, final-test isolation, runtime Pydantic schemas, bounded payloads, model/version metadata, ONNX parity tests, local/CI verification, baseline-controlled monitoring, and non-mutating retraining hooks. Notebook figures are evidence artifacts; production code imports reusable package functions and never depends on notebook state.
+
+## MLflow and DVC
+
+MLflow remains optional and disabled by default. When enabled, training and held-out evaluation log parameters, metrics, reports, plots, model artifacts, configuration, and provenance to the configured tracking URI. DVC versions raw data and orchestrates the `ingest`, `train`, and `evaluate` stages; credentials and remote endpoints are operator-owned.
 
 ```bash
 python scripts/init_mlflow.py --tracking-uri mlruns --experiment-name fake-news-detection
 python -m src.train --mlflow --train data/processed/train.csv --output artifacts/models/logistic_l2.joblib
-python -m src.evaluate --mlflow --test data/processed/test.csv --artifact artifacts/models/logistic_l2.joblib --output reports/evaluation.json
+python -m src.evaluate --mlflow --test data/processed/test.csv --artifact artifacts/models/logistic_l2.joblib --output reports/evaluation/final_metrics.json
 mlflow ui --backend-store-uri mlruns
 ```
-
-The default configuration keeps tracking disabled for lightweight smoke tests. When enabled, parameters, metrics, configuration, model artifacts, and evaluation reports are logged to the selected local or hosted tracking URI.
-
-## ONNX verification and drift hook
-
-`src.serving.export.export_onnx_sklearn` exports compatible scikit-learn models, while `tests/test_serving.py` verifies ONNX Runtime inference when `skl2onnx` and `onnxruntime` are installed. Unsupported models retain the native joblib artifact as the authoritative fallback. The FastAPI endpoint `POST /monitoring/drift` delegates to the KS/PSI monitor and accepts reference/current feature arrays for an operational drift report.

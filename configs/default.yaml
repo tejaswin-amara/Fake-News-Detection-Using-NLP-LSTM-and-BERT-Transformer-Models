@@ -119,21 +119,6 @@ evaluation:
   confidence_level: 0.95
   mcnemar_alpha: 0.05
 
-serving:
-  host: 0.0.0.0
-  port: 8000
-  model_name: logistic_l2
-  model_artifact: artifacts/models/logistic_l2.joblib
-  max_batch_size: 64
-  max_text_characters: 50000
-  include_latency_header: true
-
-monitoring:
-  ks_alpha: 0.05
-  psi_threshold: 0.20
-  reference_artifact: artifacts/monitoring/reference_features.npz
-  report_directory: reports/monitoring
-
 dvc:
   enabled: true
   pipeline_file: dvc.yaml
@@ -153,3 +138,36 @@ tracking:
   experiment_name: fake-news-detection
   log_source_metadata: true
   log_config: true
+
+phase4:
+  serving_mode: native
+  onnx_model_path: ""
+  calibration_manifest: ""
+  readiness_requires_model: true
+  artifact_manifest: ""
+  confidence_interval_source: ""
+
+serving:
+  host: 0.0.0.0
+  port: 8000
+  model_name: logistic_l2
+  model_artifact: artifacts/models/logistic_l2.joblib
+  onnx_model_path: ""
+  serving_mode: native
+  max_batch_size: 64
+  max_text_characters: 50000
+  include_latency_header: true
+  readiness_requires_model: true
+
+monitoring:
+  ks_alpha: 0.05
+  psi_threshold: 0.20
+  oov_threshold: 0.20
+  length_shift_threshold: 0.20
+  reference_artifact: artifacts/monitoring/reference_features.npz
+  reference_texts: artifacts/monitoring/reference_texts.json
+  baseline_revision: training-reference-v1
+  report_directory: reports/monitoring
+  retraining_hook_enabled: true
+  retraining_cooldown_hours: 24
+  retraining_requires_approval: true

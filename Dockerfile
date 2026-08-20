@@ -1,31 +1,52 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1.7
+
+FROM python:3.11-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:$PATH
 
-WORKDIR /app
-
-RUN apt-get update \
+RUN python -m venv "$VIRTUAL_ENV" \
+    && apt-get update \
     && apt-get install -y --no-install-recommends build-essential gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt pyproject.toml README.md ./
-RUN python -m pip install --upgrade pip \
-    && python -m pip install -r requirements.txt
+WORKDIR /build
+COPY requirements.txt pyproject.toml ./
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
+FROM python:3.11-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:$PATH \
+    API_HOST=0.0.0.0 \
+    API_PORT=8000 \
+    SERVING_MODE=native \
+    MODEL_ARTIFACT=/app/artifacts/models/logistic_l2.joblib
+
+WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
 COPY src ./src
 COPY configs ./configs
-COPY docs ./docs
 COPY scripts ./scripts
-COPY artifacts ./artifacts
+COPY README.md pyproject.toml ./
 
-RUN useradd --create-home --shell /usr/sbin/nologin appuser \
-    && chown -R appuser:appuser /app
+# Runtime artifacts and monitoring baselines should be mounted at deployment time.
+RUN addgroup --system appgroup \
+    && adduser --system --ingroup appgroup --home /nonexistent --no-create-home appuser \
+    && mkdir -p /app/artifacts /app/reports \
+    && chown -R appuser:appgroup /app
+
 USER appuser
-
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
 
-CMD ["uvicorn", "src.serving.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "if [ \"${GUNICORN_ENABLED:-false}\" = \"true\" ]; then exec gunicorn -k uvicorn.workers.UvicornWorker --workers ${WEB_CONCURRENCY:-2} --bind ${API_HOST:-0.0.0.0}:${API_PORT:-8000} src.serving.app:app; else exec uvicorn src.serving.app:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}; fi"]

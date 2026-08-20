@@ -11,6 +11,7 @@ SOURCE_ID_RE = re.compile(r"SRC-\d{3}")
 IGNORED_DIRS = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 TEXT_SUFFIXES = {".md", ".py", ".yaml", ".yml", ".toml", ".txt", ".json", ".ipynb"}
 RESERVED_FIXTURE_URLS = {"https://example.com"}
+LOCAL_OPERATIONAL_URL_RE = re.compile(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(?:/|$)")
 
 
 def iter_text_files(root: Path):
@@ -36,7 +37,8 @@ def audit(root: Path) -> tuple[list[str], list[str]]:
         for url in URL_RE.findall(text):
             normalized = url.rstrip(".,;:")
             if (
-                normalized not in combined_register
+                LOCAL_OPERATIONAL_URL_RE.match(normalized) is None
+                and normalized not in combined_register
                 and normalized not in RESERVED_FIXTURE_URLS
                 and normalized
                 not in {
