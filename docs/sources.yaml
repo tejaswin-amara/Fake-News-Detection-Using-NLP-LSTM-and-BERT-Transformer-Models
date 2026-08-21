@@ -289,3 +289,30 @@ sources:
     version: "2024.11.6"
     license_or_terms: "Follow the package license and retain the pinned release for reproducibility."
     supports: [requirements.txt, src/features/text.py, tests/test_zero_trust.py, docs/security_hardening.md]
+  - id: SRC-039
+    category: observability
+    citation: "Prometheus Python client documentation."
+    url: https://prometheus.github.io/client_python/
+    accessed: "2026-08-21"
+    version: "0.21.0"
+    license_or_terms: "Follow the Prometheus client package license and retain the pinned release."
+    supports: [requirements.txt, src/serving/app.py, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-040
+    category: kubernetes_orchestration
+    citation: "Kubernetes Deployment, Horizontal Pod Autoscaling, and NetworkPolicy documentation."
+    urls:
+      - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+      - https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+      - https://kubernetes.io/docs/concepts/services-networking/network-policies/
+    accessed: "2026-08-21"
+    version: "Kubernetes API target 1.30"
+    license_or_terms: "Kubernetes documentation and API compatibility are versioned by the declared validation target."
+    supports: [k8s/base, .github/workflows/ci.yml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-041
+    category: kubernetes_validation
+    citation: "kubeconform Kubernetes schema validator repository and release documentation."
+    url: https://github.com/yannh/kubeconform
+    accessed: "2026-08-21"
+    version: "v0.6.7"
+    license_or_terms: "Use the pinned validator release and follow its license."
+    supports: [.github/workflows/ci.yml, tests/test_day4_observability.py, docs/deployment.md]

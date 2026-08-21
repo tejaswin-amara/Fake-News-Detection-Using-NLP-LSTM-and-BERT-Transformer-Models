@@ -236,3 +236,35 @@ The Compose deployment requires a URL-safe `REDIS_PASSWORD`. The API uses an aut
 The runtime Docker stage installs `libjemalloc2` and preloads `/usr/lib/x86_64-linux-gnu/libjemalloc.so.2`. This reduces allocator fragmentation risk for repeated sparse operations, but operators must still size memory, batch limits, workers, and ONNX threads from load evidence. The setting is validated statically and by the authoritative container build in CI.
 
 All regex execution in `src/features/text.py` uses the pinned `regex` package with a 50,000-character bound and a 0.050-second timeout. Timeout-safe fallbacks prevent an adversarial article from monopolizing a request worker. The bound complements, rather than replaces, API-level `MAX_TEXT_CHARACTERS` and request-body limits.
+
+## Day 4 cloud-native observability and orchestration
+
+The service exposes Prometheus metrics at `/metrics`. A cluster scraper should use the API Service annotations in `k8s/base/api-deployment.yaml` or an organization-managed ServiceMonitor. The primary series are `fake_news_http_request_latency_seconds`, `fake_news_inference_latency_seconds`, `fake_news_drift_queue_depth`, `fake_news_rate_limiter_rejections_total`, and `fake_news_drift_monitoring_errors_total`. Labels are intentionally bounded and exclude article text, request IDs, job IDs, client addresses, and arbitrary paths.
+
+Startup now performs a deterministic warm-up inference after the model artifact and any ONNX session are loaded. `/health` reports `warmup_complete`; `/ready` returns 503 until warm-up succeeds. Kubernetes therefore uses a startup probe on `/health`, a liveness probe on `/health`, and a readiness probe on `/ready`. The initial startup budget is intentionally generous enough for model loading and the first inference; reducing it can cause restart loops during cold cluster nodes.
+
+The Kubernetes base can be inspected and built with:
+
+```bash
+kubectl kustomize k8s/base
+kubectl apply -k k8s/base
+kubectl -n fake-news get deploy,svc,hpa,networkpolicy,pods
+kubectl -n fake-news port-forward svc/fake-news-api 8000:80
+curl -s http://127.0.0.1:8000/metrics
+```
+
+Before applying the base, an operator must create the external Redis and artifact-verification Secrets and provision the artifact PVC content. The committed manifests intentionally contain no passwords or private keys:
+
+```bash
+kubectl -n fake-news create secret generic fake-news-redis \
+  --from-literal=redis-password="$REDIS_PASSWORD" \
+  --from-literal=redis-url="redis://:${REDIS_PASSWORD}@redis:6379/0"
+kubectl -n fake-news create secret generic fake-news-artifact-verification \
+  --from-literal=public-key-b64="$ARTIFACT_PUBLIC_KEY_B64"
+```
+
+The `fake-news-api` Deployment requests two replicas and limits each pod to 1 CPU and 1Gi memory. `api-hpa.yaml` scales between two and ten replicas at a 75% average CPU target, with a conservative scale-down window. HPA operation requires metrics-server or an equivalent resource metrics API, and the artifact volume must be available to every scheduled API pod.
+
+Redis is exposed only as the in-cluster `redis` Service. `networkpolicy.yaml` allows TCP 6379 ingress only from API pods and restricts Redis egress to cluster DNS. The cluster must use a NetworkPolicy-enforcing CNI; otherwise the policy is only declarative metadata and cannot be treated as an isolation control. MLflow and synthetic traffic are not permitted by the Redis ingress policy.
+
+CI validates every Kubernetes resource with strict kubeconform v0.6.7 against Kubernetes API version 1.30.0. Local static YAML parsing is useful but is not a substitute for the CI schema gate or a cluster-level dry run.

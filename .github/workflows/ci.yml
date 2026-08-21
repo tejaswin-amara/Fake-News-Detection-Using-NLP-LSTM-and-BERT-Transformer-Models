@@ -44,6 +44,20 @@ jobs:
           python scripts/source_audit.py --root .
           git diff --check
 
+      - name: Validate Kubernetes manifests with kubeconform
+        run: |
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/work:ro" \
+            ghcr.io/yannh/kubeconform:v0.6.7 \
+            -strict \
+            -summary \
+            -kubernetes-version 1.30.0 \
+            /work/k8s/base/namespace.yaml \
+            /work/k8s/base/api-deployment.yaml \
+            /work/k8s/base/api-hpa.yaml \
+            /work/k8s/base/redis-deployment.yaml \
+            /work/k8s/base/networkpolicy.yaml
+
       - name: Ruff lint
         run: ruff check src scripts tests
 

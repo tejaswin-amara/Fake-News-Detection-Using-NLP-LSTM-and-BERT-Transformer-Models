@@ -21,10 +21,18 @@ class _Job:
 
 
 class DriftJobManager:
-    def __init__(self, processor: Callable[[dict[str, Any]], dict[str, Any]], maxsize: int = 128, workers: int = 2, ttl_seconds: int = 900) -> None:
+    def __init__(
+        self,
+        processor: Callable[[dict[str, Any]], dict[str, Any]],
+        maxsize: int = 128,
+        workers: int = 2,
+        ttl_seconds: int = 900,
+        on_failure: Callable[[Exception], None] | None = None,
+    ) -> None:
         if maxsize < 1 or workers < 1 or ttl_seconds < 1:
             raise ValueError("Drift job manager settings must be positive")
         self.processor = processor
+        self.on_failure = on_failure
         self.queue: asyncio.Queue[tuple[str, dict[str, Any]]] = asyncio.Queue(maxsize=maxsize)
         self.workers = workers
         self.ttl_seconds = ttl_seconds
@@ -83,5 +91,7 @@ class DriftJobManager:
             except Exception as exc:
                 job.status = "failed"
                 job.error = type(exc).__name__
+                if self.on_failure is not None:
+                    self.on_failure(exc)
             finally:
                 self.queue.task_done()

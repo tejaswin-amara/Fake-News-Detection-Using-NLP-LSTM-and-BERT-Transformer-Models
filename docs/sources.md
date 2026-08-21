@@ -206,3 +206,15 @@ NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nlt
 ### SRC-038 — Python regex timeout-capable regular expressions
 
 [Python `regex` package documentation and release record](https://pypi.org/project/regex/). **Use:** timeout-bounded regular-expression search, substitution, and token/statistics extraction in `src/features/text.py`. **Accessed:** 2026-08-21. **Terms:** package license and release metadata apply; the exact pinned version is recorded in `requirements.txt`. **Files:** `requirements.txt`, `src/features/text.py`, `tests/test_zero_trust.py`, `docs/security_hardening.md`.
+
+### SRC-039 — Prometheus Python client
+
+[Prometheus Python client documentation](https://prometheus.github.io/client_python/). **Use:** Prometheus exposition, counters, gauges, and histograms in `src/serving/app.py`. **Accessed:** 2026-08-21. **Terms:** retain the package license and pinned version recorded in `requirements.txt`. **Files:** `requirements.txt`, `src/serving/app.py`, `tests/test_day4_observability.py`, `docs/deployment.md`.
+
+### SRC-040 — Kubernetes workload, autoscaling, and network policy APIs
+
+[Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [Horizontal Pod Autoscaling](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/), and [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/). **Use:** Kubernetes API manifests, resource/probe contracts, HPA CPU scaling, and Redis ingress isolation under `k8s/base/`. **Accessed:** 2026-08-21. **Terms:** Kubernetes documentation and API compatibility are versioned by the declared manifest validation target. **Files:** `k8s/base/`, `.github/workflows/ci.yml`, `tests/test_day4_observability.py`, `docs/deployment.md`.
+
+### SRC-041 — kubeconform Kubernetes schema validator
+
+[kubeconform repository and release documentation](https://github.com/yannh/kubeconform). **Use:** strict Kubernetes manifest schema validation in GitHub Actions. **Accessed:** 2026-08-21. **Version:** `v0.6.7`. **Terms:** use the pinned validator release and follow its license. **Files:** `.github/workflows/ci.yml`, `tests/test_day4_observability.py`, `docs/deployment.md`.

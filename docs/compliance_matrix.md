@@ -152,3 +152,18 @@ A row is complete only when its code path, documentation path, and executable te
 | EX-19 | Regex denial of service is bounded and fail-safe | `requirements.txt` pins `regex==2024.11.6`; `src/features/text.py` caps input at 50,000 characters and regex execution at 0.050 seconds | Bounded-input, timeout-fallback, cleaning, tokenization, and statistics tests | Complete |
 
 The Day 3 controls extend the Phase 7 matrix and retain the project’s core truthfulness rules: no test-set leakage, no fabricated metrics, no autonomous retraining, no committed runtime secrets, and no claim that static container contracts replace CI image execution.
+
+## Day 4 cloud-native closure matrix
+
+| Day 4 ID | Operational requirement | Implementation evidence | Verification evidence | Status |
+|---|---|---|---|---|
+| EX-20 | Time-series visibility for HTTP latency, inference latency, queue depth, rejections, and drift failures | `src/serving/app.py` Prometheus metrics and `/metrics` endpoint; `requirements.txt` | `tests/test_day4_observability.py` metrics exposition/rejection assertions | Complete |
+| EX-21 | Metrics have bounded cardinality and remain available during overload | Normalized route labels; `/metrics` exempt from request limiter; no user/job/request labels | Metrics endpoint test under rate-limit exhaustion | Complete |
+| EX-22 | ONNX/native cold-start warm-up before readiness | `src/serving/predictor.py:warmup_text_model`; serving lifespan warm-up gate; health/readiness diagnostics | Successful and failed warm-up tests | Complete |
+| EX-23 | Kubernetes API deployment with cloud resource/security/probe parity | `k8s/base/api-deployment.yaml` | Manifest contract tests; kubeconform CI gate | Complete |
+| EX-24 | CPU-based HPA at 75% with bounded replicas | `k8s/base/api-hpa.yaml` | HPA target and bounds assertions; kubeconform CI gate | Complete |
+| EX-25 | Authenticated Redis orchestration with persistent data | `k8s/base/redis-deployment.yaml` references external Secret and requires password | Redis manifest contract; kubeconform CI gate | Complete |
+| EX-26 | Redis ingress restricted to API pods | `k8s/base/networkpolicy.yaml` with API-only TCP 6379 ingress and DNS-only Redis egress | NetworkPolicy selector/port assertions; cluster CNI remains an operational prerequisite | Complete |
+| EX-27 | Kubernetes manifest schema validation is blocking in CI | `.github/workflows/ci.yml` pinned `ghcr.io/yannh/kubeconform:v0.6.7`, strict Kubernetes 1.30 validation | Workflow contract test and CI execution | Complete |
+
+Day 4 extends the Phase 7 zero-trust matrix. It does not claim that a static manifest replaces cluster-specific admission, CNI enforcement, metrics-server availability, secret provisioning, artifact PVC population, or production load testing.

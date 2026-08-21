@@ -128,6 +128,12 @@ class OnnxTextModel:
         return _validate_probability_matrix(np.asarray(probabilities, dtype=np.float64), len(values))
 
 
+def warmup_text_model(model: TextInferenceModel, text: str = "System startup warm-up article.") -> None:
+    """Execute one bounded inference through the production predictor contract."""
+    probabilities = model.predict_proba([text])
+    _validate_probability_matrix(np.asarray(probabilities, dtype=np.float64), expected_rows=1)
+
+
 def _validate_probability_matrix(probabilities: NDArray[Any], expected_rows: int) -> FloatMatrix:
     values = np.asarray(probabilities, dtype=np.float64)
     if values.ndim != 2 or values.shape != (expected_rows, 2):

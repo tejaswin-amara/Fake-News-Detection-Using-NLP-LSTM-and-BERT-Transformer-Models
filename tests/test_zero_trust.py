@@ -62,8 +62,12 @@ class BlockingService(ReadyService):
     def __init__(self) -> None:
         self.started = threading.Event()
         self.release = threading.Event()
+        self.warmup_done = False
 
     def predict(self, requests: list[Any]) -> list[PredictionResponse]:
+        if not self.warmup_done:
+            self.warmup_done = True
+            return super().predict(requests)
         self.started.set()
         if not self.release.wait(timeout=5):
             raise RuntimeError("blocking fixture timed out")

@@ -26,6 +26,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 
@@ -37,12 +38,58 @@ from src.monitoring.drift import (
 )
 from src.monitoring.jobs import DriftJobManager
 from src.serving.export import load_verified_native_artifact
-from src.serving.predictor import OnnxRuntimeConfig, OnnxTextModel, TextInferenceModel
+from src.serving.predictor import (
+    OnnxRuntimeConfig,
+    OnnxTextModel,
+    TextInferenceModel,
+    warmup_text_model,
+)
 from src.serving.rate_limiter import RedisRateLimiter, redis_is_configured
 
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _SAFE_TEXT_MAX = 50_000
 _SAFE_BATCH_MAX = 64
+
+HTTP_REQUEST_LATENCY = Histogram(
+    "fake_news_http_request_latency_seconds",
+    "HTTP request latency for the fake-news detection service.",
+    ("method", "route", "status"),
+)
+INFERENCE_LATENCY = Histogram(
+    "fake_news_inference_latency_seconds",
+    "Inference latency for native and ONNX prediction paths.",
+    ("endpoint", "serving_mode"),
+)
+DRIFT_QUEUE_DEPTH = Gauge(
+    "fake_news_drift_queue_depth",
+    "Current number of queued drift-monitoring jobs.",
+)
+RATE_LIMITER_REJECTIONS = Counter(
+    "fake_news_rate_limiter_rejections",
+    "Rejected requests by bounded admission-control reason.",
+    ("reason",),
+)
+DRIFT_MONITORING_ERRORS = Counter(
+    "fake_news_drift_monitoring_errors",
+    "Drift-monitoring jobs that failed during processing.",
+)
+
+
+def _metrics_route(path: str) -> str:
+    if path.startswith("/monitoring/drift/"):
+        return "/monitoring/drift/{job_id}"
+    return path
+
+
+def _finalize_http_response(request: Request, response: Response, request_id: str) -> Response:
+    response.headers["X-Request-ID"] = request_id
+    started = getattr(request.state, "started", time.perf_counter())
+    elapsed = time.perf_counter() - started
+    response.headers["X-Process-Time-Ms"] = f"{elapsed * 1000:.3f}"
+    HTTP_REQUEST_LATENCY.labels(
+        request.method, _metrics_route(request.url.path), str(response.status_code)
+    ).observe(elapsed)
+    return response
 
 
 def _validate_text_value(value: str, field_name: str, max_length: int) -> str:
@@ -499,6 +546,7 @@ def create_app(
         maxsize=_env_int("DRIFT_QUEUE_MAXSIZE", 128),
         workers=_env_int("DRIFT_WORKERS", 2),
         ttl_seconds=_env_int("DRIFT_JOB_TTL_SECONDS", 900),
+        on_failure=lambda _error: DRIFT_MONITORING_ERRORS.inc(),
     )
     if max_request_bytes < 1:
         raise ValueError("MAX_REQUEST_BYTES must be positive")
@@ -506,10 +554,26 @@ def create_app(
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         application.state.model_service = model_service
+        application.state.warmup_complete = False
+        application.state.warmup_error = None
         await drift_jobs.start()
         load = getattr(model_service, "load", None)
         if callable(load):
             load()
+        try:
+            if not model_service.ready:
+                raise RuntimeError("Model is not ready for warm-up")
+            if isinstance(model_service, ModelService) and model_service.model is not None:
+                warmup_text_model(model_service.model)
+            else:
+                warmup_predictions = model_service.predict([PredictionRequest(text="System startup warm-up article.")])
+                if len(warmup_predictions) != 1:
+                    raise RuntimeError("Warm-up returned an invalid prediction count")
+            application.state.warmup_complete = True
+        except Exception as exc:
+            application.state.warmup_error = type(exc).__name__
+            if getattr(model_service, "error", None) is None:
+                model_service.error = f"Model warm-up failed: {type(exc).__name__}"
         yield
         close = getattr(model_service, "close", None)
         if callable(close):
@@ -549,41 +613,55 @@ def create_app(
             except ValueError:
                 oversized = True
             if oversized:
-                return JSONResponse(
-                    status_code=413,
-                    content={"detail": "Request body exceeds the configured limit", "request_id": request_id},
-                    headers={"X-Request-ID": request_id},
+                return _finalize_http_response(
+                    request,
+                    JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request body exceeds the configured limit", "request_id": request_id},
+                    ),
+                    request_id,
                 )
-        if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready"}:
+        if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready", "/metrics"}:
             allowed, retry_after = await limiter.check_async(_client_key(request, trusted_proxy_ips))
             if not allowed:
-                return JSONResponse(
+                RATE_LIMITER_REJECTIONS.labels(reason="rate_limit").inc()
+                rejected_response = JSONResponse(
                     status_code=429,
                     content={"detail": "Rate limit exceeded", "request_id": request_id},
-                    headers={"Retry-After": str(retry_after), "X-Request-ID": request_id},
+                    headers={"Retry-After": str(retry_after)},
                 )
+                return _finalize_http_response(request, rejected_response, request_id)
         response = await call_next(request)
-        response.headers["X-Request-ID"] = request_id
-        started = getattr(request.state, "started", time.perf_counter())
-        response.headers["X-Process-Time-Ms"] = f"{(time.perf_counter() - started) * 1000:.3f}"
-        return response
+        return _finalize_http_response(request, response, request_id)
 
     @application.middleware("http")
     async def timing_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         request.state.started = time.perf_counter()
         return await call_next(request)
 
+    @application.get("/metrics")
+    def metrics() -> Response:
+        DRIFT_QUEUE_DEPTH.set(float(drift_jobs.queue.qsize()))
+        return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
     @application.get("/health")
     def health() -> dict[str, Any]:
         diagnostics = _service_diagnostics(model_service)
-        diagnostics["status"] = "ready" if model_service.ready else "degraded"
+        warmup_complete = bool(getattr(application.state, "warmup_complete", model_service.ready))
+        diagnostics["warmup_complete"] = warmup_complete
+        diagnostics["warmup_error"] = getattr(application.state, "warmup_error", None)
+        diagnostics["status"] = "ready" if model_service.ready and warmup_complete else "degraded"
         return diagnostics
 
     @application.get("/ready")
     def ready() -> dict[str, Any]:
-        if not model_service.ready:
-            raise HTTPException(status_code=503, detail=_service_diagnostics(model_service))
-        return {"status": "ready", **_service_diagnostics(model_service)}
+        warmup_complete = bool(getattr(application.state, "warmup_complete", model_service.ready))
+        if not model_service.ready or not warmup_complete:
+            diagnostics = _service_diagnostics(model_service)
+            diagnostics["warmup_complete"] = warmup_complete
+            diagnostics["warmup_error"] = getattr(application.state, "warmup_error", None)
+            raise HTTPException(status_code=503, detail=diagnostics)
+        return {"status": "ready", "warmup_complete": True, **_service_diagnostics(model_service)}
 
     @application.post("/monitoring/drift", status_code=202)
     async def monitoring_drift(request: DriftRequest) -> dict[str, Any]:
@@ -591,6 +669,7 @@ def create_app(
         try:
             job_id = await drift_jobs.submit(request.model_dump())
         except OverflowError as exc:
+            RATE_LIMITER_REJECTIONS.labels(reason="drift_queue").inc()
             raise HTTPException(
                 status_code=429,
                 detail="Drift monitoring queue is full; retry later",
@@ -609,11 +688,17 @@ def create_app(
 
     async def bounded_predict(requests: list[PredictionRequest]) -> list[PredictionResponse]:
         if inference_budget.locked():
+            RATE_LIMITER_REJECTIONS.labels(reason="inference_budget").inc()
             raise HTTPException(status_code=429, detail="Inference concurrency budget exhausted")
         await inference_budget.acquire()
+        started = time.perf_counter()
         try:
             return await run_in_threadpool(model_service.predict, requests)
         finally:
+            serving_mode = str(_service_diagnostics(model_service).get("serving_mode", "unknown"))
+            INFERENCE_LATENCY.labels(
+                "batch" if len(requests) > 1 else "single", serving_mode
+            ).observe(time.perf_counter() - started)
             inference_budget.release()
 
     @application.post("/predict", response_model=PredictionResponse)

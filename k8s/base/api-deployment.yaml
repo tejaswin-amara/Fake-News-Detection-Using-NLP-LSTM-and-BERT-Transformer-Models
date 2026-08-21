@@ -1,0 +1,169 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-news-api
+  labels:
+    app: fake-news-api
+    app.kubernetes.io/name: fake-news-detection
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fake-news-api
+  template:
+    metadata:
+      labels:
+        app: fake-news-api
+        app.kubernetes.io/name: fake-news-detection
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8000"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: fake-news-detection:phase5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: API_HOST
+              value: 0.0.0.0
+            - name: API_PORT
+              value: "8000"
+            - name: SERVING_MODE
+              value: native
+            - name: MODEL_ARTIFACT
+              value: /app/artifacts/models/logistic_l2.joblib
+            - name: PACKAGE_MANIFEST
+              value: /app/artifacts/models/package_manifest.json
+            - name: REQUIRE_SIGNED_ARTIFACT
+              value: "true"
+            - name: ARTIFACT_PUBLIC_KEY_B64
+              valueFrom:
+                secretKeyRef:
+                  name: fake-news-artifact-verification
+                  key: public-key-b64
+            - name: DISTRIBUTED_RATE_LIMITER
+              value: redis
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fake-news-redis
+                  key: redis-url
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fake-news-redis
+                  key: redis-password
+            - name: MAX_INFLIGHT_INFERENCE
+              value: "4"
+            - name: DRIFT_QUEUE_MAXSIZE
+              value: "128"
+            - name: DRIFT_WORKERS
+              value: "2"
+            - name: DRIFT_JOB_TTL_SECONDS
+              value: "900"
+            - name: HF_HUB_OFFLINE
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: app-config
+              mountPath: /app/configs/default.yaml
+              subPath: default.yaml
+              readOnly: true
+            - name: model-artifacts
+              mountPath: /app/artifacts
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: app-config
+          configMap:
+            name: fake-news-config
+            items:
+              - key: default.yaml
+                path: default.yaml
+        - name: model-artifacts
+          persistentVolumeClaim:
+            claimName: fake-news-artifacts
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fake-news-artifacts
+  labels:
+    app.kubernetes.io/name: fake-news-detection
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-news-api
+  labels:
+    app: fake-news-api
+    app.kubernetes.io/name: fake-news-detection
+spec:
+  selector:
+    app: fake-news-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP
