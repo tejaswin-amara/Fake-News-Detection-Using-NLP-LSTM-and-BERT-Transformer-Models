@@ -53,7 +53,7 @@ jobs:
             -summary \
             -kubernetes-version 1.30.0 \
             -schema-location default \
-            -schema-location file:///work/k8s/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json \
+            -schema-location /work/k8s/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json \
             /work/k8s/base/namespace.yaml \
             /work/k8s/base/api-deployment.yaml \
             /work/k8s/base/api-hpa.yaml \
