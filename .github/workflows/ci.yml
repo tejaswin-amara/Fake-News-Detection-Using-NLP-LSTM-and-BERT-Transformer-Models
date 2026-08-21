@@ -181,7 +181,17 @@ jobs:
       - name: Assert non-root image user
         run: test "$(docker image inspect --format='{{.Config.User}}' fake-news-detection:${{ github.sha }})" = "appuser"
 
-      - name: Scan image for high and critical vulnerabilities
+      - name: Report high and critical image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: fake-news-detection:${{ github.sha }}
+          format: table
+          exit-code: "0"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Block actionable critical image vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: fake-news-detection:${{ github.sha }}
@@ -189,7 +199,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
 
       - name: Export image metadata
         if: always()

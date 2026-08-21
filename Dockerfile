@@ -14,9 +14,9 @@ RUN python -m venv "$VIRTUAL_ENV" \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
-COPY requirements.txt pyproject.toml ./
+COPY requirements-runtime.txt pyproject.toml ./
 RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+    && pip install -r requirements-runtime.txt
 
 FROM python:3.11-slim@sha256:2e32f7d302adc1c37428355c1e646897c0c53f4fd60b6a551245fb90ee129f91 AS runtime
 
