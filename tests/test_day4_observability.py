@@ -233,7 +233,8 @@ def test_kustomization_and_ci_validate_kubernetes_base() -> None:
     assert "ghcr.io/yannh/kubeconform:v0.6.7" in workflow
     assert "-strict" in workflow
     assert "-kubernetes-version 1.30.0" in workflow
-    assert "-schema-location file:///work/k8s/schemas/{{.ResourceKind}}.json" in workflow
+    assert "-schema-location file:///work/k8s/schemas/{{.ResourceKind}}{{.KindSuffix}}.json" in workflow
+    assert (ROOT / "k8s/schemas/servicemonitor_v1.json").exists()
     assert "/work/k8s/base/api-deployment.yaml" in workflow
     assert "/work/k8s/base/api-hpa.yaml" in workflow
     assert "/work/k8s/base/redis-deployment.yaml" in workflow
