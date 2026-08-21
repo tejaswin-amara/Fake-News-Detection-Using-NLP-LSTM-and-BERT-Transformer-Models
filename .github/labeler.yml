@@ -1,0 +1,66 @@
+# This map is ready for path-based labeling after the labels below are created
+# in the GitHub UI. The repository currently has only GitHub's default labels;
+# the labeler workflow remains disabled until an owner creates these labels and
+# sets ENABLE_PATH_LABELER=true as a repository variable.
+changed-files-labels-limit: 5
+max-files-changed: 100
+
+source:
+  - changed-files:
+      - any-glob-to-any-file: "src/**/*.py"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "tests/**/*.py"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+          - "README.md"
+
+data-dvc:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/data/**"
+          - "configs/**"
+          - "dvc.yaml"
+          - "dvc.lock"
+          - "params.yaml"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "requirements*.txt"
+          - "pyproject.toml"
+          - "Dockerfile"
+
+serving:
+  - changed-files:
+      - any-glob-to-any-file: "src/serving/**"
+
+monitoring:
+  - changed-files:
+      - any-glob-to-any-file: "src/monitoring/**"
+
+container-kubernetes:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "Dockerfile"
+          - "docker-compose.yml"
+          - "k8s/**"
+
+ci-cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - ".devcontainer/**"
+
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "SECURITY.md"
+          - "docs/security_hardening.md"
+          - "src/serving/**"
+          - "k8s/**"

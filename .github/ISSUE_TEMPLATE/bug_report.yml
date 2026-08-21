@@ -1,0 +1,89 @@
+name: Bug report
+description: Report a reproducible defect in the data, model, serving, monitoring, or repository workflow.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for improving the project. Do not include credentials, private URLs, raw article text, personal data, model artifacts, or security exploit details. Use the private vulnerability-reporting path described in SECURITY.md for security issues.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Select the closest implementation boundary.
+      options:
+        - Data ingestion or DVC pipeline
+        - Features or preprocessing
+        - Classical, LSTM, BERT, or unsupervised model code
+        - Evaluation or MLflow reporting
+        - FastAPI serving or ONNX packaging
+        - Monitoring, metrics, or rate limiting
+        - Docker, Kubernetes, or CI/CD
+        - Documentation or governance
+        - Development environment or dependency management
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Observed impact
+      options:
+        - Blocks local development or CI
+        - Produces an incorrect or unstable result
+        - Degrades serving or monitoring behavior
+        - Documentation is inaccurate or incomplete
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Concise summary
+      description: Describe the defect without sharing sensitive content.
+      placeholder: What happened, where, and why is it a problem?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Safe reproduction steps
+      description: Provide the smallest deterministic sequence that reproduces the issue. Use synthetic or redacted inputs only.
+      placeholder: |
+        1. Run ...
+        2. Configure ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+      placeholder: Describe the expected behavior and the actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include repository revision, Python version, operating system, dependency environment, and relevant safe configuration names.
+      placeholder: "Revision: ...\nPython: ...\nOS: ...\nServing mode: ..."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or traceback
+      description: Remove secrets, access tokens, URLs containing credentials, and raw article text before pasting.
+      render: shell
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Safety and conduct acknowledgement
+      options:
+        - label: I removed credentials, personal data, raw article text, and private artifacts from this report.
+          required: true
+        - label: I understand that security vulnerabilities must be reported privately through the GitHub flow in SECURITY.md.
+          required: true
+        - label: I agree to follow the repository Code of Conduct.
+          required: true

@@ -1,0 +1,32 @@
+* text=auto eol=lf
+
+# Source and configuration files must remain portable across developer platforms.
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Keep notebooks visible in repository statistics because they are course evidence.
+*.ipynb text eol=lf linguist-language=Jupyter\ Notebook
+
+# Treat media and supplied reference documents as binary; do not line-normalize them.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.onnx binary
+*.joblib binary
+*.pt binary
+*.pth binary
+*.safetensors binary
+
+# Generated runtime output must not distort source-language statistics if retained locally.
+reports/** linguist-generated=true
+artifacts/** linguist-generated=true
+docs/references/** linguist-generated=true

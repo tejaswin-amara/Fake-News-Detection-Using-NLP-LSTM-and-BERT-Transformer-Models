@@ -1,0 +1,86 @@
+"""Regression tests for Deliverables 4–7 repository controls."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def read(path: str) -> str:
+    """Read a repository text fixture using the project root."""
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_configuration_and_devcontainer_are_safe_and_parseable() -> None:
+    """Keep cloud-development settings pinned, parseable, and secret-free."""
+    for path in (".gitattributes", ".editorconfig", ".github/CODEOWNERS"):
+        assert (ROOT / path).is_file(), f"Missing repository configuration: {path}"
+
+    devcontainer = json.loads(read(".devcontainer/devcontainer.json"))
+    assert "3.11" in devcontainer["image"]
+    assert "requirements.txt" in devcontainer["postCreateCommand"]
+    assert devcontainer["containerEnv"]["PYTHONPATH"] == "${containerWorkspaceFolder}"
+
+    environment = read(".env.example")
+    assert environment.count("PACKAGE_MANIFEST=") == 1
+    assert "replace-with-a-long-random-url-safe-secret" not in environment
+    assert "REPLACE_WITH_A_LONG_RANDOM_URL_SAFE_SECRET" in environment
+
+
+def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> None:
+    """Require public forms and safe-by-default side-effect workflow activation."""
+    bug_form = yaml.safe_load(read(".github/ISSUE_TEMPLATE/bug_report.yml"))
+    feature_form = yaml.safe_load(read(".github/ISSUE_TEMPLATE/feature_request.yml"))
+    assert bug_form["labels"] == ["bug"]
+    assert feature_form["labels"] == ["enhancement"]
+
+    for path in (
+        ".github/dependabot.yml",
+        ".github/labeler.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/release.yml",
+        ".github/workflows/scorecards.yml",
+        ".github/workflows/labeler.yml",
+    ):
+        assert isinstance(yaml.safe_load(read(path)), dict), f"Invalid YAML: {path}"
+
+    ci_workflow = read(".github/workflows/ci.yml")
+    assert "--cov-fail-under=95" in ci_workflow
+    assert "container-build-and-scan" in ci_workflow
+
+    release_workflow = read(".github/workflows/release.yml")
+    assert "workflow_run:" in release_workflow
+    assert "ENABLE_SEMANTIC_RELEASE == 'true'" in release_workflow
+
+    labeler_workflow = read(".github/workflows/labeler.yml")
+    assert "pull_request_target:" in labeler_workflow
+    assert "ENABLE_PATH_LABELER == 'true'" in labeler_workflow
+    assert "actions/checkout" not in labeler_workflow
+
+
+def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
+    """Ensure agents and discovery guidance retain quality and classification limits."""
+    for path in ("CLAUDE.md", ".cursorrules", ".github/copilot-instructions.md"):
+        content = read(path).lower()
+        assert "split-before-fit" in content
+        assert "raw article text" in content
+        assert "source" in content
+
+    blueprint = read("github-seo-growth-strategy.md")
+    description = (
+        "Reproducible fake-news text classification with NLP, BiLSTM, BERT, DVC, MLflow, "
+        "FastAPI, ONNX, monitoring, Kubernetes, and CI/CD quality gates for research use."
+    )
+    assert description in blueprint
+    assert len(description) == 160
+
+    topics_start = blueprint.index("fake-news-detection\n")
+    topics_end = blueprint.index("```", topics_start)
+    topics = blueprint[topics_start:topics_end].strip().splitlines()
+    assert len(topics) == 20
+    assert all(topic == topic.lower() and " " not in topic for topic in topics)
+    assert "not independent fact verification" in blueprint.lower()

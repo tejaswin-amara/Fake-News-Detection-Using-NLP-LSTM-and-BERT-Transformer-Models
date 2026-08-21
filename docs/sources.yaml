@@ -361,3 +361,41 @@ sources:
     accessed: "2026-08-21"
     license_or_terms: "Externally served visual indicators only; repository workflow and configuration are authoritative for behavior."
     supports: [README.md, docs/sources.md]
+  - id: SRC-047
+    category: github_repository_configuration_and_collaboration
+    citation: "GitHub documentation for CODEOWNERS, Issue Forms, Dependabot configuration, development containers, repository topics, and social previews."
+    urls:
+      - https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+      - https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-forms
+      - https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+      - https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/introduction-to-dev-containers
+      - https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics
+      - https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview
+    accessed: "2026-08-21"
+    license_or_terms: "GitHub documentation; repository settings remain owner-controlled."
+    supports: [.github/CODEOWNERS, .github/ISSUE_TEMPLATE, .github/dependabot.yml, .devcontainer/devcontainer.json, github-seo-growth-strategy.md, docs/sources.md]
+  - id: SRC-048
+    category: github_actions_automation_and_supply_chain
+    citation: "GitHub Actions upstream projects, Python Semantic Release GitHub Actions documentation, and OpenSSF Scorecard action documentation."
+    urls:
+      - https://github.com/actions/checkout
+      - https://github.com/actions/upload-artifact
+      - https://github.com/github/codeql-action
+      - https://github.com/actions/labeler
+      - https://python-semantic-release.readthedocs.io/en/latest/configuration/automatic-releases/github-actions.html
+      - https://github.com/ossf/scorecard-action
+    accessed: "2026-08-21"
+    license_or_terms: "Follow each action's current license, release, permission, and pinning guidance. Activation of release/label side effects remains owner-controlled."
+    supports: [.github/workflows/ci.yml, .github/workflows/release.yml, .github/workflows/scorecards.yml, .github/workflows/labeler.yml, .github/labeler.yml, docs/sources.md]
+  - id: SRC-049
+    category: discoverability_directories
+    citation: "Curated fake-news, machine-learning, MLOps, and Python machine-learning discovery directories, plus GitHub topic discovery."
+    urls:
+      - https://github.com/wangbing1416/Awesome-Fake-News-Detection
+      - https://github.com/josephmisiti/awesome-machine-learning
+      - https://github.com/kelvins/awesome-mlops
+      - https://github.com/lukasmasuch/best-of-ml-python
+      - https://github.com/topics/
+    accessed: "2026-08-21"
+    license_or_terms: "Directory maintainers control eligibility and acceptance. Review current contribution requirements before any manual, human-authored submission."
+    supports: [github-seo-growth-strategy.md, docs/sources.md]

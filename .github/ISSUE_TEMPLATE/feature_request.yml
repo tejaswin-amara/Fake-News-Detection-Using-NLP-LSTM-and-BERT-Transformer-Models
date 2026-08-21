@@ -1,0 +1,63 @@
+name: Feature request
+description: Propose a focused, evidence-based improvement to the repository.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project classifies patterns associated with governed labels; it is not an autonomous web-search or fact-verification service. Do not include private data, credentials, or unsupported performance claims.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: Explain the user, maintainer, or reproducibility problem to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest useful change and its intended boundary.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Explain viable alternatives, including keeping the current behavior.
+    validations:
+      required: true
+  - type: checkboxes
+    id: implications
+    attributes:
+      label: Affected contracts
+      options:
+        - label: Data provenance, split discipline, or DVC pipeline
+        - label: Model, evaluation, calibration, or held-out test discipline
+        - label: Serving, ONNX packaging, monitoring, or privacy boundary
+        - label: Container, Kubernetes, CI/CD, or supply-chain boundary
+        - label: Documentation, source register, or course-compliance evidence
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Testable acceptance criteria
+      description: State observable outcomes, tests, documentation updates, and rollback conditions.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources and licensing impact
+      description: List any external dataset, library, paper, API, or URL that the proposal introduces. These must be registered before implementation.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution intent
+      options:
+        - label: I can help implement or test this change.
+        - label: I understand that maintainers may defer or decline proposals that cannot preserve reproducibility, security, or source governance.
+          required: true
