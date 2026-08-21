@@ -182,6 +182,8 @@ serving:
   distributed_rate_limiter: ""
   redis_url: redis://redis:6379/0
   redis_rate_limit_key_prefix: "fake-news:ratelimit:"
+  redis_circuit_failure_threshold: 3
+  redis_circuit_recovery_seconds: 30
   max_inflight_inference: 4
   drift_queue_maxsize: 128
   drift_workers: 2

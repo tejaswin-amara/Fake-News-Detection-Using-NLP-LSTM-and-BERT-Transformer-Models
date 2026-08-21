@@ -26,3 +26,6 @@ reports/*
 mlruns/
 .cache/
 .huggingface/
+
+# Coverage output
+.coverage*

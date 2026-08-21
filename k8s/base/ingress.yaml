@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fake-news-api
+  labels:
+    app.kubernetes.io/name: fake-news-detection
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 1m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - fake-news.example.com
+      secretName: fake-news-api-tls
+  rules:
+    - host: fake-news.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fake-news-api
+                port:
+                  name: http

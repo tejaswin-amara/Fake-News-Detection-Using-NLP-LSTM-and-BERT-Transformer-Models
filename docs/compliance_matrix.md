@@ -167,3 +167,16 @@ The Day 3 controls extend the Phase 7 matrix and retain the project’s core tru
 | EX-27 | Kubernetes manifest schema validation is blocking in CI | `.github/workflows/ci.yml` pinned `ghcr.io/yannh/kubeconform:v0.6.7`, strict Kubernetes 1.30 validation | Workflow contract test and CI execution | Complete |
 
 Day 4 extends the Phase 7 zero-trust matrix. It does not claim that a static manifest replaces cluster-specific admission, CNI enforcement, metrics-server availability, secret provisioning, artifact PVC population, or production load testing.
+
+## Day 5 SRE closure matrix
+
+| Day 5 ID | Operational requirement | Implementation evidence | Verification evidence | Status |
+|---|---|---|---|---|
+| EX-28 | Machine-readable centralized logs with request correlation | `src/config.py` idempotent structlog JSON pipeline; `src/serving/app.py` request-ID binding and lifecycle/drift events | Structured JSON, request-correlation, and idempotence tests | Complete |
+| EX-29 | Redis dependency failure does not take down inference | `src/serving/rate_limiter.py` closed/open/half-open breaker with fail-open `(True, 0)` and CRITICAL transition alert | Mocked connection-failure threshold, open, half-open, and recovery tests | Complete |
+| EX-30 | Kubernetes API and Redis security contexts remain strict | `k8s/base/api-deployment.yaml` and `redis-deployment.yaml` retain non-root, no privilege escalation, read-only root, dropped capabilities, and RuntimeDefault seccomp | Kubernetes manifest contract tests and strict CI schema gate | Complete |
+| EX-31 | TLS ingress routing is explicit and bounded | `k8s/base/ingress.yaml` NGINX class, TLS Secret reference, HTTPS redirect, bounded body size, API-only backend | Ingress backend/TLS/annotation contract tests | Complete |
+| EX-32 | Prometheus Operator scrapes the API metrics endpoint | `k8s/base/service-monitor.yaml` selects API Service, named HTTP port, `/metrics`, bounded interval/timeout | ServiceMonitor contract tests and cluster CRD validation in CI | Complete |
+| EX-33 | Test coverage regression is blocked | `.coveragerc` documented scope and CI `pytest --cov=src --cov-fail-under=95` command | Coverage command and workflow contract tests | Complete |
+
+Day 5 completes the SRE polish layer without treating logs, circuit breakers, Kubernetes declarations, or coverage as substitutes for cluster admission policy, secret management, CNI enforcement, Prometheus Operator installation, or production load testing.

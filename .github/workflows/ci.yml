@@ -52,11 +52,15 @@ jobs:
             -strict \
             -summary \
             -kubernetes-version 1.30.0 \
+            -schema-location default \
+            -schema-location file:///work/k8s/schemas/{{.ResourceKind}}.json \
             /work/k8s/base/namespace.yaml \
             /work/k8s/base/api-deployment.yaml \
             /work/k8s/base/api-hpa.yaml \
             /work/k8s/base/redis-deployment.yaml \
-            /work/k8s/base/networkpolicy.yaml
+            /work/k8s/base/networkpolicy.yaml \
+            /work/k8s/base/ingress.yaml \
+            /work/k8s/base/service-monitor.yaml
 
       - name: Ruff lint
         run: ruff check src scripts tests
@@ -101,8 +105,8 @@ jobs:
           curl --fail --silent http://127.0.0.1:5000/health >/dev/null
           python scripts/init_mlflow.py --tracking-uri "$MLFLOW_TRACKING_URI" --experiment-name "$MLFLOW_EXPERIMENT_NAME"
 
-      - name: Run complete test suite
-        run: python -m pytest -q
+      - name: Run complete test suite with coverage gate
+        run: python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=95
 
       - name: Generate report bundle from finalized MLflow smoke run
         env:

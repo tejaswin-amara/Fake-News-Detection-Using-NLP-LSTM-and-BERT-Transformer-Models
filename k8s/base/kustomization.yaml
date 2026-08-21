@@ -9,6 +9,8 @@ resources:
   - api-hpa.yaml
   - redis-deployment.yaml
   - networkpolicy.yaml
+  - ingress.yaml
+  - service-monitor.yaml
 
 configMapGenerator:
   - name: fake-news-config

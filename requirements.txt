@@ -1,5 +1,5 @@
 # Fake News Detection project dependencies
-# Source register: docs/sources.md (SRC-011 through SRC-041)
+# Source register: docs/sources.md (SRC-011 through SRC-044)
 # Python target: 3.11
 # Install with: python -m pip install -r requirements.txt
 
@@ -84,3 +84,4 @@ cryptography==43.0.3
 redis==5.2.0
 regex==2024.11.6
 prometheus-client==0.21.0
+structlog==24.4.0

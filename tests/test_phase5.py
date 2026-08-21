@@ -22,7 +22,7 @@ def test_ci_workflow_contains_required_phase5_gates():
         "ruff check src scripts tests",
         "dvc stage list",
         "mlflow server",
-        "python -m pytest -q",
+        "python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=95",
         "docker/build-push-action@v6",
         "cache-from: type=gha",
         "scripts/gate_on_severity.py",

@@ -218,3 +218,15 @@ NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nlt
 ### SRC-041 — kubeconform Kubernetes schema validator
 
 [kubeconform repository and release documentation](https://github.com/yannh/kubeconform). **Use:** strict Kubernetes manifest schema validation in GitHub Actions. **Accessed:** 2026-08-21. **Version:** `v0.6.7`. **Terms:** use the pinned validator release and follow its license. **Files:** `.github/workflows/ci.yml`, `tests/test_day4_observability.py`, `docs/deployment.md`.
+
+### SRC-042 — structlog structured logging
+
+[structlog documentation](https://www.structlog.org/en/stable/). **Use:** machine-readable JSON logging, context variables, and standard-library logger integration in `src/config.py` and `src/serving/app.py`. **Accessed:** 2026-08-21. **Version:** `24.4.0`. **Terms:** follow the package license and retain the pinned release. **Files:** `requirements.txt`, `src/config.py`, `src/serving/app.py`, `tests/test_day4_observability.py`, `docs/security_hardening.md`.
+
+### SRC-043 — Kubernetes Ingress API
+
+[Kubernetes Ingress documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/). **Use:** the `networking.k8s.io/v1` NGINX TLS ingress in `k8s/base/ingress.yaml`. **Accessed:** 2026-08-21. **Version:** Kubernetes API target 1.30. **Terms:** deployment requires an NGINX ingress controller, DNS, and an operator-provisioned TLS Secret. **Files:** `k8s/base/ingress.yaml`, `k8s/base/kustomization.yaml`, `tests/test_day4_observability.py`, `docs/deployment.md`.
+
+### SRC-044 — Prometheus Operator ServiceMonitor
+
+[Prometheus Operator API reference for ServiceMonitor](https://prometheus-operator.dev/docs/api-reference/api/). **Use:** the `monitoring.coreos.com/v1` ServiceMonitor scraping `/metrics` in `k8s/base/service-monitor.yaml`. **Accessed:** 2026-08-21. **Version:** Prometheus Operator CRD compatible with the declared cluster. **Terms:** the Prometheus Operator CRD and matching `release` selector must be installed by the cluster operator. **Files:** `k8s/base/service-monitor.yaml`, `k8s/base/kustomization.yaml`, `tests/test_day4_observability.py`, `docs/deployment.md`.

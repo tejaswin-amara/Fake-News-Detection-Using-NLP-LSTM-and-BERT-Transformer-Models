@@ -268,3 +268,21 @@ The `fake-news-api` Deployment requests two replicas and limits each pod to 1 CP
 Redis is exposed only as the in-cluster `redis` Service. `networkpolicy.yaml` allows TCP 6379 ingress only from API pods and restricts Redis egress to cluster DNS. The cluster must use a NetworkPolicy-enforcing CNI; otherwise the policy is only declarative metadata and cannot be treated as an isolation control. MLflow and synthetic traffic are not permitted by the Redis ingress policy.
 
 CI validates every Kubernetes resource with strict kubeconform v0.6.7 against Kubernetes API version 1.30.0. Local static YAML parsing is useful but is not a substitute for the CI schema gate or a cluster-level dry run.
+
+## Day 5 SRE final polish
+
+Set `LOG_LEVEL` as needed for the runtime environment. The service configures structlog and the Uvicorn/FastAPI logger hierarchy to emit one JSON object per log line. Incoming `X-Request-ID` values are sanitized and bounded; absent values receive a generated UUID. The same ID is returned in `X-Request-ID` and appears in request lifecycle, rejection, prediction failure, and drift enqueue events. Centralized logging can therefore join API events across replicas without ingesting article bodies or secrets.
+
+Redis failure handling is controlled by `REDIS_CIRCUIT_FAILURE_THRESHOLD` and `REDIS_CIRCUIT_RECOVERY_SECONDS`, defaulting to three failures and thirty seconds. During an outage, the limiter opens and fails open so inference requests continue; operators should alert on `redis_rate_limiter_circuit_open` CRITICAL events and the associated Prometheus rejection/degradation series. A half-open probe tests recovery, and successful Redis Lua execution closes the breaker. This behavior intentionally trades temporary rate-limit enforcement for availability and must be paired with incident response and upstream gateway controls.
+
+The Kubernetes base includes an NGINX Ingress at `fake-news.example.com`, TLS Secret reference `fake-news-api-tls`, HTTPS redirection, and a 1Mi request-body limit. Provision DNS, the NGINX ingress controller, and the certificate Secret before applying the base. The API Service remains the only ingress backend; Redis is never exposed through the Ingress.
+
+The Prometheus Operator `ServiceMonitor` selects the API Service with `app: fake-news-api`, scrapes the named `http` port at `/metrics` every 15 seconds, and uses a ten-second scrape timeout. The cluster Prometheus instance must select the `release: prometheus` label or an overlay must adjust the selector.
+
+CI blocks pull requests when the exact command below reports less than 95% coverage for the governed source scope:
+
+```bash
+python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=95
+```
+
+The `.coveragerc` exclusions explicitly list the CLI entrypoints (`src/train.py`, `src/evaluate.py`) and non-serving training/data-science adapters (`src/models/lstm.py`, `src/models/bert.py`, `src/features/embeddings.py`, `src/features/preprocessing.py`, `src/data/ingestion.py`, `src/evaluation/metrics.py`, `src/evaluation/plots.py`, `src/evaluation/search.py`, `src/models/classical.py`, `src/models/unsupervised.py`, and `src/tracking.py`). These exclusions keep the Day 5 gate focused on deployable runtime behavior that can execute in standard CPU CI; they must not be expanded to conceal ordinary serving, monitoring, configuration, security, or request-handling branches.

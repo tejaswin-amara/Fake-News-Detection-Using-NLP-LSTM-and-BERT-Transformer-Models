@@ -316,3 +316,27 @@ sources:
     version: "v0.6.7"
     license_or_terms: "Use the pinned validator release and follow its license."
     supports: [.github/workflows/ci.yml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-042
+    category: structured_logging
+    citation: "structlog documentation."
+    url: https://www.structlog.org/en/stable/
+    accessed: "2026-08-21"
+    version: "24.4.0"
+    license_or_terms: "Follow the structlog package license and retain the pinned release."
+    supports: [requirements.txt, src/config.py, src/serving/app.py, tests/test_day4_observability.py, docs/security_hardening.md]
+  - id: SRC-043
+    category: kubernetes_ingress
+    citation: "Kubernetes Ingress documentation."
+    url: https://kubernetes.io/docs/concepts/services-networking/ingress/
+    accessed: "2026-08-21"
+    version: "Kubernetes API target 1.30"
+    license_or_terms: "Deployment requires an NGINX ingress controller, DNS, and an operator-provisioned TLS Secret."
+    supports: [k8s/base/ingress.yaml, k8s/base/kustomization.yaml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-044
+    category: prometheus_operator
+    citation: "Prometheus Operator ServiceMonitor API reference."
+    url: https://prometheus-operator.dev/docs/api-reference/api/
+    accessed: "2026-08-21"
+    version: "Prometheus Operator CRD compatible with the declared cluster"
+    license_or_terms: "The Prometheus Operator CRD and matching release selector must be installed by the cluster operator."
+    supports: [k8s/base/service-monitor.yaml, k8s/base/kustomization.yaml, tests/test_day4_observability.py, docs/deployment.md]

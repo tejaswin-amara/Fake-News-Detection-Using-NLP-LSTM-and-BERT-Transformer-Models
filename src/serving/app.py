@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any, Protocol, cast
 
 import numpy as np
+import structlog
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,6 +31,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, ge
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 
+from src.config import bind_request_id, configure_logging, reset_request_id
 from src.monitoring.drift import (
     build_retraining_signal,
     monitor_features,
@@ -46,7 +48,10 @@ from src.serving.predictor import (
 )
 from src.serving.rate_limiter import RedisRateLimiter, redis_is_configured
 
+logger = structlog.get_logger(__name__)
+
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+_REQUEST_ID_SAFE = re.compile(r"[^A-Za-z0-9._:-]")
 _SAFE_TEXT_MAX = 50_000
 _SAFE_BATCH_MAX = 64
 
@@ -512,6 +517,7 @@ def create_app(
     rate_limiter: RateLimiter | None = None,
 ) -> FastAPI:
     """Create an app with injectable service/limiter dependencies for safe tests."""
+    configure_logging()
     model_service: ServingService = service if service is not None else cast(ServingService, ModelService())
     origins = _cors_origins()
     credentials = _env_bool("CORS_ALLOW_CREDENTIALS", False)
@@ -524,6 +530,8 @@ def create_app(
             _env_int("RATE_LIMIT_REQUESTS", 120),
             _env_float("RATE_LIMIT_WINDOW_SECONDS", 60.0),
             os.getenv("REDIS_RATE_LIMIT_KEY_PREFIX", "fake-news:ratelimit:"),
+            _env_int("REDIS_CIRCUIT_FAILURE_THRESHOLD", 3),
+            _env_float("REDIS_CIRCUIT_RECOVERY_SECONDS", 30.0),
         )
     if limiter is None:
         limiter = RateLimiter(
@@ -605,34 +613,52 @@ def create_app(
 
     @application.middleware("http")
     async def request_security_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))[:128]
-        content_length = request.headers.get("content-length")
-        if content_length is not None:
-            try:
-                oversized = int(content_length) > max_request_bytes
-            except ValueError:
-                oversized = True
-            if oversized:
-                return _finalize_http_response(
-                    request,
-                    JSONResponse(
-                        status_code=413,
-                        content={"detail": "Request body exceeds the configured limit", "request_id": request_id},
-                    ),
-                    request_id,
-                )
-        if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready", "/metrics"}:
-            allowed, retry_after = await limiter.check_async(_client_key(request, trusted_proxy_ips))
-            if not allowed:
-                RATE_LIMITER_REJECTIONS.labels(reason="rate_limit").inc()
-                rejected_response = JSONResponse(
-                    status_code=429,
-                    content={"detail": "Rate limit exceeded", "request_id": request_id},
-                    headers={"Retry-After": str(retry_after)},
-                )
-                return _finalize_http_response(request, rejected_response, request_id)
-        response = await call_next(request)
-        return _finalize_http_response(request, response, request_id)
+        raw_request_id = request.headers.get("x-request-id", "")
+        request_id = _REQUEST_ID_SAFE.sub("", raw_request_id)[:128] or uuid.uuid4().hex
+        request_context = bind_request_id(request_id)
+        logger.info("request_started", method=request.method, route=_metrics_route(request.url.path))
+        try:
+            content_length = request.headers.get("content-length")
+            if content_length is not None:
+                try:
+                    oversized = int(content_length) > max_request_bytes
+                except ValueError:
+                    oversized = True
+                if oversized:
+                    response = _finalize_http_response(
+                        request,
+                        JSONResponse(
+                            status_code=413,
+                            content={"detail": "Request body exceeds the configured limit", "request_id": request_id},
+                        ),
+                        request_id,
+                    )
+                    logger.warning("request_rejected", reason="request_too_large", status_code=413)
+                    return response
+            if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready", "/metrics"}:
+                allowed, retry_after = await limiter.check_async(_client_key(request, trusted_proxy_ips))
+                if not allowed:
+                    RATE_LIMITER_REJECTIONS.labels(reason="rate_limit").inc()
+                    rejected_response = JSONResponse(
+                        status_code=429,
+                        content={"detail": "Rate limit exceeded", "request_id": request_id},
+                        headers={"Retry-After": str(retry_after)},
+                    )
+                    logger.warning("request_rejected", reason="rate_limit", status_code=429)
+                    return _finalize_http_response(request, rejected_response, request_id)
+            response = await call_next(request)
+            finalized = _finalize_http_response(request, response, request_id)
+            logger.info(
+                "request_completed",
+                status_code=response.status_code,
+                latency_ms=round(float(response.headers.get("X-Process-Time-Ms", "0")), 3),
+            )
+            return finalized
+        except Exception:
+            logger.exception("request_failed")
+            raise
+        finally:
+            reset_request_id(request_context)
 
     @application.middleware("http")
     async def timing_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
@@ -670,13 +696,16 @@ def create_app(
             job_id = await drift_jobs.submit(request.model_dump())
         except OverflowError as exc:
             RATE_LIMITER_REJECTIONS.labels(reason="drift_queue").inc()
+            logger.warning("drift_job_rejected", reason="queue_full", status_code=429)
             raise HTTPException(
                 status_code=429,
                 detail="Drift monitoring queue is full; retry later",
                 headers={"Retry-After": "5"},
             ) from exc
         except RuntimeError as exc:
+            logger.error("drift_job_unavailable", status_code=503)
             raise HTTPException(status_code=503, detail="Drift job queue unavailable") from exc
+        logger.info("drift_job_enqueued", job_id=job_id)
         return {"job_id": job_id, "status": "queued"}
 
     @application.get("/monitoring/drift/{job_id}")
@@ -706,6 +735,7 @@ def create_app(
         try:
             return _enrich_prediction((await bounded_predict([request]))[0], request.content())
         except RuntimeError as exc:
+            logger.error("prediction_unavailable", endpoint="single", status_code=503)
             raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:
             raise HTTPException(status_code=422, detail="Prediction request rejected") from exc
@@ -715,6 +745,7 @@ def create_app(
         try:
             predictions = [_enrich_prediction(prediction, request_item.content()) for prediction, request_item in zip(await bounded_predict(request.requests), request.requests, strict=True)]
         except RuntimeError as exc:
+            logger.error("prediction_unavailable", endpoint="batch", status_code=503)
             raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:
             raise HTTPException(status_code=422, detail="Batch prediction request rejected") from exc
