@@ -17,7 +17,7 @@ def test_ci_workflow_contains_required_phase5_gates():
     workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     for required in [
         "pull_request",
-        "actions/setup-python@v5",
+        "actions/setup-python@v",
         "pip install -r requirements.txt",
         "ruff check src scripts tests",
         "dvc stage list",
