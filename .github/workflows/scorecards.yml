@@ -32,7 +32,7 @@ jobs:
           publish_results: true
 
       - name: Upload Scorecard artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: scorecard-results
           path: results.sarif
@@ -40,6 +40,6 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Scorecard SARIF
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
