@@ -350,3 +350,14 @@ sources:
     version: "live feed; release-specific SHA-256 and HTTP metadata are recorded in data/raw/claimreview_current/collection_manifest.json"
     license_or_terms: "The feed compilation is CC BY 4.0. Individual ClaimReview structured-data licenses are recorded as sdLicense when supplied; publisher website terms continue to apply to publisher-hosted content. No full fact-check article text is collected."
     supports: [src/data/claimreview.py, configs/dataset.yaml, dvc.yaml, docs/dataset_card.md, docs/sources.md, README.md]
+  - id: SRC-046
+    category: repository_status_badges
+    citation: "GitHub Actions workflow badge and Shields.io static badges used as visual status markers in the project README."
+    urls:
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml/badge.svg?branch=main
+      - https://img.shields.io/badge/Python-3.11-3776AB
+      - https://img.shields.io/badge/License-MIT-1f6f54
+    accessed: "2026-08-21"
+    license_or_terms: "Externally served visual indicators only; repository workflow and configuration are authoritative for behavior."
+    supports: [README.md, docs/sources.md]

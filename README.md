@@ -1,8 +1,35 @@
 # Fake News Detection Using NLP, BiLSTM, and BERT
 
-A modular, reproducible, production-style fake-news classification system aligned with the **Machine Learning (25SC2107E)** syllabus and its Course Outcomes **CO1–CO6**. The implementation is designed for the ISOT Fake News Dataset and WELFake dataset, with a common ingestion contract, leakage-safe preprocessing, classical baselines, unsupervised structure discovery, optional BiLSTM and BERT fine-tuning, rigorous evaluation and calibration, FastAPI serving, artifact packaging, and drift monitoring.
+[![Continuous integration](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models) [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB)](pyproject.toml) [![License: MIT](https://img.shields.io/badge/License-MIT-1f6f54)](LICENSE)
+
+**Fake News Detection Using NLP, LSTM, and BERT Transformer Models** is a reproducible, production-oriented machine-learning repository for fake-news **classification**, rather than autonomous fact verification. It pairs leakage-safe data ingestion and train/validation/test partitioning with classical, BiLSTM, and BERT modelling paths, evaluation and calibration, FastAPI serving, artifact packaging, monitoring, and CI-controlled deployment assets. The implementation is explicitly mapped to the **Machine Learning (25SC2107E)** syllabus and Course Outcomes **CO1–CO6** in [`docs/compliance_matrix.md`](docs/compliance_matrix.md) [SRC-003].
 
 > **Important limitation:** This project classifies patterns associated with dataset labels. It is not an independent fact-checking system and must not be used as the sole basis for editorial, legal, medical, financial, or public-safety decisions.
+
+## At a glance
+
+| Area | Implemented boundary |
+|---|---|
+| **Language and packaging** | Python 3.11, pinned dependencies, `pyproject.toml`, Ruff, mypy, and pytest configuration |
+| **Data lifecycle** | DVC stages for ClaimReview collection, canonical ingestion, training, and evaluation; raw data and generated artifacts are excluded from Git by default |
+| **Models** | TF-IDF classical baselines, optional GloVe/Word2Vec BiLSTM, optional `bert-base-uncased`, and unsupervised feature discovery |
+| **Evaluation** | Fixed 70/15/15 partitioning, training-only fitting, cross-validation on the training partition, calibration, reports, and parity checks |
+| **Serving** | FastAPI health, readiness, prediction, batch prediction, Prometheus metrics, bounded concurrency, and asynchronous drift jobs |
+| **Operations** | Rootless multi-stage Docker image, Compose, Kubernetes manifests, MLflow, GitHub Actions, and a critical-CVE container gate |
+
+## Quick start
+
+The local development workflow deliberately fails when governed inputs or optional model resources are missing; it does **not** fabricate data, metrics, or model artifacts.
+
+```bash
+git clone https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git
+cd Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models
+python -m pip install -r requirements.txt
+python scripts/source_audit.py --root .
+python -m pytest -q --cov=src --cov-fail-under=95
+```
+
+After configuring a user-owned DVC remote and supplying governed raw data, run the end-to-end lifecycle with `./scripts/run_pipeline.sh`. For local serving after a verified artifact exists, consult [`docs/deployment.md`](docs/deployment.md). The exact DVC, MLflow, Docker Compose, and Kubernetes boundaries are described in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Compliance status
 
