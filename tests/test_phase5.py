@@ -23,7 +23,7 @@ def test_ci_workflow_contains_required_phase5_gates():
         "dvc stage list",
         "mlflow server",
         "python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=95",
-        "docker/build-push-action@v6",
+        "docker/build-push-action@v",
         "cache-from: type=gha",
         "scripts/gate_on_severity.py",
         "aquasecurity/trivy-action",
