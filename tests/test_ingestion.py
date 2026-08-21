@@ -65,3 +65,26 @@ def test_tfidf_requires_fit_before_transform():
     matrix = pipeline.fit_transform(["real article", "fake article"])
     assert matrix.shape[0] == 2
     assert pipeline.transform(["new article"]).shape[1] == matrix.shape[1]
+
+
+def test_normalize_text_strips_publication_dateline_and_byline() -> None:
+    from src.data.ingestion import normalize_text
+
+    assert normalize_text("WASHINGTON (Reuters) - The report was released.") == "The report was released."
+    assert normalize_text("By Jane Doe - The report was released.") == "The report was released."
+
+
+def test_near_duplicate_minhash_groups_are_removed_before_split() -> None:
+    from src.data.ingestion import remove_near_duplicates
+
+    frame = make_frame()
+    frame.loc[1, "content"] = frame.loc[0, "content"] + " additional syndicated sentence"
+    filtered, removed = remove_near_duplicates(frame, threshold=0.5)
+    assert removed >= 1
+    assert len(filtered) < len(frame)
+
+
+def test_tfidf_empty_vocabulary_contains_diagnostics() -> None:
+    pipeline = TfidfTextPipeline(min_df=2)
+    with pytest.raises(ValueError, match=r"fold_size=2.*unique_token_count=0"):
+        pipeline.fit(["!!!", "???"])

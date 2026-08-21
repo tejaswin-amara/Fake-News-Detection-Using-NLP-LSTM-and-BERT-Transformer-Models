@@ -39,14 +39,15 @@ No source URL, pretrained-model reference, framework reference, statistical-meth
 The ingestion stage performs the following controls before any learned transform is fit:
 
 1. Validate required columns and source-specific label values.
-2. Normalize Unicode and whitespace and create a deterministic content hash after removing HTML/URLs/email-address noise for the canonical hash representation.
+2. Normalize Unicode and whitespace, strip standard publication datelines such as `CITY (Reuters) -` and leading bylines, and create a deterministic content hash after removing HTML/URLs/email-address noise.
 3. Reject rows with empty title and body, invalid labels, or unusable identifiers.
 4. Report source and class counts.
 5. Remove exact normalized-content duplicates before splitting.
-6. Preserve raw title/body fields while constructing normalized `content`.
-7. Write a split manifest with seed, proportions, row counts, class counts, source paths, and label mapping.
+6. When `split.near_duplicate_check` is enabled, create token shingles, generate deterministic MinHash signatures, use LSH bands for candidate generation, confirm candidates with Jaccard similarity, and retain only the first row in each near-duplicate group.
+7. Preserve raw title/body fields while constructing normalized `content`.
+8. Write a split manifest with seed, proportions, row counts, class counts, source paths, label mapping, and near-duplicate removal notes.
 
-Near-duplicate or semantic-duplicate detection beyond exact normalized hashes is not claimed unless a corresponding executed report exists. Missing-value handling, encoders, scalers, TF-IDF, clusterers, anomaly detectors, tokenizers, and calibration maps are train-fitted only.
+Missing-value handling, encoders, scalers, TF-IDF, clusterers, anomaly detectors, tokenizers, and calibration maps are train-fitted only. The near-duplicate threshold is configurable and must be recorded with the ingestion run.
 
 ## 7. Split and leakage policy
 
@@ -62,7 +63,7 @@ The random seed is 42 by default and is recorded in the manifest. No vocabulary,
 
 ## 8. Representational limitations and bias
 
-The sources may overrepresent particular publishers, time periods, topics, political contexts, English-language conventions, collection procedures, and label-generation rules. Models can learn publisher or stylistic artifacts instead of factual status. The source distributions may not represent local news, international news, multilingual content, satire, social-media fragments, transcripts, scientific reporting, or future events. Performance can change under temporal, topic, publisher, language, and platform shift.
+The sources may overrepresent particular publishers, time periods, topics, political contexts, English-language conventions, collection procedures, and label-generation rules. In particular, ISOT real articles contain systematic Reuters wire-service formatting and datelines that can be absent from the fake subset. A classifier can therefore learn publication/source artifacts rather than factual status. Dateline/byline normalization and near-duplicate filtering reduce, but do not prove elimination of, this shortcut. Performance must be benchmarked with normalization enabled and disabled, and with a source-conditional or cross-dataset holdout such as training on ISOT and evaluating an appropriate WELFake slice. The source distributions may not represent local news, international news, multilingual content, satire, social-media fragments, transcripts, scientific reporting, or future events. Performance can change under temporal, topic, publisher, language, and platform shift.
 
 Labels should be interpreted as dataset annotations/source construction, not objective truth. Dataset artifacts can encode social and political bias. Users must not infer that a high model score proves deception or that a low score proves reliability.
 

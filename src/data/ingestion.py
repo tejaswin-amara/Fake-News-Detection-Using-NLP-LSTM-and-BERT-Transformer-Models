@@ -53,6 +53,8 @@ def normalize_text(value: object) -> str:
         return ""
     text = unicodedata.normalize("NFKC", str(value))
     text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"^\s*[A-Z][A-Z .'-]{1,48}\s+\((?:Reuters|AP|AFP|Associated Press)\)\s*[-:–—]\s*", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"^\s*(?:By|BY)\s+[A-Z][A-Za-z .'-]{2,80}\s*[-:–—]\s*", " ", text)
     text = re.sub(r"https?://\S+|www\.\S+", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
@@ -174,12 +176,97 @@ def deduplicate(frame: pd.DataFrame) -> pd.DataFrame:
     return frame.drop_duplicates(subset=["content_hash"], keep="first").reset_index(drop=True)
 
 
+def _shingles(text: str, shingle_size: int = 5) -> set[str]:
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    if not tokens:
+        return set()
+    if len(tokens) <= shingle_size:
+        return {" ".join(tokens)}
+    return {" ".join(tokens[index : index + shingle_size]) for index in range(len(tokens) - shingle_size + 1)}
+
+
+def _minhash_signature(shingles: set[str], permutations: int = 64) -> tuple[int, ...]:
+    if permutations < 4:
+        raise ValueError("permutations must be at least four")
+    if not shingles:
+        return (2**64 - 1,) * permutations
+    signature: list[int] = []
+    for permutation in range(permutations):
+        minimum = min(
+            int.from_bytes(
+                hashlib.blake2b(f"{permutation}:{shingle}".encode(), digest_size=8).digest(),
+                "big",
+            )
+            for shingle in shingles
+        )
+        signature.append(minimum)
+    return tuple(signature)
+
+
+def find_near_duplicate_groups(
+    frame: pd.DataFrame,
+    threshold: float = 0.85,
+    shingle_size: int = 5,
+    permutations: int = 64,
+    bands: int = 8,
+) -> list[list[int]]:
+    """Find candidate near-duplicate groups with MinHash LSH and exact Jaccard confirmation."""
+    if not 0.0 < threshold <= 1.0:
+        raise ValueError("threshold must lie in (0, 1]")
+    if bands < 1 or permutations % bands != 0:
+        raise ValueError("bands must evenly divide permutations")
+    shingles = [_shingles(str(content), shingle_size) for content in frame["content"].tolist()]
+    signatures = [_minhash_signature(value, permutations) for value in shingles]
+    rows_per_band = permutations // bands
+    buckets: dict[tuple[int, tuple[int, ...]], list[int]] = {}
+    for row_index, signature in enumerate(signatures):
+        for band in range(bands):
+            start = band * rows_per_band
+            key = (band, signature[start : start + rows_per_band])
+            buckets.setdefault(key, []).append(row_index)
+    parent = list(range(len(frame)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    def union(left: int, right: int) -> None:
+        root_left, root_right = find(left), find(right)
+        if root_left != root_right:
+            parent[root_right] = root_left
+
+    candidates = {tuple(sorted(bucket)) for bucket in buckets.values() if len(bucket) > 1}
+    if len(frame) <= 512:
+        candidates.update((left, right) for left in range(len(frame)) for right in range(left + 1, len(frame)))
+    for candidate in candidates:
+        for position, left in enumerate(candidate):
+            for right in candidate[position + 1 :]:
+                union_size = len(shingles[left] | shingles[right])
+                similarity = 1.0 if union_size == 0 else len(shingles[left] & shingles[right]) / union_size
+                if similarity >= threshold:
+                    union(left, right)
+    groups: dict[int, list[int]] = {}
+    for index in range(len(frame)):
+        groups.setdefault(find(index), []).append(index)
+    return [sorted(group) for group in groups.values() if len(group) > 1]
+
+
+def remove_near_duplicates(frame: pd.DataFrame, **kwargs: object) -> tuple[pd.DataFrame, int]:
+    groups = find_near_duplicate_groups(frame, **kwargs)
+    remove = {index for group in groups for index in group[1:]}
+    return frame.drop(index=sorted(remove)).reset_index(drop=True), len(remove)
+
+
 def split_frame(
     frame: pd.DataFrame,
     seed: int = 42,
     train_size: float = 0.70,
     validation_size: float = 0.15,
     test_size: float = 0.15,
+    near_duplicate_check: bool = True,
+    near_duplicate_threshold: float = 0.85,
 ) -> tuple[dict[str, pd.DataFrame], SplitManifest]:
     """Create a deterministic stratified three-way split.
 
@@ -191,6 +278,10 @@ def split_frame(
         raise ValueError("train_size + validation_size + test_size must equal 1.0")
     validate_frame(frame)
     clean = deduplicate(frame)
+    removed_near_duplicates = 0
+    if near_duplicate_check:
+        clean, removed_near_duplicates = remove_near_duplicates(clean, threshold=near_duplicate_threshold)
+        validate_frame(clean)
     train, remainder = train_test_split(
         clean, test_size=(validation_size + test_size), random_state=seed, stratify=clean["label"]
     )
@@ -224,6 +315,7 @@ def split_frame(
         source_files=[],
         notes=[
             "Exact normalized-content duplicates removed before splitting.",
+            f"Near-duplicate MinHash/LSH filtering removed {removed_near_duplicates} rows before splitting.",
             "No learned feature transform fitted in this function.",
         ],
     )
@@ -257,10 +349,23 @@ def main() -> None:
     parser.add_argument("--path", required=True)
     parser.add_argument("--output", default="data/processed")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--config", default="configs/default.yaml")
     args = parser.parse_args()
     frame = load_dataset(args.dataset, args.path)
     quality = validate_frame(frame)
-    splits, manifest = split_frame(frame, seed=args.seed)
+    import yaml
+
+    config = yaml.safe_load(Path(args.config).read_text(encoding="utf-8")) or {}
+    split_config = config.get("split", {})
+    splits, manifest = split_frame(
+        frame,
+        seed=int(split_config.get("random_seed", args.seed)),
+        train_size=float(split_config.get("train_size", 0.70)),
+        validation_size=float(split_config.get("validation_size", 0.15)),
+        test_size=float(split_config.get("test_size", 0.15)),
+        near_duplicate_check=bool(split_config.get("near_duplicate_check", True)),
+        near_duplicate_threshold=float(split_config.get("near_duplicate_threshold", 0.85)),
+    )
     manifest = SplitManifest(**{**manifest.to_dict(), "source_files": [str(args.path)]})
     save_splits(splits, manifest, args.output)
     print(json.dumps({"quality": quality, "manifest": manifest.to_dict()}, indent=2))

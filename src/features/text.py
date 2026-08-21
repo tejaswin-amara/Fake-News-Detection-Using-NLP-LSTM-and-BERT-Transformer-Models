@@ -221,7 +221,16 @@ class TfidfTextPipeline:
         self.fitted = False
 
     def fit(self, texts: Iterable[str]) -> TfidfTextPipeline:
-        self.vectorizer.fit([clean_text(text) for text in texts])
+        cleaned = [clean_text(text) for text in texts]
+        unique_tokens = {token for text in cleaned for token in tokenize_text(text)}
+        try:
+            self.vectorizer.fit(cleaned)
+        except ValueError as exc:
+            raise ValueError(
+                "TF-IDF fitting failed: empty or pruned vocabulary; "
+                f"fold_size={len(cleaned)}, unique_token_count={len(unique_tokens)}, "
+                f"min_df={self.min_df}, max_df={self.max_df}"
+            ) from exc
         self.fitted = True
         return self
 
@@ -231,8 +240,9 @@ class TfidfTextPipeline:
         return self.vectorizer.transform([clean_text(text) for text in texts])
 
     def fit_transform(self, texts: Iterable[str]):
-        self.fit(texts)
-        return self.transform(texts)
+        materialized = list(texts)
+        self.fit(materialized)
+        return self.transform(materialized)
 
     def get_feature_names(self) -> np.ndarray:
         if not self.fitted:

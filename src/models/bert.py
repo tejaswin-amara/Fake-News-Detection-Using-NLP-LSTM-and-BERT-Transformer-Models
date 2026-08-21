@@ -23,7 +23,7 @@ class BertConfig:
     max_grad_norm: float = 1.0
     max_length: int = 512
     batch_size: int = 8
-    fp16: bool = True
+    fp16: bool | None = None
 
 
 def load_components(config: BertConfig):
@@ -52,12 +52,22 @@ def tokenize_dataset(
     return dataset.map(tokenize, batched=True, remove_columns=["text"])
 
 
+def resolve_fp16(config: BertConfig) -> bool:
+    """Enable mixed precision only when the runtime has a CUDA accelerator."""
+    try:
+        import torch
+    except ImportError:
+        return False
+    return bool(torch.cuda.is_available() and config.fp16 is not False)
+
+
 def build_training_arguments(config: BertConfig, output_dir: str | Path, train_size: int) -> Any:
     try:
         from transformers import TrainingArguments  # type: ignore
     except ImportError as exc:
         raise RuntimeError("Install transformers to use the BERT training path") from exc
     steps_per_epoch = max(1, train_size // config.batch_size)
+    use_fp16 = resolve_fp16(config)
     return TrainingArguments(
         output_dir=str(output_dir),
         num_train_epochs=config.epochs,
@@ -67,12 +77,12 @@ def build_training_arguments(config: BertConfig, output_dir: str | Path, train_s
         per_device_eval_batch_size=config.batch_size,
         weight_decay=0.01,
         optim="adamw_torch",
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         greater_is_better=False,
-        fp16=config.fp16,
+        fp16=use_fp16,
         max_grad_norm=config.max_grad_norm,
         logging_strategy="steps",
         logging_steps=50,
@@ -93,8 +103,9 @@ def train_bert(
     except ImportError as exc:
         raise RuntimeError("Install transformers to use the BERT training path") from exc
     tokenizer, model = load_components(config)
+    use_fp16 = resolve_fp16(config)
     collator = DataCollatorWithPadding(
-        tokenizer=tokenizer, pad_to_multiple_of=8 if config.fp16 else None
+        tokenizer=tokenizer, pad_to_multiple_of=8 if use_fp16 else None
     )
     args = build_training_arguments(config, output_dir, len(train_dataset))
     trainer = Trainer(

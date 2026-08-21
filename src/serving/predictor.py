@@ -46,12 +46,16 @@ class OnnxRuntimeConfig:
 class PackagedTextModel:
     """Serialized preprocessing-plus-estimator boundary for online inference."""
 
-    def __init__(self, text_pipeline: Any, estimator: Any) -> None:
+    def __init__(self, text_pipeline: Any, estimator: Any, feature_transformer: Any | None = None) -> None:
         self.text_pipeline = text_pipeline
         self.estimator = estimator
+        self.feature_transformer = feature_transformer
 
     def _features(self, texts: Sequence[str]) -> Any:
-        return self.text_pipeline.transform(list(texts))
+        features = self.text_pipeline.transform(list(texts))
+        if self.feature_transformer is not None:
+            features = self.feature_transformer.transform(features)
+        return features
 
     def predict_proba(self, texts: Iterable[str]) -> FloatMatrix:
         values = list(texts)

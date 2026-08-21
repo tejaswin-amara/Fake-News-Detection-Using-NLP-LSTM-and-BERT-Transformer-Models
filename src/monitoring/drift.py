@@ -107,6 +107,20 @@ def population_stability_index(reference: Any, current: Any, bins: int = 10, eps
     return max(result, 0.0)
 
 
+def _benjamini_hochberg(p_values: Sequence[float], alpha: float) -> tuple[list[float], list[bool]]:
+    values = np.asarray(p_values, dtype=np.float64)
+    if values.size == 0:
+        return [], []
+    order = np.argsort(values)
+    adjusted = np.ones(values.size, dtype=np.float64)
+    running = 1.0
+    for rank in range(values.size - 1, -1, -1):
+        index = int(order[rank])
+        running = min(running, float(values[index]) * values.size / (rank + 1))
+        adjusted[index] = min(max(running, 0.0), 1.0)
+    return adjusted.tolist(), (adjusted <= alpha).tolist()
+
+
 def monitor_features(
     reference: Mapping[str, Any],
     current: Mapping[str, Any],
@@ -118,22 +132,21 @@ def monitor_features(
     names = sorted(set(reference).intersection(current))
     if not names:
         raise ValueError("No common feature names between reference and current data")
+    raw_reports = {name: ks_drift(reference[name], current[name], alpha=ks_alpha) for name in names}
+    adjusted_p, adjusted_flags = _benjamini_hochberg([float(raw_reports[name]["p_value"]) for name in names], ks_alpha)
     feature_reports: dict[str, Any] = {}
-    for name in names:
-        ks = ks_drift(reference[name], current[name], alpha=ks_alpha)
+    for index, name in enumerate(names):
+        ks = dict(raw_reports[name])
+        ks["raw_drift_detected"] = ks["drift_detected"]
+        ks["adjusted_p_value"] = adjusted_p[index]
+        ks["drift_detected"] = adjusted_flags[index]
         psi = population_stability_index(reference[name], current[name])
-        feature_reports[name] = {
-            "ks": ks,
-            "psi": psi,
-            "psi_drift_detected": bool(psi >= psi_threshold),
-        }
+        feature_reports[name] = {"ks": ks, "psi": psi, "psi_drift_detected": bool(psi >= psi_threshold)}
     return {
         "features": feature_reports,
+        "multiple_testing": {"method": "benjamini_hochberg", "family_size": len(names), "alpha": ks_alpha},
         "thresholds": {"ks_alpha": ks_alpha, "psi": psi_threshold},
-        "drift_detected": any(
-            details["ks"]["drift_detected"] or details["psi_drift_detected"]
-            for details in feature_reports.values()
-        ),
+        "drift_detected": any(details["ks"]["drift_detected"] or details["psi_drift_detected"] for details in feature_reports.values()),
     }
 
 
@@ -209,10 +222,16 @@ def monitor_text_batch(
     }
     reference = _text_features(reference_texts, reference_vocab)
     current = _text_features(current_texts, reference_vocab)
+    names = sorted(reference)
+    raw_reports = {name: ks_drift(reference[name], current[name], alpha=ks_alpha) for name in names}
+    adjusted_p, adjusted_flags = _benjamini_hochberg([float(raw_reports[name]["p_value"]) for name in names], ks_alpha)
     feature_reports: dict[str, Any] = {}
     drifted_features: list[str] = []
-    for name in sorted(reference):
-        ks = ks_drift(reference[name], current[name], alpha=ks_alpha)
+    for index, name in enumerate(names):
+        ks = dict(raw_reports[name])
+        ks["raw_drift_detected"] = ks["drift_detected"]
+        ks["adjusted_p_value"] = adjusted_p[index]
+        ks["drift_detected"] = adjusted_flags[index]
         reference_mean = float(np.mean(reference[name], dtype=np.float64))
         current_mean = float(np.mean(current[name], dtype=np.float64))
         difference = abs(current_mean - reference_mean)
@@ -232,6 +251,7 @@ def monitor_text_batch(
     return {
         "features": feature_reports,
         "drifted_features": drifted_features,
+        "multiple_testing": {"method": "benjamini_hochberg", "family_size": len(names), "alpha": ks_alpha},
         "thresholds": {
             "oov_rate": oov_threshold,
             "length_shift": length_threshold,

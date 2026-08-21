@@ -170,6 +170,7 @@ class PredictionResponse(BaseModel):
     confidence_interval_high: float | None = Field(default=None, ge=0.0, le=1.0)
     calibration_status: str = "not_available"
     serving_mode: str = "native"
+    low_signal: bool = False
 
 
 class BatchPredictionResponse(BaseModel):
@@ -278,7 +279,16 @@ class ModelService:
             self.error = f"Model artifact not found: {self.artifact_path}"
             return
         try:
-            artifact = load_native_artifact(self.artifact_path)
+            expected_sha256 = os.getenv("MODEL_ARTIFACT_SHA256", "")
+            manifest_path = os.getenv("PACKAGE_MANIFEST", "")
+            if not expected_sha256 and manifest_path:
+                manifest_file = Path(manifest_path)
+                if manifest_file.exists():
+                    import json
+
+                    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+                    expected_sha256 = str(manifest.get("native_artifact", {}).get("sha256", ""))
+            artifact = load_native_artifact(self.artifact_path, expected_sha256)
             packaged_model = artifact["model"]
             if not hasattr(packaged_model, "predict_proba"):
                 raise TypeError("Packaged artifact does not expose predict_proba")
@@ -330,6 +340,17 @@ class ModelService:
         if not self.ready or self.model is None:
             raise RuntimeError(self.error or "Model is not ready")
         texts = [request.content() for request in requests]
+        low_signal_flags: list[bool] = []
+        pipeline = getattr(self.model, "text_pipeline", None)
+        if pipeline is not None:
+            transformed = pipeline.transform(texts)
+            if hasattr(transformed, "getnnz"):
+                nonzero = np.asarray(transformed.getnnz(axis=1)).reshape(-1)
+            else:
+                nonzero = np.count_nonzero(np.asarray(transformed), axis=1)
+            low_signal_flags = [int(value) == 0 for value in nonzero.tolist()]
+        else:
+            low_signal_flags = [not bool(re.search(r"[A-Za-z0-9]", text)) for text in texts]
         probabilities = np.asarray(self.model.predict_proba(texts), dtype=np.float64)
         if probabilities.ndim != 2 or probabilities.shape != (len(texts), 2):
             raise RuntimeError("Model returned an invalid probability matrix")
@@ -358,17 +379,20 @@ class ModelService:
                 confidence_interval_high=high,
                 calibration_status=calibration_status,
                 serving_mode=serving_mode,
+                low_signal=low_signal,
             )
-            for label, probability_fake in zip(labels.tolist(), raw.tolist(), strict=True)
+            for label, probability_fake, low_signal in zip(labels.tolist(), raw.tolist(), low_signal_flags, strict=True)
         ]
 
 
-def _enrich_prediction(prediction: PredictionResponse) -> PredictionResponse:
+def _enrich_prediction(prediction: PredictionResponse, text: str | None = None) -> PredictionResponse:
     data = prediction.model_dump()
     raw = data.get("raw_probability_fake")
     calibrated = data.get("calibrated_probability_fake")
     data["raw_probability_fake"] = data["probability_fake"] if raw is None else raw
     data["calibrated_probability_fake"] = data["probability_fake"] if calibrated is None else calibrated
+    if text is not None:
+        data["low_signal"] = bool(data.get("low_signal", False) or not re.search(r"[A-Za-z0-9]", text))
     return PredictionResponse(**data)
 
 
@@ -418,6 +442,10 @@ def create_app(
         _env_int("RATE_LIMIT_MAX_CLIENTS", 10_000),
     )
     trusted_proxy_ips = set(_env_csv("TRUSTED_PROXY_IPS"))
+    web_concurrency = _env_int("WEB_CONCURRENCY", 1)
+    distributed_limiter = os.getenv("DISTRIBUTED_RATE_LIMITER", "").strip()
+    if web_concurrency > 1 and not distributed_limiter:
+        raise ValueError("WEB_CONCURRENCY>1 requires DISTRIBUTED_RATE_LIMITER configuration")
     max_request_bytes = _env_int("MAX_REQUEST_BYTES", 1_000_000)
     if max_request_bytes < 1:
         raise ValueError("MAX_REQUEST_BYTES must be positive")
@@ -526,7 +554,7 @@ def create_app(
     @application.post("/predict", response_model=PredictionResponse)
     def predict(request: PredictionRequest) -> PredictionResponse:
         try:
-            return _enrich_prediction(model_service.predict([request])[0])
+            return _enrich_prediction(model_service.predict([request])[0], request.content())
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:
@@ -535,7 +563,7 @@ def create_app(
     @application.post("/predict/batch", response_model=BatchPredictionResponse)
     def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
         try:
-            predictions = [_enrich_prediction(prediction) for prediction in model_service.predict(request.requests)]
+            predictions = [_enrich_prediction(prediction, request_item.content()) for prediction, request_item in zip(model_service.predict(request.requests), request.requests, strict=True)]
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:

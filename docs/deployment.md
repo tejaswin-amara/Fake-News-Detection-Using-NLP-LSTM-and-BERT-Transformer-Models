@@ -200,3 +200,17 @@ The Compose stack runs each service with a read-only root filesystem, `cap_drop:
 The lifecycle runner validates the DVC cache path before running and retries idempotent `dvc repro` a bounded number of times. MLflow initialization retries transient failures and can use the explicitly configured local fallback. Neither path deletes caches, fabricates data, suppresses provenance failures, nor performs autonomous retraining.
 
 See [`docs/security_hardening.md`](security_hardening.md) for the threat model, request-boundary policy, logging/secrets policy, drift safeguards, CI security gates, and rollback response.
+
+## Scaling, workers, and rate limiting
+
+The default Compose deployment uses one Uvicorn worker and one CPU because the rate limiter is intentionally in-process and the ONNX/native thread budget is one intra-op and one inter-op thread. This is the safe single-instance baseline.
+
+For a larger deployment, choose one scaling dimension deliberately:
+
+| Deployment shape | Guidance | Rate-limit requirement |
+|---|---|---|
+| One container, one Uvicorn worker | Lowest operational complexity and deterministic local limiter behavior | In-process limiter is sufficient for the single instance |
+| One container, multiple Gunicorn/Uvicorn workers | Set `GUNICORN_ENABLED=true` and `WEB_CONCURRENCY` only after configuring `DISTRIBUTED_RATE_LIMITER` | A shared gateway or Redis-backed limiter is required; startup rejects workers greater than one without the declaration |
+| Multiple replicas | Prefer one worker per CPU-bounded replica and scale replicas through the orchestrator | Enforce a shared limiter and trusted proxy policy before the replicas |
+
+Gunicorn workers multiply model memory, preprocessing state, and request concurrency. Replicas multiply that cost again. Do not increase workers while leaving `cpus: 1.0` and ONNX intra/inter-op threads at one without load evidence. Re-run `tests/test_serving_stress.py` or an equivalent production load test after changing vocabulary size, batch size, worker count, or replica count. The stress evidence is written to `reports/serving_stress_memory.json` when the test runs.

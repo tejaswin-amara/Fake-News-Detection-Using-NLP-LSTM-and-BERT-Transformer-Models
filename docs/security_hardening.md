@@ -44,7 +44,7 @@ DVC remains the source of truth for governed ISOT/WELFake inputs. The hardening 
 
 ## CI/CD security gates
 
-Every pull request and `main` push runs Ruff, strict mypy, compilation, configuration/source/DVC validation, Bandit SAST, pip-audit dependency scanning, the full pytest suite, local MLflow smoke operation, a rootless image-user assertion, and Trivy scanning for high/critical OS and library vulnerabilities. Bandit and Trivy are blocking gates. The pinned legacy ML/NLP matrix currently resolves upstream advisories reported by pip-audit, so pip-audit is an evidence-producing non-blocking gate until the compatibility-preserving dependency refresh is completed; its machine-readable report is uploaded on every run. Scan reports are uploaded as CI artifacts. The workflow has read-only repository permissions and does not require application secrets.
+Every pull request and `main` push runs Ruff, strict mypy, compilation, configuration/source/DVC validation, Bandit SAST, pip-audit dependency scanning, the full pytest suite, local MLflow smoke operation, a rootless image-user assertion, and Trivy scanning for high/critical OS and library vulnerabilities. Bandit, the explicit High/Critical pip-audit severity gate, and Trivy are blocking gates. pip-audit JSON versions that omit severity are reported as unrated for manual triage rather than assigned an invented severity; the machine-readable report and gate output are uploaded on every run. Scan reports are uploaded as CI artifacts. The workflow has read-only repository permissions and does not require application secrets.
 
 ## Verification evidence
 

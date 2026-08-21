@@ -21,6 +21,7 @@ split:
   stratify: true
   random_seed: 42
   near_duplicate_check: true
+  near_duplicate_threshold: 0.85
 
 text:
   title_weight: 1.0
@@ -157,10 +158,13 @@ serving:
   port: 8000
   model_name: logistic_l2
   model_artifact: artifacts/models/logistic_l2.joblib
+  model_artifact_sha256: ""
+  package_manifest: artifacts/models/package_manifest.json
   onnx_model_path: ""
   serving_mode: native
   max_batch_size: 64
   max_text_characters: 50000
+  max_request_bytes: 1000000
   include_latency_header: true
   readiness_requires_model: true
   cors_allowed_origins: []
@@ -171,6 +175,8 @@ serving:
   rate_limit_window_seconds: 60
   rate_limit_max_clients: 10000
   trusted_proxy_ips: []
+  web_concurrency: 1
+  distributed_rate_limiter: ""
   reject_unknown_fields: true
   reject_control_characters: true
   onnx_execution_providers: [CPUExecutionProvider]

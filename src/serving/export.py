@@ -38,8 +38,18 @@ def save_native_artifact(model: Any, path: str | Path, metadata: dict[str, Any])
     return output
 
 
-def load_native_artifact(path: str | Path) -> dict[str, Any]:
-    artifact = joblib.load(path)
+def load_native_artifact(path: str | Path, expected_sha256: str | None = None) -> dict[str, Any]:
+    """Verify an optional trusted digest before crossing the joblib boundary."""
+    artifact_path = Path(path)
+    if expected_sha256 is None or not expected_sha256.strip():
+        raise ValueError("A trusted SHA-256 digest is required before native deserialization")
+    expected = expected_sha256.strip().lower()
+    if len(expected) != 64 or any(character not in "0123456789abcdef" for character in expected):
+        raise ValueError("expected_sha256 must be a 64-character hexadecimal digest")
+    actual = sha256_file(artifact_path)
+    if actual != expected:
+        raise ValueError("Native artifact SHA-256 digest mismatch")
+    artifact = joblib.load(artifact_path)
     if not isinstance(artifact, dict) or "model" not in artifact:
         raise ValueError("Native artifact must contain model and metadata keys")
     return artifact

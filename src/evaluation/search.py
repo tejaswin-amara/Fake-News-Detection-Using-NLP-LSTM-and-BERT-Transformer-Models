@@ -44,10 +44,11 @@ def grid_search(
     cv_folds: int = 5,
     scoring: str = "average_precision",
     random_state: int = 42,
+    n_jobs: int | None = None,
 ) -> GridSearchCV:
     search = GridSearchCV(
         estimator, parameter_grid, scoring=scoring, cv=_cv(cv_folds, random_state),
-        n_jobs=None, refit=True, return_train_score=True,
+        n_jobs=n_jobs, refit=True, return_train_score=True,
     )
     search.fit(X, y)
     return search
@@ -62,10 +63,11 @@ def random_search(
     cv_folds: int = 5,
     scoring: str = "average_precision",
     random_state: int = 42,
+    n_jobs: int | None = None,
 ) -> RandomizedSearchCV:
     search = RandomizedSearchCV(
         estimator, parameter_distributions, n_iter=n_iter, scoring=scoring,
-        cv=_cv(cv_folds, random_state), random_state=random_state, n_jobs=None,
+        cv=_cv(cv_folds, random_state), random_state=random_state, n_jobs=n_jobs,
         refit=True, return_train_score=True,
     )
     search.fit(X, y)
@@ -81,6 +83,7 @@ def bayesian_search(
     scoring: str = "average_precision",
     random_state: int = 42,
     cv_folds: int = 5,
+    n_jobs: int | None = None,
 ) -> dict[str, Any]:
     """Optional Optuna/TPE Bayesian search with bounded deterministic trials."""
     try:
@@ -104,7 +107,7 @@ def bayesian_search(
             else:
                 raise ValueError(f"Unknown Bayesian search specification: {spec['type']}")
         candidate = clone(estimator).set_params(**params)
-        return float(cross_val_score(candidate, X, y, cv=cv, scoring=scoring).mean())
+        return float(cross_val_score(candidate, X, y, cv=cv, scoring=scoring, n_jobs=n_jobs).mean())
 
     study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=random_state))
     study.optimize(objective, n_trials=n_trials)

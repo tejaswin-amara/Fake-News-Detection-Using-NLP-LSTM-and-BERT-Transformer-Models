@@ -22,6 +22,8 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: 8000
       MODEL_ARTIFACT: /app/artifacts/models/logistic_l2.joblib
+      MODEL_ARTIFACT_SHA256: ${MODEL_ARTIFACT_SHA256:-}
+      PACKAGE_MANIFEST: /app/artifacts/models/package_manifest.json
       SERVING_MODE: native
       READINESS_REQUIRES_MODEL: "true"
       MAX_BATCH_SIZE: "64"
@@ -34,6 +36,8 @@ services:
       ONNX_EXECUTION_PROVIDERS: ${ONNX_EXECUTION_PROVIDERS:-CPUExecutionProvider}
       ONNX_INTRA_OP_THREADS: ${ONNX_INTRA_OP_THREADS:-1}
       ONNX_INTER_OP_THREADS: ${ONNX_INTER_OP_THREADS:-1}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      DISTRIBUTED_RATE_LIMITER: ${DISTRIBUTED_RATE_LIMITER:-}
     ports:
       - "8000:8000"
     volumes:

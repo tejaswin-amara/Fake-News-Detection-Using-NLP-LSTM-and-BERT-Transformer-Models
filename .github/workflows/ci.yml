@@ -54,8 +54,14 @@ jobs:
         run: bandit -r src scripts -lll -ii -f json -o bandit-report.json
 
       - name: pip-audit dependency vulnerability scan
-        continue-on-error: true
-        run: pip-audit -r requirements.txt --format json --output pip-audit-report.json
+        run: |
+          set -o pipefail
+          audit_status=0
+          pip-audit -r requirements.txt --format json --output pip-audit-report.json || audit_status=$?
+          python scripts/gate_on_severity.py --report pip-audit-report.json --max-severity high
+          if [ "$audit_status" -ne 0 ]; then
+            echo "pip-audit reported advisories; no explicit High/Critical finding passed the severity gate."
+          fi
 
       - name: Compile Python
         run: python -m compileall -q src scripts tests
@@ -137,8 +143,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build rootless multi-stage image
-        run: docker build --tag fake-news-detection:${{ github.sha }} .
+      - name: Build rootless multi-stage image with GitHub Actions cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: fake-news-detection:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Assert non-root image user
         run: test "$(docker image inspect --format='{{.Config.User}}' fake-news-detection:${{ github.sha }})" = "appuser"

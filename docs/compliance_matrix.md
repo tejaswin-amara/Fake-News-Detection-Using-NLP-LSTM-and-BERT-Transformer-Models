@@ -81,3 +81,29 @@ A row is complete only when its code path, documentation path, and executable te
 | Security governance | `docs/security_hardening.md`, source register, deployment/runbook updates | Source audit and documentation tests | Complete |
 
 The hardening controls are engineering safeguards rather than a security certification. The local in-process limiter is explicitly not a distributed rate-limit guarantee, and Docker/vulnerability-scan evidence is authoritative only when the GitHub Actions container job executes.
+
+## Attached audit remediation closure matrix
+
+| Audit ID | Remediation evidence | Verification | Status |
+|---|---|---|---|
+| C-1 | `src/train.py` dispatches classical, unsupervised, BiLSTM, and BERT paths; `dvc.yaml` routes the configured model name and includes all path dependencies | Compile/import checks and model-path contract tests; full deep training requires governed data and pretrained assets | Complete |
+| C-2 | `src/train.py` loads `configs/models.yaml` and `configs/evaluation.yaml`; configured search type, folds, scoring, iterations, and model grids are applied | Phase 5 pipeline contract and search tests | Complete |
+| C-3 | `src/data/ingestion.py` strips publication datelines/bylines and applies deterministic MinHash/LSH plus Jaccard near-duplicate filtering before splitting | Ingestion regression tests; dataset-card artifact-leakage policy | Complete |
+| C-4 | `.github/workflows/ci.yml` runs `pip-audit` through `scripts/gate_on_severity.py` with a blocking explicit High/Critical gate | Workflow YAML contract and gate-unit behavior | Complete |
+| C-5 | `src/serving/export.py` requires a trusted SHA-256 before `joblib.load`; `src/serving/app.py` reads the digest from environment or package manifest | Artifact integrity tests | Complete |
+| H-1 | `src/models/lstm.py` sets Adam `clipnorm=1.0` | Source and compile checks | Complete |
+| H-2 | `src/monitoring/drift.py` applies Benjamini–Hochberg correction to numeric and text KS families | API drift response and correction metadata tests | Complete |
+| H-3 | `src/serving/app.py` rejects `WEB_CONCURRENCY>1` without `DISTRIBUTED_RATE_LIMITER` | Startup assertion test and deployment scaling matrix | Complete |
+| H-4 | CI uses `docker/build-push-action@v6` with `type=gha` cache | Workflow contract; runner executes the authoritative image build | Complete |
+| H-5 | `src/models/bert.py` resolves fp16 from CUDA availability | CPU-safe configuration implementation | Complete |
+| H-6 | `src/models/bert.py` uses `eval_strategy="epoch"` | Source check and BERT configuration path | Complete |
+| M-1 | `TfidfTextPipeline.fit` reports fold size, token count, and pruning settings on empty vocabulary | Diagnostic exception test | Complete |
+| M-2 | `PredictionResponse.low_signal` is set after transform/request signal checks | Punctuation-only API test | Complete |
+| M-3 | `tests/test_serving_stress.py` exercises a 200,000-feature sparse matrix at batch size 64 and writes RSS evidence | `reports/serving_stress_memory.json`; local observed delta approximately 1.1 MB | Complete |
+| M-4 | `compute_scale_pos_weight` uses training labels; XGBoost receives the ratio and LightGBM receives `is_unbalance=True` | Factory and training-path checks | Complete |
+| M-5 | `split.near_duplicate_check` and threshold are read by ingestion and recorded in the split manifest | YAML and ingestion tests | Complete |
+| L-1 | Grid, random, and Bayesian search accept and propagate `n_jobs` | Search signature and configured training path | Complete |
+| L-2 | Dataset, model, mathematical, deployment, and security documents state intended use, limitations, integrity risks, and evidence boundaries | Documentation/source audit | Complete |
+| L-3 | `docs/deployment.md` specifies Uvicorn/Gunicorn worker, replica, CPU, ONNX-thread, and distributed-limiter relationships | Deployment scaling table | Complete |
+
+The matrix distinguishes implementation closure from benchmark availability. No full-data metric is claimed unless the governed ISOT/WELFake lifecycle has actually executed with the required raw data and pretrained assets.

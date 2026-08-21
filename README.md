@@ -64,11 +64,11 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `src/evaluation/metrics.py` | Classification/regression metrics, stratified/nested CV, calibration, McNemar, paired bootstrap, and report schemas | CO5/M5 |
 | `src/evaluation/plots.py` | Confusion, ROC/PR, reliability, calibration comparison, learning, and validation curves | CO5/M5 |
 | `src/evaluation/search.py` | Grid/random/Bayesian search, result schemas, and serialization | CO5/M5 |
-| `src/train.py` and `src/evaluate.py` | Search orchestration, serving-safe packaging, held-out test reporting, calibration, plots, and optional MLflow logging | CO1/M1, CO5/M5, CO6/M6 |
+| `src/train.py` and `src/evaluate.py` | Search orchestration, serving-safe packaging, held-out test reporting, calibration, plots, MLflow logging, and executable `logistic_*`, tree, `xgboost`, `lightgbm`, `unsupervised`, `lstm`, and `bert` dispatch paths | CO1/M1, CO5/M5, CO6/M6 |
 | `src/serving/app.py` | FastAPI `/health`, `/ready`, `/predict`, `/predict/batch`, and `/monitoring/drift` with schema validation and latency headers | CO6/M6 |
 | `src/serving/predictor.py` | Bound preprocessing-plus-model inference contract | CO1/M1, CO6/M6 |
-| `src/serving/export.py` | Native package manifests, checksums, ONNX/TorchScript export, ONNX Runtime parity | CO6/M6 |
-| `src/monitoring/drift.py` | KS/PSI feature and probability drift, text/OOV monitoring, retraining signals | CO6/M6 |
+| `src/serving/export.py` | Native package manifests, checksums, trusted SHA-256 verification before joblib deserialization, ONNX/TorchScript export, ONNX Runtime parity | CO6/M6 |
+| `src/monitoring/drift.py` | KS/PSI feature and probability drift, Benjamini–Hochberg correction, text/OOV monitoring, retraining signals | CO6/M6 |
 | `src/tracking.py` | Optional MLflow experiment and artifact tracking | CO6/M6 |
 | `src/train.py` | Reproducible classical training entry point | CO1/M1, CO2/M2, CO3/M3 |
 | `src/evaluate.py` | Held-out artifact evaluation entry point | CO5/M5 |
@@ -77,7 +77,7 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `docs/security_hardening.md` | Threat model, API validation, CORS/rate limiting, ONNX/runtime, container, tracking, drift, and CI security controls | CO6/M6 |
 | `scripts/source_audit.py` | Source-register and URL consistency audit | All outcomes |
 | `configs/` | `default.yaml`, `models.yaml`, and `evaluation.yaml` for data, models, evaluation, serving, and monitoring | CO1/M1, CO5/M5, CO6/M6 |
-| `tests/` | Unit, integration, leakage, serialization, export, API, adversarial, numerical-stability, and infrastructure-failure tests | CO1–CO6 |
+| `tests/` | Unit, integration, leakage, serialization, export, API, adversarial, numerical-stability, infrastructure-failure, and 200,000-feature RSS stress tests | CO1–CO6 |
 | `docs/sources.md` | Complete source, provenance, license, and source-to-file register | All outcomes |
 | `docs/sources.yaml` | Machine-readable source metadata used by audit tooling | All outcomes |
 | `docs/compliance_matrix.md` | Script/notebook/test/artifact traceability to every CO and module | All outcomes |
@@ -99,7 +99,8 @@ Raw datasets, pretrained weights, and generated model artifacts are excluded fro
 
 ## Reproducibility and leakage prevention
 
-The default split is stratified **70% training, 15% validation, and 15% test** with a recorded seed and split manifest. Stratified five-fold cross-validation is used for training-set model selection. TF-IDF vocabularies, scalers, token vocabularies, dimensionality reducers, clusterers, anomaly detectors, calibration maps, and thresholds must be fitted only on their permitted training data. The final test set is held out from model-selection and calibration decisions.
+The default split is stratified **70% training, 15% validation, and 15% test** with a recorded seed and split manifest. Ingestion strips common Reuters/AP datelines and bylines and, when enabled by `split.near_duplicate_check`, applies deterministic MinHash/LSH candidate detection with Jaccard confirmation before splitting. ISOT artifact leakage remains a documented evaluation risk; benchmark normalization-on/off and source-conditional or cross-dataset holdouts before making substantive claims. Stratified five-fold cross-validation is used for training-set model selection.
+ TF-IDF vocabularies, scalers, token vocabularies, dimensionality reducers, clusterers, anomaly detectors, calibration maps, and thresholds must be fitted only on their permitted training data. The final test set is held out from model-selection and calibration decisions.
 
 Every trained artifact records its configuration, random seed, dataset identity, source checksum where available, software versions, feature schema, model family, and training timestamp. Results are reported only for experiments actually executed; optional models that cannot run because of missing hardware or dependencies are marked as unavailable rather than assigned invented scores.
 

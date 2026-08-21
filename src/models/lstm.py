@@ -64,7 +64,7 @@ def build_bilstm_model(config: LSTMConfig, embedding_matrix: np.ndarray | None =
     outputs = tf.keras.layers.Dense(1, activation="sigmoid", name="fake_probability")(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs, name="glove_bilstm_fake_news")
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=config.learning_rate),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=config.learning_rate, clipnorm=1.0),
         loss="binary_crossentropy",
         metrics=[
             tf.keras.metrics.BinaryAccuracy(name="accuracy"),

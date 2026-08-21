@@ -99,7 +99,17 @@ def build_random_forest(
     )
 
 
-def build_xgboost(random_state: int = 42, **overrides: Any) -> Any:
+def compute_scale_pos_weight(y: Any) -> float:
+    """Compute negative-to-positive ratio from the training labels only."""
+    labels = np.asarray(y, dtype=int).reshape(-1)
+    positives = int(np.sum(labels == 1))
+    negatives = int(np.sum(labels == 0))
+    if positives < 1 or negatives < 1:
+        raise ValueError("Both classes are required to compute scale_pos_weight")
+    return float(negatives / positives)
+
+
+def build_xgboost(random_state: int = 42, scale_pos_weight: float = 1.0, **overrides: Any) -> Any:
     try:
         from xgboost import XGBClassifier  # type: ignore
     except ImportError as exc:
@@ -115,12 +125,13 @@ def build_xgboost(random_state: int = 42, **overrides: Any) -> Any:
         "tree_method": "hist",
         "random_state": random_state,
         "n_jobs": -1,
+        "scale_pos_weight": float(scale_pos_weight),
     }
     params.update(overrides)
     return XGBClassifier(**params)
 
 
-def build_lightgbm(random_state: int = 42, **overrides: Any) -> Any:
+def build_lightgbm(random_state: int = 42, is_unbalance: bool = True, **overrides: Any) -> Any:
     try:
         from lightgbm import LGBMClassifier  # type: ignore
     except ImportError as exc:
@@ -137,6 +148,7 @@ def build_lightgbm(random_state: int = 42, **overrides: Any) -> Any:
         "random_state": random_state,
         "n_jobs": -1,
         "verbosity": -1,
+        "is_unbalance": bool(is_unbalance),
     }
     params.update(overrides)
     return LGBMClassifier(**params)

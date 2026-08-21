@@ -27,24 +27,34 @@ stages:
     cmd: >-
       python -m src.train
       --train data/processed/train.csv
+      --validation data/processed/validation.csv
       --model ${dvc.model_name}
       --output ${dvc.model_artifact}
       --config configs/default.yaml
+      --models-config configs/models.yaml
+      --evaluation-config configs/evaluation.yaml
     deps:
       - src/train.py
       - src/features/text.py
       - src/models/classical.py
+      - src/models/lstm.py
+      - src/models/bert.py
+      - src/models/unsupervised.py
+      - src/features/unsupervised_features.py
       - src/serving/predictor.py
       - src/serving/export.py
       - data/processed/train.csv
+      - data/processed/validation.csv
       - configs/default.yaml
+      - configs/models.yaml
+      - configs/evaluation.yaml
     params:
       - dvc.model_name
       - dvc.model_artifact
       - text.tfidf
       - models.classical
     outs:
-      - artifacts/models/logistic_l2.joblib
+      - ${dvc.model_artifact}
 
   evaluate:
     cmd: >-

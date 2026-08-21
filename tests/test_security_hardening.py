@@ -132,3 +132,44 @@ def test_tracking_fallback_is_used_after_primary_failure(monkeypatch: pytest.Mon
 def test_synthetic_traffic_configuration_is_bounded() -> None:
     config = TrafficConfig("http://api", 0.0, 2, 1.0, 3)
     assert config.max_requests == 3
+
+
+def test_model_artifact_requires_matching_sha256(tmp_path: Path) -> None:
+    import hashlib
+
+    import joblib
+
+    from src.serving.export import load_native_artifact
+
+    artifact_path = tmp_path / "artifact.joblib"
+    joblib.dump({"model": "fixture"}, artifact_path)
+    digest = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+    assert load_native_artifact(artifact_path, digest)["model"] == "fixture"
+    with pytest.raises(ValueError, match="digest mismatch"):
+        load_native_artifact(artifact_path, "0" * 64)
+    with pytest.raises(ValueError, match="required"):
+        load_native_artifact(artifact_path)
+
+
+def test_low_signal_flag_for_punctuation_payload() -> None:
+    client = TestClient(create_app(HardenedFakeService(), RateLimiter(limit=100, window_seconds=60)))
+    response = client.post("/predict", json={"text": "!!! ??? ..."})
+    assert response.status_code == 200
+    assert response.json()["low_signal"] is True
+
+
+def test_benjamini_hochberg_metadata_is_present() -> None:
+    client = TestClient(create_app(HardenedFakeService(), RateLimiter(limit=100, window_seconds=60)))
+    response = client.post(
+        "/monitoring/drift",
+        json={"reference": {"a": [0.0, 0.0, 0.0], "b": [0.0, 0.0, 0.0]}, "current": {"a": [0.0, 0.0, 0.0], "b": [1.0, 1.0, 1.0]}},
+    )
+    assert response.status_code == 200
+    assert response.json()["numeric"]["multiple_testing"]["method"] == "benjamini_hochberg"
+
+
+def test_multi_worker_without_distributed_limiter_is_blocked(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WEB_CONCURRENCY", "2")
+    monkeypatch.delenv("DISTRIBUTED_RATE_LIMITER", raising=False)
+    with pytest.raises(ValueError, match="DISTRIBUTED_RATE_LIMITER"):
+        create_app(HardenedFakeService())
