@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 URL_RE = re.compile(r"https?://[^\s)\]>\"']+")
@@ -14,7 +15,7 @@ RESERVED_FIXTURE_URLS = {"https://example.com"}
 LOCAL_OPERATIONAL_URL_RE = re.compile(r"https?://(?:localhost|127\.0\.0\.1|api)(?::\d+)?(?:/|$)")
 
 
-def iter_text_files(root: Path):
+def iter_text_files(root: Path) -> Iterator[Path]:
     for path in root.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
             continue

@@ -13,10 +13,13 @@ import platform
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import joblib
 import numpy as np
+from numpy.typing import NDArray
+
+FloatMatrix = NDArray[np.float64]
 
 
 def sha256_file(path: str | Path) -> str:
@@ -88,8 +91,8 @@ def build_package_manifest(
 
 def export_onnx_sklearn(model: Any, output_path: str | Path, sample_features: Any) -> Path:
     try:
-        from skl2onnx import convert_sklearn  # type: ignore
-        from skl2onnx.common.data_types import FloatTensorType  # type: ignore
+        from skl2onnx import convert_sklearn
+        from skl2onnx.common.data_types import FloatTensorType
     except ImportError as exc:
         raise RuntimeError("Install skl2onnx to export sklearn models to ONNX") from exc
     features = sample_features.toarray() if hasattr(sample_features, "toarray") else np.asarray(sample_features)
@@ -106,9 +109,9 @@ def export_onnx_sklearn(model: Any, output_path: str | Path, sample_features: An
     return output
 
 
-def onnx_predict_proba(onnx_path: str | Path, features: Any) -> np.ndarray:
+def onnx_predict_proba(onnx_path: str | Path, features: Any) -> FloatMatrix:
     try:
-        import onnxruntime as ort  # type: ignore
+        import onnxruntime as ort
     except ImportError as exc:
         raise RuntimeError("Install onnxruntime to execute ONNX artifacts") from exc
     matrix = features.toarray() if hasattr(features, "toarray") else np.asarray(features)
@@ -123,7 +126,7 @@ def onnx_predict_proba(onnx_path: str | Path, features: Any) -> np.ndarray:
     probabilities = np.asarray(probabilities)
     if probabilities.ndim == 1:
         probabilities = np.column_stack([1.0 - probabilities, probabilities])
-    return probabilities.astype(float)
+    return cast(FloatMatrix, probabilities.astype(np.float64))
 
 
 def onnx_parity_report(
@@ -159,7 +162,7 @@ def assert_onnx_parity(native_probabilities: Any, onnx_probabilities: Any, epsil
 
 def export_torchscript(model: Any, output_path: str | Path, example_inputs: Any) -> Path:
     try:
-        import torch  # type: ignore
+        import torch
     except ImportError as exc:
         raise RuntimeError("Install torch to export TorchScript models") from exc
     model.eval()

@@ -17,6 +17,12 @@ The repository is **100% implemented across CO1–CO6 and Modules M1–M6** agai
 | **CO5 / M5**: evaluation and selection | 70/15/15 split, stratified 5-fold CV, grid/random/Bayesian-search path, metrics, learning/validation curves, calibration, Brier score, McNemar test |
 | **CO6 / M6**: ML engineering | Configuration, versioned artifacts, skew prevention, native/ONNX parity, FastAPI readiness and batch serving, Docker Compose, rootless Docker, GitHub Actions, MLflow, DVC, synthetic traffic, report generation, KS/PSI/text drift, and human-approved retraining signals |
 
+## Deep Audit hardening
+
+The final hardening pass adds strict Pydantic request validation, deny-by-default CORS, bounded rate limiting, sanitized error responses, lifespan-managed model/session loading, explicit ONNX provider/thread controls, finite probability validation, stable KS/PSI drift mathematics, MLflow retry/fallback behavior, DVC cache validation, and rootless read-only Compose controls. The evidence is documented in [`docs/security_hardening.md`](docs/security_hardening.md) and mapped in [`docs/compliance_matrix.md`](docs/compliance_matrix.md).
+
+CI now runs Ruff, strict mypy, Bandit SAST, pip-audit dependency scanning, the complete pytest suite, MLflow smoke operation, the rootless image-user assertion, and Trivy container scanning. The local rate limiter is explicitly a single-instance fallback; multi-replica production deployments require a shared gateway or Redis-backed limiter.
+
 ## Architecture and lifecycle
 
 ```mermaid
@@ -68,9 +74,10 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `src/evaluate.py` | Held-out artifact evaluation entry point | CO5/M5 |
 | `Dockerfile`, `.dockerignore`, `.env.example` | Rootless multi-stage serving image, build exclusions, and runtime configuration | CO6/M6 |
 | `docs/deployment.md` | End-to-end request trace, container operation, monitoring, retraining, and security boundary | CO6/M6 |
+| `docs/security_hardening.md` | Threat model, API validation, CORS/rate limiting, ONNX/runtime, container, tracking, drift, and CI security controls | CO6/M6 |
 | `scripts/source_audit.py` | Source-register and URL consistency audit | All outcomes |
 | `configs/` | `default.yaml`, `models.yaml`, and `evaluation.yaml` for data, models, evaluation, serving, and monitoring | CO1/M1, CO5/M5, CO6/M6 |
-| `tests/` | Unit, integration, leakage, serialization, export, and API tests | CO1–CO6 |
+| `tests/` | Unit, integration, leakage, serialization, export, API, adversarial, numerical-stability, and infrastructure-failure tests | CO1–CO6 |
 | `docs/sources.md` | Complete source, provenance, license, and source-to-file register | All outcomes |
 | `docs/sources.yaml` | Machine-readable source metadata used by audit tooling | All outcomes |
 | `docs/compliance_matrix.md` | Script/notebook/test/artifact traceability to every CO and module | All outcomes |

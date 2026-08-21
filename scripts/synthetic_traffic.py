@@ -7,12 +7,14 @@ import json
 import logging
 import signal
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 LOGGER = logging.getLogger("synthetic_traffic")
 _STOP = False
+__all__ = ["TrafficConfig", "run", "send_prediction", "send_drift", "time"]
 
 
 @dataclass(frozen=True)
@@ -29,7 +31,7 @@ def _stop_handler(_signum: int, _frame: object) -> None:
     _STOP = True
 
 
-def _post_json(base_url: str, path: str, payload: dict[str, object], timeout: float) -> int:
+def _post_json(base_url: str, path: str, payload: Mapping[str, object], timeout: float) -> int:
     body = json.dumps(payload).encode("utf-8")
     request = Request(
         f"{base_url.rstrip('/')}{path}",

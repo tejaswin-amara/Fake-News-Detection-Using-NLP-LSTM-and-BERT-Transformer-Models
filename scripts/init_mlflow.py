@@ -17,11 +17,19 @@ def main() -> None:
     parser.add_argument("--tracking-uri", default="mlruns")
     parser.add_argument("--artifact-location", default=None)
     parser.add_argument("--experiment-name", default="fake-news-detection")
+    parser.add_argument("--retry-attempts", type=int, default=3)
+    parser.add_argument("--retry-backoff-seconds", type=float, default=0.5)
+    parser.add_argument("--local-fallback-uri", default=None)
+    parser.add_argument("--fail-on-remote-error", action="store_true")
     args = parser.parse_args()
     result = initialize_tracking(
         tracking_uri=args.tracking_uri,
         artifact_location=args.artifact_location,
         experiment_name=args.experiment_name,
+        retry_attempts=args.retry_attempts,
+        retry_backoff_seconds=args.retry_backoff_seconds,
+        local_fallback_uri=args.local_fallback_uri,
+        fail_on_remote_error=args.fail_on_remote_error,
     )
     print(json.dumps(result, indent=2))
 

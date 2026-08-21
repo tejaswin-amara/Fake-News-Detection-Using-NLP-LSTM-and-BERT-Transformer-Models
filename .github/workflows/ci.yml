@@ -47,6 +47,16 @@ jobs:
       - name: Ruff lint
         run: ruff check src scripts tests
 
+      - name: Strict static typing
+        run: mypy src scripts tests
+
+      - name: Bandit SAST
+        run: bandit -r src scripts -lll -ii -f json -o bandit-report.json
+
+      - name: pip-audit dependency vulnerability scan
+        continue-on-error: true
+        run: pip-audit -r requirements.txt --format json --output pip-audit-report.json
+
       - name: Compile Python
         run: python -m compileall -q src scripts tests
 
@@ -111,6 +121,8 @@ jobs:
           path: |
             .ci/mlflow/server.log
             reports/
+            bandit-report.json
+            pip-audit-report.json
           if-no-files-found: ignore
 
   container-build-and-scan:
@@ -127,6 +139,9 @@ jobs:
 
       - name: Build rootless multi-stage image
         run: docker build --tag fake-news-detection:${{ github.sha }} .
+
+      - name: Assert non-root image user
+        run: test "$(docker image inspect --format='{{.Config.User}}' fake-news-detection:${{ github.sha }})" = "appuser"
 
       - name: Scan image for high and critical vulnerabilities
         uses: aquasecurity/trivy-action@0.28.0

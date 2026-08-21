@@ -28,7 +28,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     API_HOST=0.0.0.0 \
     API_PORT=8000 \
     SERVING_MODE=native \
-    MODEL_ARTIFACT=/app/artifacts/models/logistic_l2.joblib
+    MODEL_ARTIFACT=/app/artifacts/models/logistic_l2.joblib \
+    HOME=/tmp \
+    TMPDIR=/tmp
 
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
@@ -45,6 +47,7 @@ RUN addgroup --system appgroup \
 
 USER appuser
 EXPOSE 8000
+STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"

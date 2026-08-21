@@ -12,6 +12,12 @@ TRAINING_DATA="${TRAINING_DATA:-data/processed/train.csv}"
 ONNX_PATH="${ONNX_PATH:-artifacts/models/logistic_l2.onnx}"
 PACKAGE_MANIFEST="${PACKAGE_MANIFEST:-artifacts/models/package_manifest.json}"
 REPORT_DIR="${REPORT_DIR:-reports}"
+MLFLOW_RETRY_ATTEMPTS="${MLFLOW_RETRY_ATTEMPTS:-3}"
+MLFLOW_RETRY_BACKOFF_SECONDS="${MLFLOW_RETRY_BACKOFF_SECONDS:-0.5}"
+MLFLOW_LOCAL_FALLBACK_URI="${MLFLOW_LOCAL_FALLBACK_URI:-mlruns}"
+MLFLOW_FAIL_ON_REMOTE_ERROR="${MLFLOW_FAIL_ON_REMOTE_ERROR:-false}"
+DVC_RETRY_ATTEMPTS="${DVC_RETRY_ATTEMPTS:-2}"
+DVC_RETRY_BACKOFF_SECONDS="${DVC_RETRY_BACKOFF_SECONDS:-2}"
 
 log() {
   printf '[run_pipeline] %s\n' "$*"
@@ -21,6 +27,42 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || { printf 'Missing required command: %s\n' "$1" >&2; exit 1; }
 }
 
+retry_command() {
+  local attempts="$1"
+  local delay="$2"
+  shift 2
+  local attempt=1
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    if [ "$attempt" -ge "$attempts" ]; then
+      printf 'Command failed after %s attempts: %s\n' "$attempt" "$*" >&2
+      return 1
+    fi
+    log "Retrying failed command in ${delay}s (attempt $((attempt + 1))/${attempts})"
+    sleep "$delay"
+    attempt=$((attempt + 1))
+  done
+}
+
+validate_dvc_cache() {
+  local cache_dir
+  cache_dir="${DVC_CACHE_DIR:-$(dvc cache dir 2>/dev/null || true)}"
+  if [ -z "$cache_dir" ]; then
+    log "DVC cache directory is not configured; DVC will use its project default"
+    return 0
+  fi
+  if [ -e "$cache_dir" ] && [ ! -d "$cache_dir" ]; then
+    printf 'DVC cache path is not a directory: %s\n' "$cache_dir" >&2
+    return 1
+  fi
+  mkdir -p "$cache_dir"
+  local probe="$cache_dir/.phase6-write-probe"
+  : > "$probe"
+  rm -f "$probe"
+}
+
 log "Validating tools and repository contracts"
 require_command python
 require_command dvc
@@ -28,16 +70,21 @@ python -c 'import yaml; yaml.safe_load(open("configs/default.yaml", encoding="ut
 python scripts/source_audit.py --root .
 dvc stage list >/dev/null
 bash -n scripts/run_pipeline.sh
+validate_dvc_cache
 
 mkdir -p artifacts/models reports/evaluation "$REPORT_DIR" mlruns
 
 log "Initializing local MLflow experiment"
 python scripts/init_mlflow.py \
   --tracking-uri "$TRACKING_URI" \
-  --experiment-name "$EXPERIMENT_NAME"
+  --experiment-name "$EXPERIMENT_NAME" \
+  --retry-attempts "$MLFLOW_RETRY_ATTEMPTS" \
+  --retry-backoff-seconds "$MLFLOW_RETRY_BACKOFF_SECONDS" \
+  --local-fallback-uri "$MLFLOW_LOCAL_FALLBACK_URI" \
+  $(if [ "$MLFLOW_FAIL_ON_REMOTE_ERROR" = "true" ]; then printf '%s' '--fail-on-remote-error'; fi)
 
 log "Running DVC ingestion, training, and held-out evaluation"
-dvc repro
+retry_command "$DVC_RETRY_ATTEMPTS" "$DVC_RETRY_BACKOFF_SECONDS" dvc repro
 
 log "Running MLflow-backed held-out evaluation"
 python -m src.evaluate \

@@ -65,3 +65,19 @@ This matrix is the project’s evidence index for the `25SC2107E` Machine Learni
 ## Completion and truthfulness rule
 
 A row is complete only when its code path, documentation path, and executable test or generated evidence artifact are present. A source citation alone is not implementation evidence, and implementation without a source-to-file mapping is not source-governed. A dynamic metric is reportable only when it comes from an executed artifact; unavailable full-data results remain explicitly unavailable rather than being represented by an unexecuted stand-in or invented benchmark.
+
+## Deep Audit and Hardening completion
+
+| Hardening requirement | Implementation evidence | Verification evidence | Status |
+|---|---|---|---|
+| Strict typing and static quality | `pyproject.toml` mypy configuration; typed serving, predictor, drift, tracking, and automation boundaries | Mypy CI gate, Ruff, compilation | Complete |
+| Strict API payload validation | `src/serving/app.py` strict Pydantic models, control-character rejection, finite-value and pair validation | `tests/test_security_hardening.py` adversarial payload tests | Complete |
+| CORS and rate limiting | `src/serving/app.py` deny-by-default CORS and bounded thread-safe `RateLimiter` | CORS, wildcard-credentials, retry-after, eviction tests | Complete |
+| ONNX execution hardening | `src/serving/predictor.py` provider/thread/session configuration and finite matrix checks | ONNX parity and invalid-configuration tests | Complete |
+| Drift numerical stability | `src/monitoring/drift.py` finite filtering, constant-distribution handling, safe PSI, bounded text monitoring | Equal/different constants, non-finite rejection, JSON-safe output tests | Complete |
+| MLflow/DVC resilience | `src/tracking.py`, `scripts/init_mlflow.py`, `scripts/run_pipeline.sh` retry/fallback/cache validation | Mocked MLflow fallback and shell/DVC contract tests | Complete |
+| Rootless/read-only runtime | `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Compose security assertions, CI non-root image assertion, Trivy | Complete |
+| SAST and dependency security | `.github/workflows/ci.yml` Bandit and pip-audit gates | CI reports and failure-on-findings policy | Complete |
+| Security governance | `docs/security_hardening.md`, source register, deployment/runbook updates | Source audit and documentation tests | Complete |
+
+The hardening controls are engineering safeguards rather than a security certification. The local in-process limiter is explicitly not a distributed rate-limit guarantee, and Docker/vulnerability-scan evidence is authoritative only when the GitHub Actions container job executes.

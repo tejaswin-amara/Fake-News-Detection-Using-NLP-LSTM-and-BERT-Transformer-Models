@@ -138,6 +138,11 @@ tracking:
   experiment_name: fake-news-detection
   log_source_metadata: true
   log_config: true
+  retry_attempts: 3
+  retry_backoff_seconds: 0.5
+  local_fallback_uri: mlruns
+  fail_on_remote_error: false
+
 
 phase4:
   serving_mode: native
@@ -158,6 +163,22 @@ serving:
   max_text_characters: 50000
   include_latency_header: true
   readiness_requires_model: true
+  cors_allowed_origins: []
+  cors_allow_credentials: false
+  cors_allowed_methods: [GET, POST, OPTIONS]
+  cors_allowed_headers: [Content-Type, X-Request-ID]
+  rate_limit_requests: 120
+  rate_limit_window_seconds: 60
+  rate_limit_max_clients: 10000
+  trusted_proxy_ips: []
+  reject_unknown_fields: true
+  reject_control_characters: true
+  onnx_execution_providers: [CPUExecutionProvider]
+  onnx_intra_op_threads: 1
+  onnx_inter_op_threads: 1
+  onnx_graph_optimization: ORT_ENABLE_ALL
+  onnx_cpu_mem_arena: true
+  readonly_runtime: true
 
 monitoring:
   ks_alpha: 0.05
@@ -171,3 +192,5 @@ monitoring:
   retraining_hook_enabled: true
   retraining_cooldown_hours: 24
   retraining_requires_approval: true
+  max_monitoring_values: 10000
+  reject_non_finite_values: true

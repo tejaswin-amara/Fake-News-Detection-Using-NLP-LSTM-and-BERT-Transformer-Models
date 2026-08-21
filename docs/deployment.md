@@ -178,3 +178,25 @@ python scripts/generate_reports.py \
 ## Phase 5 acceptance evidence
 
 The repository acceptance gate includes YAML parsing for workflow/Compose/configuration, DVC stage parsing, source-register audit, shell syntax, Ruff, compilation, the complete test suite, dependency resolution, MLflow report selection/download checks, ONNX parity checks, API/drift checks, and CI Docker build/scan. A local Docker build is environment-dependent; the authoritative image build and vulnerability scan run in GitHub Actions.
+
+## Deep Audit hardening controls
+
+The final serving boundary is deny-by-default. Set `CORS_ALLOWED_ORIGINS` to an explicit comma-separated allowlist in production; do not combine `*` with credentials. `RATE_LIMIT_REQUESTS`, `RATE_LIMIT_WINDOW_SECONDS`, `RATE_LIMIT_MAX_CLIENTS`, and `TRUSTED_PROXY_IPS` control the bounded in-process limiter. `/health` and `/ready` remain available to orchestration even when prediction traffic is rate-limited.
+
+```bash
+export CORS_ALLOWED_ORIGINS=https://example.com
+export CORS_ALLOW_CREDENTIALS=false
+export RATE_LIMIT_REQUESTS=120
+export RATE_LIMIT_WINDOW_SECONDS=60
+export TRUSTED_PROXY_IPS=10.0.0.10
+```
+
+The local limiter is intentionally not described as a distributed protection mechanism. Multi-replica deployments must enforce a shared gateway or Redis-backed limiter before the API replicas. Forwarded client addresses are accepted only from configured trusted proxy peers.
+
+`SERVING_MODE=onnx` requires `ONNX_MODEL_PATH`, an existing packaged artifact, and an allowed provider list. `ONNX_EXECUTION_PROVIDERS`, `ONNX_INTRA_OP_THREADS`, `ONNX_INTER_OP_THREADS`, `ONNX_GRAPH_OPTIMIZATION`, and `ONNX_CPU_MEM_ARENA` are validated at startup. Native mode remains the safe fallback when ONNX is unavailable; a parity failure is fatal to ONNX packaging and never becomes an unverified ONNX deployment.
+
+The Compose stack runs each service with a read-only root filesystem, `cap_drop: ALL`, `no-new-privileges`, a dedicated init process, bounded memory/CPU, and a restricted `/tmp` tmpfs. Only the MLflow named volume is writable. The API’s artifacts and configuration are mounted read-only. The runtime image executes as `appuser`.
+
+The lifecycle runner validates the DVC cache path before running and retries idempotent `dvc repro` a bounded number of times. MLflow initialization retries transient failures and can use the explicitly configured local fallback. Neither path deletes caches, fabricates data, suppresses provenance failures, nor performs autonomous retraining.
+
+See [`docs/security_hardening.md`](security_hardening.md) for the threat model, request-boundary policy, logging/secrets policy, drift safeguards, CI security gates, and rollback response.

@@ -1,4 +1,4 @@
-"""FastAPI serving boundary for packaged fake-news models.
+"""Hardened FastAPI serving boundary for packaged fake-news models.
 
 Compliant with M1/CO1 and M6/CO6. References SRC-008, SRC-009, SRC-030,
 SRC-031, and SRC-034. Native packaged preprocessing is authoritative unless an
@@ -7,14 +7,25 @@ explicitly parity-verified ONNX serving adapter is configured.
 
 from __future__ import annotations
 
+import math
 import os
 import platform
+import re
+import threading
 import time
+import uuid
+from collections import deque
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, cast
 
+import numpy as np
 from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel, Field
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from src.monitoring.drift import (
     build_retraining_signal,
@@ -23,11 +34,40 @@ from src.monitoring.drift import (
     monitor_text_batch,
 )
 from src.serving.export import load_native_artifact
+from src.serving.predictor import OnnxRuntimeConfig, OnnxTextModel, TextInferenceModel
+
+_CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+_SAFE_TEXT_MAX = 50_000
+_SAFE_BATCH_MAX = 64
+
+
+def _validate_text_value(value: str, field_name: str, max_length: int) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be a string")
+    if len(value) > max_length:
+        raise ValueError(f"{field_name} exceeds the maximum length")
+    if _CONTROL_CHARACTERS.search(value):
+        raise ValueError(f"{field_name} contains disallowed control characters")
+    return value
 
 
 class PredictionRequest(BaseModel):
+    """Strict single-article request with no unknown JSON fields."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     title: str = Field(default="", max_length=20_000)
-    text: str = Field(..., min_length=1, max_length=50_000)
+    text: str = Field(..., min_length=1, max_length=_SAFE_TEXT_MAX)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        return _validate_text_value(value, "title", 20_000)
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, value: str) -> str:
+        return _validate_text_value(value, "text", _SAFE_TEXT_MAX)
 
     def content(self) -> str:
         content = f"{self.title.strip()}\n{self.text.strip()}".strip()
@@ -37,10 +77,17 @@ class PredictionRequest(BaseModel):
 
 
 class BatchPredictionRequest(BaseModel):
-    requests: list[PredictionRequest] = Field(..., min_length=1, max_length=64)
+    """Strict bounded batch request."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    requests: list[PredictionRequest] = Field(..., min_length=1, max_length=_SAFE_BATCH_MAX)
 
 
 class DriftRequest(BaseModel):
+    """Strict drift request accepting exactly one complete reference/current pair."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     reference: dict[str, list[float]] | None = Field(default=None, min_length=1)
     current: dict[str, list[float]] | None = Field(default=None, min_length=1)
     reference_texts: list[str] | None = Field(default=None, max_length=10_000)
@@ -54,8 +101,63 @@ class DriftRequest(BaseModel):
     oov_threshold: float = Field(default=0.20, ge=0.0, le=1.0)
     length_threshold: float = Field(default=0.20, ge=0.0)
 
+    @field_validator("baseline_revision", "window_id")
+    @classmethod
+    def validate_identifiers(cls, value: str) -> str:
+        return _validate_text_value(value, "identifier", 200)
+
+    @field_validator("reference", "current")
+    @classmethod
+    def validate_numeric_mapping(cls, value: dict[str, list[float]] | None) -> dict[str, list[float]] | None:
+        if value is None:
+            return None
+        for name, values in value.items():
+            _validate_text_value(name, "feature name", 200)
+            if not 2 <= len(values) <= 10_000:
+                raise ValueError("numeric drift arrays must contain between 2 and 10000 values")
+            if not all(math.isfinite(number) for number in values):
+                raise ValueError("numeric drift arrays must contain only finite values")
+        return value
+
+    @field_validator("reference_probabilities", "current_probabilities")
+    @classmethod
+    def validate_probabilities(cls, value: list[float] | None) -> list[float] | None:
+        if value is None:
+            return None
+        if not 2 <= len(value) <= 10_000:
+            raise ValueError("probability arrays must contain between 2 and 10000 values")
+        if not all(math.isfinite(number) and 0.0 <= number <= 1.0 for number in value):
+            raise ValueError("probabilities must be finite and lie in [0, 1]")
+        return value
+
+    @field_validator("reference_texts", "current_texts")
+    @classmethod
+    def validate_text_arrays(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        if len(value) < 2:
+            raise ValueError("text drift requires at least two texts")
+        for text in value:
+            _validate_text_value(text, "monitored text", _SAFE_TEXT_MAX)
+        return value
+
+    @model_validator(mode="after")
+    def validate_complete_pair(self) -> DriftRequest:
+        groups = (
+            (self.reference, self.current),
+            (self.reference_texts, self.current_texts),
+            (self.reference_probabilities, self.current_probabilities),
+        )
+        if not any(left is not None and right is not None for left, right in groups):
+            raise ValueError("Provide one complete numeric, probability, or text reference/current pair")
+        if any((left is None) != (right is None) for left, right in groups):
+            raise ValueError("Each drift reference/current pair must be provided together")
+        return self
+
 
 class PredictionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     label: int = Field(..., ge=0, le=1)
     label_name: str
     probability_real: float = Field(..., ge=0.0, le=1.0)
@@ -71,22 +173,105 @@ class PredictionResponse(BaseModel):
 
 
 class BatchPredictionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     predictions: list[PredictionResponse]
     count: int
     model_name: str
     artifact_version: str
 
 
+class ServingService(Protocol):
+    """Structural service contract used by the FastAPI factory and tests."""
+
+    ready: bool
+    error: str | None
+
+    def predict(self, requests: list[PredictionRequest]) -> list[PredictionResponse]:
+        """Predict for an already validated bounded request list."""
+
+
+class RateLimiter:
+    """Thread-safe bounded fixed-window limiter for a single service instance."""
+
+    def __init__(self, limit: int = 120, window_seconds: float = 60.0, max_clients: int = 10_000) -> None:
+        if limit < 1 or window_seconds <= 0.0 or max_clients < 1:
+            raise ValueError("rate limiter settings must be positive")
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self.max_clients = max_clients
+        self._events: dict[str, deque[float]] = {}
+        self._lock = threading.Lock()
+
+    def check(self, client_key: str, now: float | None = None) -> tuple[bool, int]:
+        current = time.monotonic() if now is None else now
+        with self._lock:
+            events = self._events.setdefault(client_key, deque())
+            cutoff = current - self.window_seconds
+            while events and events[0] <= cutoff:
+                events.popleft()
+            if len(self._events) > self.max_clients:
+                oldest_key = min(self._events, key=lambda key: self._events[key][-1] if self._events[key] else current)
+                if oldest_key != client_key:
+                    self._events.pop(oldest_key, None)
+            if len(events) >= self.limit:
+                retry_after = max(1, int(math.ceil(events[0] + self.window_seconds - current)))
+                return False, retry_after
+            events.append(current)
+            return True, 0
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    return default if value is None else value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    return default if value is None else int(value)
+
+
+def _env_float(name: str, default: float) -> float:
+    value = os.getenv(name)
+    return default if value is None else float(value)
+
+
+def _env_csv(name: str, default: tuple[str, ...] = ()) -> tuple[str, ...]:
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
 class ModelService:
+    """Load the packaged model/session once and reuse it for every request."""
+
     def __init__(self, artifact_path: str | Path | None = None) -> None:
-        self.artifact_path = Path(artifact_path or os.getenv("MODEL_ARTIFACT", "artifacts/models/logistic_l2.joblib"))
-        self.onnx_path = Path(os.getenv("ONNX_MODEL_PATH", "")) if os.getenv("ONNX_MODEL_PATH") else None
-        self.serving_mode = os.getenv("SERVING_MODE", "native")
-        self.model: Any | None = None
+        raw_artifact: str | Path = artifact_path if artifact_path is not None else os.getenv("MODEL_ARTIFACT", "artifacts/models/logistic_l2.joblib")
+        self.artifact_path = Path(raw_artifact)
+        raw_onnx = os.getenv("ONNX_MODEL_PATH", "")
+        self.onnx_path = Path(raw_onnx) if raw_onnx else None
+        self.serving_mode = os.getenv("SERVING_MODE", "native").strip().lower()
+        self.model: TextInferenceModel | None = None
         self.metadata: dict[str, Any] = {}
         self.error: str | None = None
         self.loaded_at: str | None = None
+        self._loaded = False
+
+    def _runtime_config(self) -> OnnxRuntimeConfig:
+        return OnnxRuntimeConfig(
+            providers=_env_csv("ONNX_EXECUTION_PROVIDERS", ("CPUExecutionProvider",)),
+            intra_op_num_threads=_env_int("ONNX_INTRA_OP_THREADS", 1),
+            inter_op_num_threads=_env_int("ONNX_INTER_OP_THREADS", 1),
+            graph_optimization_level=os.getenv("ONNX_GRAPH_OPTIMIZATION", "ORT_ENABLE_ALL"),
+            enable_cpu_mem_arena=_env_bool("ONNX_CPU_MEM_ARENA", True),
+        )
+
+    def load(self) -> None:
+        if self._loaded:
+            return
         self._load()
+        self._loaded = True
 
     def _load(self) -> None:
         if not self.artifact_path.exists():
@@ -94,18 +279,35 @@ class ModelService:
             return
         try:
             artifact = load_native_artifact(self.artifact_path)
-            self.model = artifact["model"]
-            self.metadata = artifact.get("metadata", {})
+            packaged_model = artifact["model"]
+            if not hasattr(packaged_model, "predict_proba"):
+                raise TypeError("Packaged artifact does not expose predict_proba")
+            self.metadata = dict(artifact.get("metadata", {}))
+            if self.serving_mode == "onnx":
+                if self.onnx_path is None or not self.onnx_path.exists():
+                    raise FileNotFoundError("ONNX serving mode requires an existing ONNX_MODEL_PATH")
+                self.model = OnnxTextModel.from_artifact(packaged_model, self.onnx_path, self._runtime_config())
+            else:
+                self.model = cast(TextInferenceModel, packaged_model)
             self.metadata.setdefault("serving_mode", self.serving_mode)
             self.metadata.setdefault("onnx_path", str(self.onnx_path) if self.onnx_path else None)
             self.error = None
             self.loaded_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         except Exception as exc:
-            self.error = f"Model artifact failed to load: {exc}"
+            self.model = None
+            self.error = f"Model artifact failed to load: {type(exc).__name__}"
+
+    def close(self) -> None:
+        session = getattr(self.model, "session", None)
+        close = getattr(session, "close", None)
+        if callable(close):
+            close()
+        self.model = None
+        self._loaded = False
 
     @property
     def ready(self) -> bool:
-        return self.model is not None and hasattr(self.model, "predict_proba")
+        return self.model is not None and callable(getattr(self.model, "predict_proba", None))
 
     def diagnostics(self) -> dict[str, Any]:
         return {
@@ -118,48 +320,47 @@ class ModelService:
             "calibration_status": self.metadata.get("calibration_status", "not_available"),
             "loaded_at": self.loaded_at,
             "python": platform.python_version(),
+            "onnx_providers": list(_env_csv("ONNX_EXECUTION_PROVIDERS", ("CPUExecutionProvider",))),
+            "onnx_intra_op_threads": _env_int("ONNX_INTRA_OP_THREADS", 1),
+            "onnx_inter_op_threads": _env_int("ONNX_INTER_OP_THREADS", 1),
             "error": self.error,
         }
 
     def predict(self, requests: list[PredictionRequest]) -> list[PredictionResponse]:
-        if not self.ready:
+        if not self.ready or self.model is None:
             raise RuntimeError(self.error or "Model is not ready")
         texts = [request.content() for request in requests]
-        started = time.perf_counter()
-        try:
-            probabilities = self.model.predict_proba(texts)
-        except Exception:
-            probabilities = self.model.predict_proba([[text] for text in texts])
-        elapsed_ms = (time.perf_counter() - started) * 1000.0
-        model_probabilities = probabilities[:, 1]
+        probabilities = np.asarray(self.model.predict_proba(texts), dtype=np.float64)
+        if probabilities.ndim != 2 or probabilities.shape != (len(texts), 2):
+            raise RuntimeError("Model returned an invalid probability matrix")
+        if not np.isfinite(probabilities).all():
+            raise RuntimeError("Model returned non-finite probabilities")
+        raw = np.clip(probabilities[:, 1], 0.0, 1.0)
+        labels = (raw >= 0.5).astype(np.int8)
         model_name = str(self.metadata.get("model_name", "unknown"))
         artifact_version = str(self.metadata.get("artifact_version", self.metadata.get("created_at", "unknown")))
         calibration_status = str(self.metadata.get("calibration_status", "not_available"))
         interval = self.metadata.get("confidence_interval")
-        responses: list[PredictionResponse] = []
-        for probability_fake in model_probabilities:
-            raw_probability = float(min(1.0, max(0.0, probability_fake)))
-            calibrated_probability = raw_probability
-            label = int(calibrated_probability >= 0.5)
-            low = interval.get("low") if isinstance(interval, dict) else None
-            high = interval.get("high") if isinstance(interval, dict) else None
-            response = PredictionResponse(
-                label=label,
+        low = interval.get("low") if isinstance(interval, dict) else None
+        high = interval.get("high") if isinstance(interval, dict) else None
+        serving_mode = str(self.metadata.get("serving_mode", self.serving_mode))
+        return [
+            PredictionResponse(
+                label=int(label),
                 label_name="fake" if label else "real",
-                probability_real=1.0 - calibrated_probability,
-                probability_fake=calibrated_probability,
+                probability_real=float(1.0 - probability_fake),
+                probability_fake=float(probability_fake),
                 model_name=model_name,
                 artifact_version=artifact_version,
-                raw_probability_fake=raw_probability,
-                calibrated_probability_fake=calibrated_probability,
+                raw_probability_fake=float(probability_fake),
+                calibrated_probability_fake=float(probability_fake),
                 confidence_interval_low=low,
                 confidence_interval_high=high,
                 calibration_status=calibration_status,
-                serving_mode=str(self.metadata.get("serving_mode", self.serving_mode)),
+                serving_mode=serving_mode,
             )
-            response.__dict__["_inference_latency_ms"] = elapsed_ms
-            responses.append(response)
-        return responses
+            for label, probability_fake in zip(labels.tolist(), raw.tolist(), strict=True)
+        ]
 
 
 def _enrich_prediction(prediction: PredictionResponse) -> PredictionResponse:
@@ -172,8 +373,11 @@ def _enrich_prediction(prediction: PredictionResponse) -> PredictionResponse:
 
 
 def _service_diagnostics(service: Any) -> dict[str, Any]:
-    if hasattr(service, "diagnostics"):
-        return service.diagnostics()
+    diagnostics = getattr(service, "diagnostics", None)
+    if callable(diagnostics):
+        result = diagnostics()
+        if isinstance(result, dict):
+            return cast(dict[str, Any], result)
     return {
         "model_ready": bool(getattr(service, "ready", False)),
         "artifact_path": str(getattr(service, "artifact_path", "unknown")),
@@ -185,16 +389,99 @@ def _service_diagnostics(service: Any) -> dict[str, Any]:
     }
 
 
-def create_app(service: ModelService | None = None) -> FastAPI:
-    model_service = service or ModelService()
-    application = FastAPI(title="Fake News Detection API", version="0.2.0")
+def _client_key(request: Request, trusted_proxy_ips: set[str]) -> str:
+    host = request.client.host if request.client else "unknown"
+    if host in trusted_proxy_ips:
+        forwarded = request.headers.get("x-forwarded-for", "").split(",", 1)[0].strip()
+        if forwarded:
+            return forwarded
+    return host
+
+
+def _cors_origins() -> tuple[str, ...]:
+    return _env_csv("CORS_ALLOWED_ORIGINS")
+
+
+def create_app(
+    service: ServingService | None = None,
+    rate_limiter: RateLimiter | None = None,
+) -> FastAPI:
+    """Create an app with injectable service/limiter dependencies for safe tests."""
+    model_service: ServingService = service if service is not None else cast(ServingService, ModelService())
+    origins = _cors_origins()
+    credentials = _env_bool("CORS_ALLOW_CREDENTIALS", False)
+    if credentials and "*" in origins:
+        raise ValueError("Wildcard CORS origins cannot be combined with credentials")
+    limiter = rate_limiter or RateLimiter(
+        _env_int("RATE_LIMIT_REQUESTS", 120),
+        _env_float("RATE_LIMIT_WINDOW_SECONDS", 60.0),
+        _env_int("RATE_LIMIT_MAX_CLIENTS", 10_000),
+    )
+    trusted_proxy_ips = set(_env_csv("TRUSTED_PROXY_IPS"))
+    max_request_bytes = _env_int("MAX_REQUEST_BYTES", 1_000_000)
+    if max_request_bytes < 1:
+        raise ValueError("MAX_REQUEST_BYTES must be positive")
+
+    @asynccontextmanager
+    async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+        application.state.model_service = model_service
+        load = getattr(model_service, "load", None)
+        if callable(load):
+            load()
+        yield
+        close = getattr(model_service, "close", None)
+        if callable(close):
+            close()
+
+    application = FastAPI(title="Fake News Detection API", version="0.3.0", lifespan=lifespan)
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(origins),
+        allow_credentials=credentials,
+        allow_methods=list(_env_csv("CORS_ALLOWED_METHODS", ("GET", "POST", "OPTIONS"))),
+        allow_headers=list(_env_csv("CORS_ALLOWED_HEADERS", ("Content-Type", "X-Request-ID"))),
+        max_age=600,
+    )
+
+    @application.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        del exc
+        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
+        return JSONResponse(status_code=422, content={"detail": "Request validation failed", "request_id": request_id})
 
     @application.middleware("http")
-    async def latency_header(request: Request, call_next):
-        started = time.perf_counter()
+    async def request_security_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))[:128]
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                oversized = int(content_length) > max_request_bytes
+            except ValueError:
+                oversized = True
+            if oversized:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Request body exceeds the configured limit", "request_id": request_id},
+                    headers={"X-Request-ID": request_id},
+                )
+        if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready"}:
+            allowed, retry_after = limiter.check(_client_key(request, trusted_proxy_ips))
+            if not allowed:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded", "request_id": request_id},
+                    headers={"Retry-After": str(retry_after), "X-Request-ID": request_id},
+                )
         response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        started = getattr(request.state, "started", time.perf_counter())
         response.headers["X-Process-Time-Ms"] = f"{(time.perf_counter() - started) * 1000:.3f}"
         return response
+
+    @application.middleware("http")
+    async def timing_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        request.state.started = time.perf_counter()
+        return await call_next(request)
 
     @application.get("/health")
     def health() -> dict[str, Any]:
@@ -220,41 +507,39 @@ def create_app(service: ModelService | None = None) -> FastAPI:
                 if numeric["drift_detected"]:
                     drifted.extend(name for name, detail in numeric["features"].items() if detail["ks"]["drift_detected"] or detail["psi_drift_detected"])
             if request.reference_probabilities is not None and request.current_probabilities is not None:
-                probability = monitor_prediction_probabilities(request.reference_probabilities, request.current_probabilities, psi_threshold=request.psi_threshold)
+                probability = monitor_prediction_probabilities(request.reference_probabilities, request.current_probabilities, psi_threshold=request.psi_threshold, ks_alpha=request.ks_alpha)
                 reports["probability"] = probability
                 if probability["drift_detected"]:
                     drifted.append("prediction_probability")
             if request.reference_texts is not None and request.current_texts is not None:
-                text = monitor_text_batch(request.reference_texts, request.current_texts, oov_threshold=request.oov_threshold, length_threshold=request.length_threshold)
+                text = monitor_text_batch(request.reference_texts, request.current_texts, oov_threshold=request.oov_threshold, length_threshold=request.length_threshold, ks_alpha=request.ks_alpha)
                 reports["text"] = text
                 if text["drift_detected"]:
                     drifted.extend(text["drifted_features"])
-            if not reports.keys() - {"baseline_revision", "window_id"}:
-                raise ValueError("Provide numeric, probability, or text reference/current data")
             reports["drifted_features"] = sorted(set(drifted))
             reports["drift_detected"] = bool(drifted)
             reports["retraining_signal"] = build_retraining_signal(reports, baseline_revision=request.baseline_revision, window_id=request.window_id)
             return reports
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail=f"Drift monitoring failed: {exc}") from exc
+        except (ValueError, RuntimeError) as exc:
+            raise HTTPException(status_code=422, detail=f"Drift monitoring failed: {type(exc).__name__}") from exc
 
     @application.post("/predict", response_model=PredictionResponse)
     def predict(request: PredictionRequest) -> PredictionResponse:
         try:
             return _enrich_prediction(model_service.predict([request])[0])
         except RuntimeError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:
-            raise HTTPException(status_code=422, detail=f"Prediction failed: {exc}") from exc
+            raise HTTPException(status_code=422, detail="Prediction request rejected") from exc
 
     @application.post("/predict/batch", response_model=BatchPredictionResponse)
     def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
         try:
             predictions = [_enrich_prediction(prediction) for prediction in model_service.predict(request.requests)]
         except RuntimeError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:
-            raise HTTPException(status_code=422, detail=f"Batch prediction failed: {exc}") from exc
+            raise HTTPException(status_code=422, detail="Batch prediction request rejected") from exc
         model_name = predictions[0].model_name if predictions else "unknown"
         artifact_version = predictions[0].artifact_version if predictions else "unknown"
         return BatchPredictionResponse(predictions=predictions, count=len(predictions), model_name=model_name, artifact_version=artifact_version)

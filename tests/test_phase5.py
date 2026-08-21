@@ -25,6 +25,10 @@ def test_ci_workflow_contains_required_phase5_gates():
         "python -m pytest -q",
         "docker build",
         "aquasecurity/trivy-action",
+        "mypy src scripts tests",
+        "bandit -r src scripts",
+        "pip-audit -r requirements.txt",
+        "Assert non-root image user",
     ]:
         assert required in workflow
 
@@ -37,6 +41,11 @@ def test_compose_declares_health_checked_api_mlflow_and_traffic_services():
     assert compose["services"]["api"]["volumes"] == ["./artifacts:/app/artifacts:ro", "./configs:/app/configs:ro"]
     assert "scripts/synthetic_traffic.py" in compose["services"]["traffic"]["command"]
     assert compose["services"]["traffic"]["depends_on"]["api"]["condition"] == "service_healthy"
+    for service in compose["services"].values():
+        assert service["read_only"] is True
+        assert service["cap_drop"] == ["ALL"]
+        assert "no-new-privileges:true" in service["security_opt"]
+        assert service["init"] is True
 
 
 def test_pipeline_script_is_strict_and_ordered():
@@ -46,6 +55,9 @@ def test_pipeline_script_is_strict_and_ordered():
     positions = [script.index(item) for item in order]
     assert positions == sorted(positions)
     assert "dvc repro" in script and "--epsilon 0.000009" in script
+    assert "validate_dvc_cache" in script
+    assert "retry_command" in script
+    assert "MLFLOW_LOCAL_FALLBACK_URI" in script
 
 
 def test_synthetic_traffic_finite_mode_hits_prediction_and_drift(monkeypatch):
