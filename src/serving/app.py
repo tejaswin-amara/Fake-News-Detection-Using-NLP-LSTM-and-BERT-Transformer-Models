@@ -65,6 +65,10 @@ INFERENCE_LATENCY = Histogram(
     "Inference latency for native and ONNX prediction paths.",
     ("endpoint", "serving_mode"),
 )
+INFERENCE_QUEUE_DEPTH = Gauge(
+    "fake_news_inference_queue_depth",
+    "Requests waiting for an inference permit; bounded admission rejects rather than queues when exhausted.",
+)
 DRIFT_QUEUE_DEPTH = Gauge(
     "fake_news_drift_queue_depth",
     "Current number of queued drift-monitoring jobs.",
@@ -667,6 +671,9 @@ def create_app(
 
     @application.get("/metrics")
     def metrics() -> Response:
+        # Inference uses immediate 429 admission control rather than an unbounded
+        # backlog, so no request is ever kept waiting for an inference permit.
+        INFERENCE_QUEUE_DEPTH.set(0.0)
         DRIFT_QUEUE_DEPTH.set(float(drift_jobs.queue.qsize()))
         return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 

@@ -61,6 +61,7 @@ def test_metrics_endpoint_exposes_custom_series_and_is_not_rate_limited() -> Non
         assert metrics.status_code == 200
         assert "fake_news_http_request_latency_seconds_bucket" in metrics.text
         assert "fake_news_inference_latency_seconds_bucket" in metrics.text
+        assert "fake_news_inference_queue_depth" in metrics.text
         assert "fake_news_drift_queue_depth" in metrics.text
         assert "fake_news_rate_limiter_rejections_total" in metrics.text
         assert "fake_news_drift_monitoring_errors_total" in metrics.text
