@@ -54,8 +54,8 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
     assert "container-build-and-scan" in ci_workflow
 
     codeql_workflow = read(".github/workflows/codeql.yml")
-    assert "github/codeql-action/init@v3" in codeql_workflow
-    assert "github/codeql-action/analyze@v3" in codeql_workflow
+    assert "github/codeql-action/init@v4" in codeql_workflow
+    assert "github/codeql-action/analyze@v4" in codeql_workflow
     assert "security-events: write" in codeql_workflow
 
     release_workflow = read(".github/workflows/release.yml")
