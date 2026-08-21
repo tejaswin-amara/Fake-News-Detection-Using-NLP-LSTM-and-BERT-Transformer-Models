@@ -22,7 +22,7 @@ torchaudio==2.6.0
 torchvision==0.21.0
 tensorflow-cpu==2.21.0
 transformers==5.5.0
-tokenizers==0.21.4
+tokenizers==0.22.2
 safetensors==0.4.5
 
 cryptography==46.0.5
