@@ -2,31 +2,31 @@
 # developer tooling stay in requirements.txt and are intentionally excluded.
 numpy==1.26.4
 pandas==2.2.3
-scipy==1.13.1
-scikit-learn==1.5.2
-joblib==1.4.2
-pydantic==2.9.2
-pydantic-settings==2.6.1
+scipy==1.17.1
+scikit-learn==1.9.0
+joblib==1.5.3
+pydantic==2.13.4
+pydantic-settings==2.15.0
 nltk==3.10.3
 xgboost==2.1.2
 lightgbm==4.7.0
 
 fastapi==0.141.1
-uvicorn[standard]==0.32.0
-httpx==0.27.2
-python-multipart==0.0.30
+uvicorn[standard]==0.52.3
+httpx==0.28.1
+python-multipart==0.0.32
 
-onnxruntime==1.20.1
-torch==2.6.0
-torchaudio==2.6.0
-torchvision==0.21.0
+onnxruntime==1.29.0
+torch==2.13.0
+torchaudio==2.11.0
+torchvision==0.28.0
 tensorflow-cpu==2.21.0
 transformers==5.15.0
-tokenizers==0.22.2
+tokenizers==0.23.1
 safetensors==0.8.0
 
 cryptography==46.0.5
 redis==5.2.0
 regex==2025.10.23
-prometheus-client==0.21.0
+prometheus-client==0.26.0
 structlog==24.4.0
