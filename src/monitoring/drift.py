@@ -272,7 +272,7 @@ def build_retraining_signal(
     if cooldown_hours < 0:
         raise ValueError("cooldown_hours must be non-negative")
     raw_drifted = report.get("drifted_features", [])
-    if not isinstance(raw_drifted, Sequence) or isinstance(raw_drifted, (str, bytes)):
+    if not isinstance(raw_drifted, Sequence) or isinstance(raw_drifted, str | bytes):
         raise ValueError("drifted_features must be a sequence")
     drifted = sorted({str(item) for item in raw_drifted})
     triggered = bool(report.get("drift_detected", False))

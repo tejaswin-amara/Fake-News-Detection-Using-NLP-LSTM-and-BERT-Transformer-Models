@@ -96,7 +96,7 @@ def run_search(model: Any, search_type: str, X: Any, y: Any, args: argparse.Name
         bayesian_space = {
             key: {"type": "float", "low": min(values), "high": max(values), "log": True}
             for key, values in space.items()
-            if all(isinstance(value, (int, float)) for value in values)
+            if all(isinstance(value, int | float) for value in values)
         }
         result = bayesian_search(model, bayesian_space, X, y, n_trials=args.n_iter, scoring=args.scoring, random_state=args.seed, cv_folds=args.cv_folds, n_jobs=args.n_jobs)
         return result["best_estimator"], result["search_result"].to_dict()
