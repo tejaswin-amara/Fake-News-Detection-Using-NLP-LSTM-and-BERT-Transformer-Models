@@ -179,7 +179,7 @@ jobs:
         run: test "$(docker image inspect --format='{{.Config.User}}' fake-news-detection:${{ github.sha }})" = "appuser"
 
       - name: Scan image for high and critical vulnerabilities
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: fake-news-detection:${{ github.sha }}
           format: table
