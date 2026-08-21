@@ -147,7 +147,7 @@ jobs:
 
       - name: Upload test and MLflow logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ci-test-and-mlflow-logs
           path: |
@@ -211,7 +211,7 @@ jobs:
 
       - name: Upload image metadata
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: container-image-metadata
           path: image-inspect.json
