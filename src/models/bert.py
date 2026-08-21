@@ -111,7 +111,6 @@ def build_training_arguments(config: BertConfig, output_dir: str | Path, train_s
         greater_is_better=False,
         fp16=use_fp16,
         max_grad_norm=config.max_grad_norm,
-        save_safetensors=True,
         logging_strategy="steps",
         logging_steps=50,
         report_to="none",
@@ -142,7 +141,7 @@ def train_bert(
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
         data_collator=collator,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
     )
     trainer.train()
     trainer.save_model(str(output_dir))
