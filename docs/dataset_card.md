@@ -32,6 +32,12 @@ The WELFake adapter accepts `WELFake_Dataset.csv` and requires `Title`, `Text`, 
 
 Operators must acquire each dataset from a registered source, inspect the applicable license/terms, record the downloaded file checksum, and place the files under `data/raw/` or `data/external/` according to adapter instructions. Credentials and restricted data must not be committed. DVC metadata versions the input path and processed split outputs; a configured remote is operator-owned.
 
+### Current ClaimReview fact-checked claims release
+
+`src/data/claimreview.py` builds the new `claimreview-current-2026-08-21` release from the live Data Commons Fact Check Markup Tool data feed (SRC-045). The feed publishes structured ClaimReview metadata and its compilation is CC BY 4.0; publisher-hosted fact-check article content is not part of the download and is not collected by this project. Each retained claim has a canonical review URL, review publisher, original rating, retrieval timestamp, source-license field where supplied, and a feed checksum in `data/raw/claimreview_current/collection_manifest.json`.
+
+The release is deliberately conservative. It retains English claim text only, accepts only unambiguous source ratings (`accurate`/`correct`/`true`/`verified` as `real`; `fake`/`false`/`incorrect`/`pants on fire`/`wrong` as `fake`), and excludes nuanced ratings such as “mostly false.” The source verdict is metadata and never appears in model input. The detailed release counts, exclusions, temporal boundaries, and limitations are recorded in [`current_dataset_release.md`](current_dataset_release.md).
+
 No source URL, pretrained-model reference, framework reference, statistical-method reference, or deployment reference used by this project may remain undocumented. The source-audit script checks external URLs and SRC identifiers against the repository registers. Local operational endpoint examples are not dataset sources.
 
 ## 6. Data quality and preprocessing
@@ -60,6 +66,8 @@ The default protocol is a stratified three-way split:
 | Test | 15% | One final held-out evaluation after all decisions are frozen |
 
 The random seed is 42 by default and is recorded in the manifest. No vocabulary, scaler, imputer, target encoder, dimensionality reducer, clusterer, anomaly detector, calibrator, threshold, or feature-selection decision may use validation/test rows before its permitted stage. Final test results are never used for model selection.
+
+The ClaimReview release uses an additional fixed chronological protocol because it is a current source: records before `2023-08-21` train the model, records from `2023-08-21` through `2024-08-20` validate it, and records on/after `2024-08-21` form the final time-held-out test set. Exact and MinHash/LSH near duplicates are removed before splitting. To prevent the extreme source-rating imbalance from making a trivial classifier, the majority class is downsampled deterministically **inside** each already fixed temporal split. No record crosses a temporal boundary to achieve balance.
 
 ## 8. Representational limitations and bias
 

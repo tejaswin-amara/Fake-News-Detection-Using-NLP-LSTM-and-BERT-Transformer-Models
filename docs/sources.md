@@ -22,6 +22,10 @@ The attached handout is copied into `docs/references/MachineLearninghandout.pdf`
 
 **Use:** WELFake ingestion adapter and dataset provenance. **Files/claims supported:** `README.md`, `src/data/ingestion.py`, dataset card, EDA notebook, benchmark report. **Accessed:** 2026-08-20. **License:** Zenodo record states CC BY 4.0 for the dataset record; downstream component terms must be reviewed before redistribution. **Checksum recorded at source:** `WELFake_Dataset.csv` MD5 `73c9675a4b3d09f86a6933d0b8d7d908`.
 
+### SRC-045 — Data Commons current ClaimReview fact-check feed
+
+**Citation:** Data Commons, *Fact Check Markup Tool Data Feed*, live structured ClaimReview feed. [Download documentation](https://datacommons.org/factcheck/download), [FAQ](https://datacommons.org/factcheck/faq), and [latest feed](https://storage.googleapis.com/datacommons-feeds/factcheck/latest/data.json). **Use:** new current fact-checked claims dataset collection, provenance manifest, label-gated normalization, and time-held-out release. **Files/claims supported:** `src/data/claimreview.py`, `configs/dataset.yaml`, `dvc.yaml`, `README.md`, `docs/dataset_card.md`, `docs/current_dataset_release.md`. **Accessed:** 2026-08-21. **License:** Data Commons states the feed compilation is CC BY 4.0; individual ClaimReview structured-data licensing is represented by `sdLicense` where provided, and publisher terms continue to apply to material on publisher sites. The project does not collect full fact-check article text. **Release provenance:** feed SHA-256 `9266a7bbc99ee16416f05afdad2524557b242a98ba9e823e3cb0734631cdc2b0`, with full release metadata written to `collection_manifest.json` and `release_manifest.json` in DVC-managed data paths.
+
 ### SRC-003 — Course handout
 
 **Citation:** *Machine Learning*, course code `25SC2107E`, `MachineLearninghandout.pdf`, supplied by the project owner, dated 2026-08-20 in the attachment metadata. A copy is maintained at `docs/references/MachineLearninghandout.pdf`.
@@ -175,6 +179,7 @@ Python Packaging Authority. [Packaging User Guide](https://packaging.python.org/
 | SRC-021–023 | Classical model implementations, pruning, boosting, and explanations |
 | SRC-024–029 | `src/evaluation/metrics.py`, calibration reports, statistical tests, and M5 notebooks |
 | SRC-030–034 | `src/serving/app.py`, `src/monitoring/drift.py`, Docker, MLflow, packaging, and CI |
+| SRC-045 | Current ClaimReview source collection, provenance, temporal release policy, and dataset documentation |
 | SRC-003 | `docs/compliance_matrix.md`, all CO/M claims, and the project acceptance criteria |
 
 ## Change log
@@ -182,6 +187,7 @@ Python Packaging Authority. [Packaging User Guide](https://packaging.python.org/
 | Date | Change |
 |---|---|
 | 2026-08-20 | Initial source register created from the user brief, course handout, and verified public source records. |
+| 2026-08-21 | Added SRC-045 and the current ClaimReview dataset release provenance, source license boundary, and DVC collection workflow. |
 
 ### SRC-035 — NLP and ONNX conversion libraries
 

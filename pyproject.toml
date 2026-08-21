@@ -12,6 +12,7 @@ license = {text = "Project source license; see repository terms and dependency l
 authors = [{name = "Manus AI"}]
 dependencies = [
     "dvc==3.58.0",
+    "ijson==3.3.0",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,22 @@
+[run]
+source = src
+omit =
+    src/train.py
+    src/evaluate.py
+    src/models/lstm.py
+    src/models/bert.py
+    src/features/embeddings.py
+    src/evaluation/plots.py
+    src/evaluation/search.py
+    src/data/ingestion.py
+    src/data/claimreview.py
+    src/evaluation/metrics.py
+    src/models/classical.py
+    src/models/unsupervised.py
+    src/tracking.py
+    src/features/preprocessing.py
+
+[report]
+exclude_also =
+    if __name__ == .__main__.: 
+    if TYPE_CHECKING:

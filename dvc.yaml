@@ -1,4 +1,24 @@
 stages:
+  claimreview_current:
+    cmd: >-
+      python -m src.data.claimreview
+      --config configs/dataset.yaml
+      --refresh
+    deps:
+      - src/data/claimreview.py
+      - src/data/ingestion.py
+      - src/features/minhash.py
+      - configs/dataset.yaml
+      - docs/sources.yaml
+    outs:
+      - data/raw/claimreview_current/data.json
+      - data/raw/claimreview_current/collection_manifest.json
+      - data/processed/claimreview_current/master.csv
+      - data/processed/claimreview_current/train.csv
+      - data/processed/claimreview_current/validation.csv
+      - data/processed/claimreview_current/test.csv
+      - data/processed/claimreview_current/release_manifest.json
+
   ingest:
     cmd: >-
       python -m src.data.ingestion

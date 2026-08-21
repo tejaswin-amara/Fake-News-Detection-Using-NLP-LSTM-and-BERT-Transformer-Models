@@ -1,0 +1,54 @@
+schema: '2.0'
+stages:
+  claimreview_current:
+    cmd: python -m src.data.claimreview --config configs/dataset.yaml --refresh
+    deps:
+    - path: configs/dataset.yaml
+      hash: md5
+      md5: b362f00c69541928b1fa2c768fd9b497
+      size: 523
+    - path: docs/sources.yaml
+      hash: md5
+      md5: 3984677e49755d85487f81de394d031e
+      size: 18384
+    - path: src/data/claimreview.py
+      hash: md5
+      md5: 5b25b9168b516bb63962be107fc98917
+      size: 16513
+    - path: src/data/ingestion.py
+      hash: md5
+      md5: be0adcbccaec3149ac81ee509500cbb9
+      size: 15555
+    - path: src/features/minhash.py
+      hash: md5
+      md5: 5584e2b45387501c6930e96b3dac42a2
+      size: 4936
+    outs:
+    - path: data/processed/claimreview_current/master.csv
+      hash: md5
+      md5: e7ad4ebefb0ffff533683dc24c8c1434
+      size: 9191397
+    - path: data/processed/claimreview_current/release_manifest.json
+      hash: md5
+      md5: f92f08031053e5364d09fc774a78bfb6
+      size: 1644
+    - path: data/processed/claimreview_current/test.csv
+      hash: md5
+      md5: 87872c750b0cf9a432b1335a02b9819c
+      size: 21914
+    - path: data/processed/claimreview_current/train.csv
+      hash: md5
+      md5: e14c57446ceff16c67850149817708d4
+      size: 381607
+    - path: data/processed/claimreview_current/validation.csv
+      hash: md5
+      md5: 5bd352773c3d19d16ba9f203f56d6956
+      size: 18595
+    - path: data/raw/claimreview_current/collection_manifest.json
+      hash: md5
+      md5: ae7e4713c490b7e69eeb6ed2f9598380
+      size: 507
+    - path: data/raw/claimreview_current/data.json
+      hash: md5
+      md5: c070a7c991dbb3f89bdb434e86a3eae3
+      size: 206267993

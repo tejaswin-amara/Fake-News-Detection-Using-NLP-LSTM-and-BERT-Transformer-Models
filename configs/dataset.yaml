@@ -1,0 +1,15 @@
+claimreview_current:
+  release_id: "claimreview-current-2026-08-21"
+  feed_url: "https://storage.googleapis.com/datacommons-feeds/factcheck/latest/data.json"
+  raw_feed_path: "data/raw/claimreview_current/data.json"
+  output_dir: "data/processed/claimreview_current"
+  reference_date: "2026-08-21"
+  max_age_days: 3652
+  validation_start: "2023-08-21"
+  test_start: "2024-08-21"
+  random_seed: 42
+  minimum_per_label: 10
+  near_duplicate_threshold: 0.92
+  minhash_permutations: 64
+  minhash_bands: 8
+  timeout_seconds: 180

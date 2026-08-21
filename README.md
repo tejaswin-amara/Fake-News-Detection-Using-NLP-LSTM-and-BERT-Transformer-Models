@@ -95,6 +95,8 @@ A single online request follows the path **HTTP validation → text normalizatio
 
 The ingestion layer accepts ISOT and WELFake through adapters rather than assuming one CSV schema. The ISOT source is documented through Ahmed, Traore, and Saad’s publication [1], while the WELFake record is maintained through Zenodo with DOI `10.5281/zenodo.4561253` [2]. WELFake’s Zenodo record describes the released columns and reports the dataset’s published label convention; the repository normalizes all supported inputs to its explicit internal convention of `0 = real` and `1 = fake`, recording any source-label inversion in the ingestion metadata [2].
 
+The repository also defines a new **ClaimReview current fact-checked claims** release from the live Data Commons Fact Check Markup Tool feed [45]. The release is a dated English claim-level dataset, not a scraped news-article corpus or an automated web-search truth engine. Its input is structured fact-check markup only; full publisher fact-check articles are not collected. The release manifest records the feed checksum, retrieval time, original publisher rating, source URL, exclusions, temporal boundaries, and retained records. The current `2026-08-21` release uses a ten-year source window because the current two-year feed segment contained too few unambiguous `real` ratings for valid three-way evaluation; the newest period remains fully held out for testing, and balancing happens only inside each fixed time partition. See [`docs/current_dataset_release.md`](docs/current_dataset_release.md) and [`docs/dataset_card.md`](docs/dataset_card.md).
+
 Raw datasets, pretrained weights, and generated model artifacts are excluded from version control unless their license and repository size make inclusion appropriate. The repository records URLs, DOIs, access dates, versions, checksums, and license terms in [`docs/sources.md`](docs/sources.md). Dataset download and checksum commands will be added to the data-ingestion documentation once the executable pipeline is present.
 
 ## Reproducibility and leakage prevention
@@ -128,12 +130,13 @@ The foundational tranche includes this README, [`docs/sources.md`](docs/sources.
 
 ## DVC and MLflow lifecycle infrastructure
 
-DVC is initialized under `.dvc/` and defines the reproducible `ingest`, `train`, and `evaluate` stages in [`dvc.yaml`](dvc.yaml). The ingest stage enforces the strict stratified 70/15/15 split before TF-IDF or any other learned transformation is fit. Configure a user-owned DVC remote without committing credentials, then reproduce the pipeline with:
+DVC is initialized under `.dvc/` and defines the reproducible `claimreview_current`, `ingest`, `train`, and `evaluate` stages in [`dvc.yaml`](dvc.yaml). The ClaimReview stage fetches the public structured-data feed, records its provenance, rejects non-English/ambiguous/unattributable rows, removes duplicate claims, and creates fixed chronological train/validation/test partitions before any learned transformation is fit. Configure a user-owned DVC remote without committing credentials, then reproduce the pipeline with:
 
 ```bash
 python -m pip install -r requirements.txt
 dvc remote add -d storage <your-dvc-remote-url>
 dvc add data/raw/isot
+dvc repro claimreview_current
 dvc repro
 dvc status
 ```
@@ -181,6 +184,7 @@ The repository is **Complete through Phase 7**. Reproducibility, source governan
 
 1. [Ahmed H, Traore I, and Saad S. *Detecting opinion spams and fake news using text classification*.](https://doi.org/10.1002/spy2.9)
 2. [Verma PK, Agrawal P, and Prodan R. *WELFake dataset for fake news detection in text data*.](https://doi.org/10.5281/zenodo.4561253) Associated paper: [10.1109/TCSS.2021.3068519](https://doi.org/10.1109/TCSS.2021.3068519).
+45. [Data Commons Fact Check Markup Tool Data Feed and FAQ.](https://datacommons.org/factcheck/download) The live feed uses the ClaimReview schema and the released compilation is CC BY 4.0; individual structured-data licensing is recorded when supplied.
 3. [*Machine Learning*, 25SC2107E, supplied course handout.](docs/references/MachineLearninghandout.pdf) Public course page: [y25btech.klef.in](https://y25btech.klef.in).
 4. [Géron A. *Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow*. 3rd ed. 2022.](https://www.oreilly.com/library/view/hands-on-machine-learning/9781098125974/)
 5. [Hastie T, Tibshirani R, and Friedman J. *The Elements of Statistical Learning*. 2nd ed. 2017.](https://hastie.su.domains/ElemStatLearn/)

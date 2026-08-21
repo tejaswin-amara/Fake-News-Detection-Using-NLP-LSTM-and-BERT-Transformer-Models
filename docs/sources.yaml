@@ -1,6 +1,6 @@
 schema_version: "1.0"
 project: "Fake News Detection Using NLP, BiLSTM, and BERT"
-last_reviewed: "2026-08-20"
+last_reviewed: "2026-08-21"
 policy: "Every external source used or referred to must appear here and in docs/sources.md. Restricted materials are linked with metadata rather than redistributed."
 sources:
   - id: SRC-001
@@ -340,3 +340,13 @@ sources:
     version: "Prometheus Operator CRD compatible with the declared cluster"
     license_or_terms: "The Prometheus Operator CRD and matching release selector must be installed by the cluster operator."
     supports: [k8s/base/service-monitor.yaml, k8s/base/kustomization.yaml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-045
+    category: current_fact_checked_claims_feed
+    citation: "Data Commons Fact Check Markup Tool Data Feed, structured ClaimReview fact-check markup, live version retrieved for the ClaimReview current dataset release."
+    url: https://storage.googleapis.com/datacommons-feeds/factcheck/latest/data.json
+    documentation_url: https://datacommons.org/factcheck/download
+    faq_url: https://datacommons.org/factcheck/faq
+    accessed: "2026-08-21"
+    version: "live feed; release-specific SHA-256 and HTTP metadata are recorded in data/raw/claimreview_current/collection_manifest.json"
+    license_or_terms: "The feed compilation is CC BY 4.0. Individual ClaimReview structured-data licenses are recorded as sdLicense when supplied; publisher website terms continue to apply to publisher-hosted content. No full fact-check article text is collected."
+    supports: [src/data/claimreview.py, configs/dataset.yaml, dvc.yaml, docs/dataset_card.md, docs/sources.md, README.md]
