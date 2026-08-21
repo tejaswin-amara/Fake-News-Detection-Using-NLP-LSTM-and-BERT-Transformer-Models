@@ -1,14 +1,11 @@
 name: Semantic release
 
 on:
-  workflow_run:
-    workflows: ["fake-news-detection-ci"]
+  push:
     branches: [main]
-    types: [completed]
+  workflow_dispatch:
 
-permissions:
-  contents: write
-  id-token: write
+permissions: read-all
 
 concurrency:
   group: semantic-release-main
@@ -17,16 +14,16 @@ concurrency:
 jobs:
   release:
     name: Create semantic version and GitHub release
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      vars.ENABLE_SEMANTIC_RELEASE == 'true'
+    if: vars.ENABLE_SEMANTIC_RELEASE == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
-      - name: Check out the CI-validated main revision
+      - name: Check out the trusted main revision
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -37,5 +34,6 @@ jobs:
           build: "false"
 
 # Activation is deliberately explicit. Before setting ENABLE_SEMANTIC_RELEASE=true,
-# configure write-capable GitHub Actions permissions or a scoped SEMANTIC_RELEASE_TOKEN.
-# Conventional Commit prefixes determine whether a qualifying main-branch change releases.
+# protect main with the required CI status checks and configure write-capable GitHub
+# Actions permissions or a scoped SEMANTIC_RELEASE_TOKEN. Conventional Commit
+# prefixes determine whether a qualifying main-branch change releases.

@@ -8,3 +8,8 @@
 - [x] Deliver repository-specific AI and coding-agent instruction files for Deliverable 6.
 - [x] Deliver the GitHub SEO and discoverability execution blueprint for Deliverable 7.
 - [x] Register Deliverables 4–7 sources and verify repository quality gates and CI.
+- [x] Inventory all remote branches, open pull requests, and GitHub code-scanning access constraints for safe consolidation.
+- [ ] Obtain access to GitHub code-scanning alerts and remediate any verified findings.
+- [x] Remediate verified Scorecard workflow findings with least-privilege release permissions, safe main checkout, direct CodeQL analysis, and private-reporting linkage.
+- [ ] Remediate verified actionable code-scanning findings without weakening repository security controls.
+- [ ] Merge all eligible CI-validated branches into main and confirm final main-branch CI.

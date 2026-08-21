@@ -252,3 +252,7 @@ GitHub Actions and upstream projects: [actions/checkout](https://github.com/acti
 ### SRC-049 — Discoverability directories and topic discovery
 
 Potential manual, curator-controlled discovery destinations: [Awesome Fake News Detection](https://github.com/wangbing1416/Awesome-Fake-News-Detection), [Awesome Machine Learning](https://github.com/josephmisiti/awesome-machine-learning), [Awesome MLOps](https://github.com/kelvins/awesome-mlops), [Best-of ML Python](https://github.com/lukasmasuch/best-of-ml-python), and [GitHub topic discovery](https://github.com/topics/). **Use:** `github-seo-growth-strategy.md` manual review and submission checklist. **Accessed:** 2026-08-21. **Terms:** directory maintainers control eligibility and acceptance; read current contribution rules immediately before any human-authored submission. No endorsement, affiliation, or acceptance is implied.
+
+### SRC-050 — GitHub-native private vulnerability reporting
+
+Private advisory submission route: [Report a vulnerability](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/security/advisories/new). **Use:** the explicit private-reporting link in `SECURITY.md`; reports remain subject to the repository’s GitHub private vulnerability-reporting availability and access controls. **Accessed:** 2026-08-21. **Terms:** GitHub platform feature; no external security contact or response-time commitment is implied.

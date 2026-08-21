@@ -6,7 +6,7 @@ Security fixes are assessed for the latest code on the `main` branch. Historical
 
 ## Reporting a vulnerability
 
-Please use the repository’s GitHub-native private **Report a vulnerability** flow to submit a report. Do not publish an issue, proof-of-concept exploit, token, private dataset fragment, or artifact-signing material before maintainers have reviewed the report. The report should describe the affected revision or component, the preconditions, a safe reproduction path, impact, and any suggested mitigation.
+Please use the repository’s GitHub-native private [**Report a vulnerability** flow](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/security/advisories/new) to submit a report when it is enabled for the repository. Do not publish an issue, proof-of-concept exploit, token, private dataset fragment, or artifact-signing material before maintainers have reviewed the report. The report should describe the affected revision or component, the preconditions, a safe reproduction path, impact, and any suggested mitigation.
 
 The project does not publish a security email address. Status and remediation discussions will occur through GitHub’s private vulnerability-reporting workflow where available. No response-time or disclosure-date commitment is made in this policy.
 

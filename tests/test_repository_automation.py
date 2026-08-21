@@ -42,6 +42,7 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
         ".github/dependabot.yml",
         ".github/labeler.yml",
         ".github/workflows/ci.yml",
+        ".github/workflows/codeql.yml",
         ".github/workflows/release.yml",
         ".github/workflows/scorecards.yml",
         ".github/workflows/labeler.yml",
@@ -52,8 +53,17 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
     assert "--cov-fail-under=95" in ci_workflow
     assert "container-build-and-scan" in ci_workflow
 
+    codeql_workflow = read(".github/workflows/codeql.yml")
+    assert "github/codeql-action/init@v3" in codeql_workflow
+    assert "github/codeql-action/analyze@v3" in codeql_workflow
+    assert "security-events: write" in codeql_workflow
+
     release_workflow = read(".github/workflows/release.yml")
-    assert "workflow_run:" in release_workflow
+    assert "push:" in release_workflow
+    assert "branches: [main]" in release_workflow
+    assert "workflow_run:" not in release_workflow
+    assert "permissions: read-all" in release_workflow
+    assert "contents: write" in release_workflow
     assert "ENABLE_SEMANTIC_RELEASE == 'true'" in release_workflow
 
     labeler_workflow = read(".github/workflows/labeler.yml")

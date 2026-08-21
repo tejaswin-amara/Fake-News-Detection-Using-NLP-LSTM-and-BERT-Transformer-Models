@@ -399,3 +399,11 @@ sources:
     accessed: "2026-08-21"
     license_or_terms: "Directory maintainers control eligibility and acceptance. Review current contribution requirements before any manual, human-authored submission."
     supports: [github-seo-growth-strategy.md, docs/sources.md]
+  - id: SRC-050
+    category: github_private_vulnerability_reporting
+    citation: "GitHub-native private vulnerability-reporting route for this repository."
+    urls:
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/security/advisories/new
+    accessed: "2026-08-21"
+    license_or_terms: "GitHub platform feature; availability and access are governed by repository settings."
+    supports: [SECURITY.md, docs/sources.md]
