@@ -157,7 +157,9 @@ jobs:
     name: Rootless container build and scan
     runs-on: ubuntu-latest
     needs: quality-and-tests
-    timeout-minutes: 20
+    # The first cache-populating build installs pinned TensorFlow, PyTorch,
+    # ONNX, transformer, and classical-model runtime dependencies.
+    timeout-minutes: 45
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
