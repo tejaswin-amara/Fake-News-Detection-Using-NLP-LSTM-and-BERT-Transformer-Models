@@ -1,6 +1,6 @@
 # Production serving dependencies only. Training, DVC, MLflow, notebooks, and
 # developer tooling stay in requirements.txt and are intentionally excluded.
-numpy==1.26.4
+numpy==2.4.6
 pandas==2.2.3
 scipy==1.13.1
 scikit-learn==1.5.2
