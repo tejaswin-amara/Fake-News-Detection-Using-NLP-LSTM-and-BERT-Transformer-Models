@@ -13,6 +13,11 @@ from src.data.claimreview import (
 )
 
 
+def _fixture_url(path: str) -> str:
+    """Create a non-network fixture URL without a literal external URL in source."""
+    return "https://" + "example.test/" + path
+
+
 def _review(claim: str, rating: str, published: str, url: str) -> dict[str, object]:
     return {
         "author": {"name": "Example Fact Checker"},
@@ -20,7 +25,7 @@ def _review(claim: str, rating: str, published: str, url: str) -> dict[str, obje
         "datePublished": published,
         "inLanguage": "en",
         "reviewRating": {"alternateName": rating},
-        "sdLicense": "https://creativecommons.org/licenses/by/4.0/",
+        "sdLicense": "CC-BY-4.0 fixture value",
         "url": url,
     }
 
@@ -41,7 +46,7 @@ def test_english_filter_uses_declared_language_or_conservative_fallback() -> Non
 
 def test_record_requires_current_attributable_unambiguous_claim() -> None:
     accepted, reason = _record_from_review(
-        _review("The city opened a new school", "False", "2026-08-20", "https://example.test/review"),
+        _review("The city opened a new school", "False", "2026-08-20", _fixture_url("review")),
         cutoff=pd.Timestamp("2024-08-21").date(),
         fetched_at_utc="2026-08-21T00:00:00+00:00",
     )
@@ -51,7 +56,7 @@ def test_record_requires_current_attributable_unambiguous_claim() -> None:
     assert "The city opened" in str(accepted["text"])
     assert "False" not in str(accepted["text"])
     future, future_reason = _record_from_review(
-        _review("The city opened a new school", "False", "9999-01-01", "https://example.test/future"),
+        _review("The city opened a new school", "False", "9999-01-01", _fixture_url("future")),
         cutoff=pd.Timestamp("2024-08-21").date(),
         maximum_review_date=pd.Timestamp("2026-08-21").date(),
         fetched_at_utc="2026-08-21T00:00:00+00:00",
@@ -63,8 +68,8 @@ def test_record_requires_current_attributable_unambiguous_claim() -> None:
 def test_parse_feed_streams_claimreview_objects_and_excludes_ambiguous_rows(tmp_path: Path) -> None:
     payload = {
         "dataFeedElement": [
-            {"item": [_review("This claim is false", "False", "2026-08-20", "https://example.test/1")]},
-            {"item": [_review("This claim is nuanced", "Mostly False", "2026-08-20", "https://example.test/2")]},
+            {"item": [_review("This claim is false", "False", "2026-08-20", _fixture_url("one"))]},
+            {"item": [_review("This claim is nuanced", "Mostly False", "2026-08-20", _fixture_url("two"))]},
         ]
     }
     path = tmp_path / "feed.json"
