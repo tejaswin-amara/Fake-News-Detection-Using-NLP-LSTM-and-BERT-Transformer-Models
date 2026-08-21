@@ -42,13 +42,26 @@ DVC remains the source of truth for governed ISOT/WELFake inputs. The hardening 
 
 `src/monitoring/drift.py` filters or rejects non-finite arrays according to the monitoring type, enforces minimum sample sizes, clips safe probabilities, handles equal and different constant distributions, includes out-of-range histogram values, uses positive finite bin probabilities, and rejects non-finite output. PSI and KS reports are JSON-safe. Retraining signals are side-effect free, carry a cooldown key, and always require human approval.
 
+## Phase 7 zero-trust and extreme-scale serving controls
+
+Phase 7 closes the remaining trust-boundary and resource-amplification gaps. When `REQUIRE_SIGNED_ARTIFACT=true`, `src/serving/export.py` verifies the native artifact SHA-256 against `PACKAGE_MANIFEST`, then verifies the manifest’s Ed25519 signature using `ARTIFACT_PUBLIC_KEY_B64` before any joblib deserialization. The canonical signed bytes exclude only the signature field and use deterministic JSON ordering. When signatures are intentionally disabled for a controlled development environment, the trusted SHA-256 path remains mandatory; production deployments should keep signed verification enabled.
+
+BERT loading is air-gapped by contract. `validate_offline_bundle()` requires a local `config.json`, `vocab.txt`, and `model.safetensors` bundle, while `load_components()` sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` and passes `local_files_only=True`. The model identifier remains `bert-base-uncased`; no runtime path may resolve missing weights from the public Hub. A missing, malformed, or non-BERT bundle fails readiness rather than silently downloading or substituting weights.
+
+Sparse TF-IDF is safe in native serving and is deliberately rejected by ONNX export and runtime adapters. This prevents accidental `.toarray()` conversion of high-dimensional sparse matrices. The unsupervised sparse path reduces through bounded TruncatedSVD, while DBSCAN is prohibited in `online=true` feature augmentation because its prediction semantics and memory profile are offline-oriented. Near-duplicate detection uses fixed-size streaming MinHash/LSH signatures, bounded bucket occupancy, and exact Jaccard confirmation only for LSH candidates; it does not materialize an all-pairs similarity matrix.
+
+Multi-worker and multi-replica deployments use the Redis-backed atomic Lua fixed-window limiter through `DISTRIBUTED_RATE_LIMITER=redis` and `REDIS_URL`. The in-process limiter remains a single-instance fallback only. The API also enforces `MAX_INFLIGHT_INFERENCE` with an asynchronous semaphore and executes CPU-bound prediction in a threadpool; requests arriving after the budget is exhausted receive `429` rather than accumulating unbounded work.
+
+Drift monitoring is a bounded asynchronous job queue. `POST /monitoring/drift` validates and enqueues a job, returns `202` with a `job_id`, and never performs potentially expensive statistics on the request thread. Operators poll `GET /monitoring/drift/{job_id}` for `queued`, `running`, `completed`, `failed`, or `expired` states. `DRIFT_QUEUE_MAXSIZE`, `DRIFT_WORKERS`, and `DRIFT_JOB_TTL_SECONDS` bound memory and lifecycle; the resulting retraining signal remains observational and requires human approval.
+
 ## CI/CD security gates
 
 Every pull request and `main` push runs Ruff, strict mypy, compilation, configuration/source/DVC validation, Bandit SAST, pip-audit dependency scanning, the full pytest suite, local MLflow smoke operation, a rootless image-user assertion, and Trivy scanning for high/critical OS and library vulnerabilities. Bandit, the explicit High/Critical pip-audit severity gate, and Trivy are blocking gates. pip-audit JSON versions that omit severity are reported as unrated for manual triage rather than assigned an invented severity; the machine-readable report and gate output are uploaded on every run. Scan reports are uploaded as CI artifacts. The workflow has read-only repository permissions and does not require application secrets.
 
 ## Verification evidence
 
-The hardening tests cover CORS allowlists, wildcard/credential rejection, rate-limit exhaustion and eviction, control-character and unknown-field rejection, massive batch rejection, finite drift behavior, invalid probability handling, ONNX configuration validation, MLflow fallback, Compose security fields, CI scan gates, and the existing prediction/ONNX/monitoring contracts. Local verification distinguishes tests that run in the sandbox from Docker and vulnerability scans that require the GitHub Actions runner.
+The hardening tests cover CORS allowlists, wildcard/credential rejection, rate-limit exhaustion and eviction, control-character and unknown-field rejection, massive batch rejection, finite drift behavior, invalid probability handling, ONNX configuration validation, MLflow fallback, Compose security fields, CI scan gates, async drift job polling, inference-budget exhaustion, signed manifest verification, sparse ONNX rejection, air-gapped BERT validation, Redis limiter behavior, streaming TF-IDF fitting, MinHash/LSH duplicate detection, and the existing prediction/ONNX/monitoring contracts.
+ Local verification distinguishes tests that run in the sandbox from Docker and vulnerability scans that require the GitHub Actions runner.
 
 ## Incident and rollback response
 

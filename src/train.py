@@ -194,7 +194,7 @@ def main() -> None:
     if args.model == "unsupervised":
         from src.features.unsupervised_features import UnsupervisedFeatureAugmenter
 
-        feature_transformer = UnsupervisedFeatureAugmenter(n_clusters=2, random_state=seed)
+        feature_transformer = UnsupervisedFeatureAugmenter(n_clusters=2, random_state=seed, include_dbscan=False, online=True)
         X_train = feature_transformer.fit_transform(X_train)
         model = build_logistic_model("l2", random_state=seed)
     else:

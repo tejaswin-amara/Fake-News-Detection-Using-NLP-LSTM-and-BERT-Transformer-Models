@@ -190,6 +190,23 @@ class TextStatisticsTransformer(BaseEstimator, TransformerMixin):
         return np.asarray(self.feature_names, dtype=object)
 
 
+class _CountingCleanTextStream:
+    def __init__(self, texts: Iterable[str], max_diagnostic_tokens: int = 100_000) -> None:
+        self.texts = texts
+        self.max_diagnostic_tokens = max_diagnostic_tokens
+        self.fold_size = 0
+        self.unique_tokens: set[str] = set()
+
+    def __iter__(self):
+        for text in self.texts:
+            cleaned = clean_text(text)
+            self.fold_size += 1
+            if len(self.unique_tokens) < self.max_diagnostic_tokens:
+                remaining = self.max_diagnostic_tokens - len(self.unique_tokens)
+                self.unique_tokens.update(tokenize_text(cleaned)[:remaining])
+            yield cleaned
+
+
 class TfidfTextPipeline:
     """Serializable TF-IDF transformer with explicit fit/transform stages."""
 
@@ -221,14 +238,13 @@ class TfidfTextPipeline:
         self.fitted = False
 
     def fit(self, texts: Iterable[str]) -> TfidfTextPipeline:
-        cleaned = [clean_text(text) for text in texts]
-        unique_tokens = {token for text in cleaned for token in tokenize_text(text)}
+        stream = _CountingCleanTextStream(texts)
         try:
-            self.vectorizer.fit(cleaned)
+            self.vectorizer.fit(stream)
         except ValueError as exc:
             raise ValueError(
                 "TF-IDF fitting failed: empty or pruned vocabulary; "
-                f"fold_size={len(cleaned)}, unique_token_count={len(unique_tokens)}, "
+                f"fold_size={stream.fold_size}, unique_token_count={len(stream.unique_tokens)}, "
                 f"min_df={self.min_df}, max_df={self.max_df}"
             ) from exc
         self.fitted = True
@@ -240,9 +256,17 @@ class TfidfTextPipeline:
         return self.vectorizer.transform([clean_text(text) for text in texts])
 
     def fit_transform(self, texts: Iterable[str]):
-        materialized = list(texts)
-        self.fit(materialized)
-        return self.transform(materialized)
+        stream = _CountingCleanTextStream(texts)
+        try:
+            matrix = self.vectorizer.fit_transform(stream)
+        except ValueError as exc:
+            raise ValueError(
+                "TF-IDF fitting failed: empty or pruned vocabulary; "
+                f"fold_size={stream.fold_size}, unique_token_count={len(stream.unique_tokens)}, "
+                f"min_df={self.min_df}, max_df={self.max_df}"
+            ) from exc
+        self.fitted = True
+        return matrix
 
     def get_feature_names(self) -> np.ndarray:
         if not self.fitted:

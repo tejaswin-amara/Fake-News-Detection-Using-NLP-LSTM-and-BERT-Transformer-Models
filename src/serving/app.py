@@ -7,6 +7,7 @@ explicitly parity-verified ONNX serving adapter is configured.
 
 from __future__ import annotations
 
+import asyncio
 import math
 import os
 import platform
@@ -26,6 +27,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from starlette.concurrency import run_in_threadpool
 
 from src.monitoring.drift import (
     build_retraining_signal,
@@ -33,8 +35,10 @@ from src.monitoring.drift import (
     monitor_prediction_probabilities,
     monitor_text_batch,
 )
-from src.serving.export import load_native_artifact
+from src.monitoring.jobs import DriftJobManager
+from src.serving.export import load_verified_native_artifact
 from src.serving.predictor import OnnxRuntimeConfig, OnnxTextModel, TextInferenceModel
+from src.serving.rate_limiter import RedisRateLimiter, redis_is_configured
 
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _SAFE_TEXT_MAX = 50_000
@@ -221,6 +225,9 @@ class RateLimiter:
             events.append(current)
             return True, 0
 
+    async def check_async(self, client_key: str) -> tuple[bool, int]:
+        return self.check(client_key)
+
 
 def _env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
@@ -279,16 +286,17 @@ class ModelService:
             self.error = f"Model artifact not found: {self.artifact_path}"
             return
         try:
-            expected_sha256 = os.getenv("MODEL_ARTIFACT_SHA256", "")
             manifest_path = os.getenv("PACKAGE_MANIFEST", "")
-            if not expected_sha256 and manifest_path:
-                manifest_file = Path(manifest_path)
-                if manifest_file.exists():
-                    import json
+            public_key = os.getenv("ARTIFACT_PUBLIC_KEY_B64", "")
+            require_signature = _env_bool("REQUIRE_SIGNED_ARTIFACT", True)
+            if require_signature:
+                if not manifest_path or not public_key:
+                    raise ValueError("Signed native serving requires PACKAGE_MANIFEST and ARTIFACT_PUBLIC_KEY_B64")
+                artifact = load_verified_native_artifact(self.artifact_path, manifest_path, public_key_b64=public_key, require_signature=True)
+            else:
+                from src.serving.export import load_native_artifact, sha256_file
 
-                    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
-                    expected_sha256 = str(manifest.get("native_artifact", {}).get("sha256", ""))
-            artifact = load_native_artifact(self.artifact_path, expected_sha256)
+                artifact = load_native_artifact(self.artifact_path, os.getenv("MODEL_ARTIFACT_SHA256", sha256_file(self.artifact_path)))
             packaged_model = artifact["model"]
             if not hasattr(packaged_model, "predict_proba"):
                 raise TypeError("Packaged artifact does not expose predict_proba")
@@ -426,6 +434,32 @@ def _cors_origins() -> tuple[str, ...]:
     return _env_csv("CORS_ALLOWED_ORIGINS")
 
 
+def _process_drift_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    request = DriftRequest.model_validate(payload)
+    reports: dict[str, Any] = {"baseline_revision": request.baseline_revision, "window_id": request.window_id}
+    drifted: list[str] = []
+    if request.reference is not None and request.current is not None:
+        numeric = monitor_features(request.reference, request.current, ks_alpha=request.ks_alpha, psi_threshold=request.psi_threshold)
+        reports["numeric"] = numeric
+        reports.update(numeric)
+        if numeric["drift_detected"]:
+            drifted.extend(name for name, detail in numeric["features"].items() if detail["ks"]["drift_detected"] or detail["psi_drift_detected"])
+    if request.reference_probabilities is not None and request.current_probabilities is not None:
+        probability = monitor_prediction_probabilities(request.reference_probabilities, request.current_probabilities, psi_threshold=request.psi_threshold, ks_alpha=request.ks_alpha)
+        reports["probability"] = probability
+        if probability["drift_detected"]:
+            drifted.append("prediction_probability")
+    if request.reference_texts is not None and request.current_texts is not None:
+        text = monitor_text_batch(request.reference_texts, request.current_texts, oov_threshold=request.oov_threshold, length_threshold=request.length_threshold, ks_alpha=request.ks_alpha)
+        reports["text"] = text
+        if text["drift_detected"]:
+            drifted.extend(text["drifted_features"])
+    reports["drifted_features"] = sorted(set(drifted))
+    reports["drift_detected"] = bool(drifted)
+    reports["retraining_signal"] = build_retraining_signal(reports, baseline_revision=request.baseline_revision, window_id=request.window_id)
+    return reports
+
+
 def create_app(
     service: ServingService | None = None,
     rate_limiter: RateLimiter | None = None,
@@ -436,30 +470,58 @@ def create_app(
     credentials = _env_bool("CORS_ALLOW_CREDENTIALS", False)
     if credentials and "*" in origins:
         raise ValueError("Wildcard CORS origins cannot be combined with credentials")
-    limiter = rate_limiter or RateLimiter(
-        _env_int("RATE_LIMIT_REQUESTS", 120),
-        _env_float("RATE_LIMIT_WINDOW_SECONDS", 60.0),
-        _env_int("RATE_LIMIT_MAX_CLIENTS", 10_000),
-    )
+    limiter: RateLimiter | RedisRateLimiter | None = rate_limiter
+    if limiter is None and redis_is_configured():
+        limiter = RedisRateLimiter(
+            os.environ["REDIS_URL"],
+            _env_int("RATE_LIMIT_REQUESTS", 120),
+            _env_float("RATE_LIMIT_WINDOW_SECONDS", 60.0),
+            os.getenv("REDIS_RATE_LIMIT_KEY_PREFIX", "fake-news:ratelimit:"),
+        )
+    if limiter is None:
+        limiter = RateLimiter(
+            _env_int("RATE_LIMIT_REQUESTS", 120),
+            _env_float("RATE_LIMIT_WINDOW_SECONDS", 60.0),
+            _env_int("RATE_LIMIT_MAX_CLIENTS", 10_000),
+        )
     trusted_proxy_ips = set(_env_csv("TRUSTED_PROXY_IPS"))
     web_concurrency = _env_int("WEB_CONCURRENCY", 1)
     distributed_limiter = os.getenv("DISTRIBUTED_RATE_LIMITER", "").strip()
     if web_concurrency > 1 and not distributed_limiter:
         raise ValueError("WEB_CONCURRENCY>1 requires DISTRIBUTED_RATE_LIMITER configuration")
     max_request_bytes = _env_int("MAX_REQUEST_BYTES", 1_000_000)
+    max_inflight_inference = _env_int("MAX_INFLIGHT_INFERENCE", 4)
+    if max_inflight_inference < 1:
+        raise ValueError("MAX_INFLIGHT_INFERENCE must be positive")
+    inference_budget = asyncio.Semaphore(max_inflight_inference)
+    drift_jobs = DriftJobManager(
+        _process_drift_payload,
+        maxsize=_env_int("DRIFT_QUEUE_MAXSIZE", 128),
+        workers=_env_int("DRIFT_WORKERS", 2),
+        ttl_seconds=_env_int("DRIFT_JOB_TTL_SECONDS", 900),
+    )
     if max_request_bytes < 1:
         raise ValueError("MAX_REQUEST_BYTES must be positive")
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         application.state.model_service = model_service
+        await drift_jobs.start()
         load = getattr(model_service, "load", None)
         if callable(load):
             load()
         yield
         close = getattr(model_service, "close", None)
         if callable(close):
-            close()
+            result = close()
+            if hasattr(result, "__await__"):
+                await result
+        await drift_jobs.stop()
+        limiter_close = getattr(limiter, "close", None)
+        if callable(limiter_close):
+            result = limiter_close()
+            if hasattr(result, "__await__"):
+                await result
 
     application = FastAPI(title="Fake News Detection API", version="0.3.0", lifespan=lifespan)
     application.add_middleware(
@@ -493,7 +555,7 @@ def create_app(
                     headers={"X-Request-ID": request_id},
                 )
         if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready"}:
-            allowed, retry_after = limiter.check(_client_key(request, trusted_proxy_ips))
+            allowed, retry_after = await limiter.check_async(_client_key(request, trusted_proxy_ips))
             if not allowed:
                 return JSONResponse(
                     status_code=429,
@@ -523,47 +585,43 @@ def create_app(
             raise HTTPException(status_code=503, detail=_service_diagnostics(model_service))
         return {"status": "ready", **_service_diagnostics(model_service)}
 
-    @application.post("/monitoring/drift")
-    def monitoring_drift(request: DriftRequest) -> dict[str, Any]:
+    @application.post("/monitoring/drift", status_code=202)
+    async def monitoring_drift(request: DriftRequest) -> dict[str, Any]:
         try:
-            reports: dict[str, Any] = {"baseline_revision": request.baseline_revision, "window_id": request.window_id}
-            drifted: list[str] = []
-            if request.reference is not None and request.current is not None:
-                numeric = monitor_features(request.reference, request.current, ks_alpha=request.ks_alpha, psi_threshold=request.psi_threshold)
-                reports["numeric"] = numeric
-                reports.update(numeric)
-                if numeric["drift_detected"]:
-                    drifted.extend(name for name, detail in numeric["features"].items() if detail["ks"]["drift_detected"] or detail["psi_drift_detected"])
-            if request.reference_probabilities is not None and request.current_probabilities is not None:
-                probability = monitor_prediction_probabilities(request.reference_probabilities, request.current_probabilities, psi_threshold=request.psi_threshold, ks_alpha=request.ks_alpha)
-                reports["probability"] = probability
-                if probability["drift_detected"]:
-                    drifted.append("prediction_probability")
-            if request.reference_texts is not None and request.current_texts is not None:
-                text = monitor_text_batch(request.reference_texts, request.current_texts, oov_threshold=request.oov_threshold, length_threshold=request.length_threshold, ks_alpha=request.ks_alpha)
-                reports["text"] = text
-                if text["drift_detected"]:
-                    drifted.extend(text["drifted_features"])
-            reports["drifted_features"] = sorted(set(drifted))
-            reports["drift_detected"] = bool(drifted)
-            reports["retraining_signal"] = build_retraining_signal(reports, baseline_revision=request.baseline_revision, window_id=request.window_id)
-            return reports
-        except (ValueError, RuntimeError) as exc:
-            raise HTTPException(status_code=422, detail=f"Drift monitoring failed: {type(exc).__name__}") from exc
+            job_id = await drift_jobs.submit(request.model_dump())
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail="Drift job queue unavailable") from exc
+        return {"job_id": job_id, "status": "queued"}
+
+    @application.get("/monitoring/drift/{job_id}")
+    async def monitoring_drift_status(job_id: str) -> dict[str, Any]:
+        status = drift_jobs.status(job_id)
+        if status is None:
+            raise HTTPException(status_code=404, detail="Drift job not found")
+        return status
+
+    async def bounded_predict(requests: list[PredictionRequest]) -> list[PredictionResponse]:
+        if inference_budget.locked():
+            raise HTTPException(status_code=429, detail="Inference concurrency budget exhausted")
+        await inference_budget.acquire()
+        try:
+            return await run_in_threadpool(model_service.predict, requests)
+        finally:
+            inference_budget.release()
 
     @application.post("/predict", response_model=PredictionResponse)
-    def predict(request: PredictionRequest) -> PredictionResponse:
+    async def predict(request: PredictionRequest) -> PredictionResponse:
         try:
-            return _enrich_prediction(model_service.predict([request])[0], request.content())
+            return _enrich_prediction((await bounded_predict([request]))[0], request.content())
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:
             raise HTTPException(status_code=422, detail="Prediction request rejected") from exc
 
     @application.post("/predict/batch", response_model=BatchPredictionResponse)
-    def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
+    async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
         try:
-            predictions = [_enrich_prediction(prediction, request_item.content()) for prediction, request_item in zip(model_service.predict(request.requests), request.requests, strict=True)]
+            predictions = [_enrich_prediction(prediction, request_item.content()) for prediction, request_item in zip(await bounded_predict(request.requests), request.requests, strict=True)]
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail="Prediction service unavailable") from exc
         except (ValueError, TypeError) as exc:

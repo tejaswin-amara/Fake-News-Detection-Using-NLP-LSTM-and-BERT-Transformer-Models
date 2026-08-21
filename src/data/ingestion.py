@@ -19,6 +19,8 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from src.features.minhash import find_near_duplicate_groups as find_streaming_near_duplicate_groups
+
 INTERNAL_LABELS = {"real": 0, "fake": 1}
 _REQUIRED_COLUMNS = {"id", "title", "text", "label", "dataset"}
 
@@ -254,7 +256,7 @@ def find_near_duplicate_groups(
 
 
 def remove_near_duplicates(frame: pd.DataFrame, **kwargs: object) -> tuple[pd.DataFrame, int]:
-    groups = find_near_duplicate_groups(frame, **kwargs)
+    groups = find_streaming_near_duplicate_groups(frame["content"].astype(str).tolist(), **kwargs)
     remove = {index for group in groups for index in group[1:]}
     return frame.drop(index=sorted(remove)).reset_index(drop=True), len(remove)
 

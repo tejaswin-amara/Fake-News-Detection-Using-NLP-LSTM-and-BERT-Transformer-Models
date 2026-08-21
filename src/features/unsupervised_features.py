@@ -25,6 +25,7 @@ class UnsupervisedFeatureAugmenter:
     include_minibatch_kmeans: bool = False
     include_dbscan: bool = True
     include_anomaly: bool = True
+    online: bool = False
     minibatch_size: int = 256
 
     def __post_init__(self) -> None:
@@ -34,7 +35,9 @@ class UnsupervisedFeatureAugmenter:
         self.n_input_features_: int | None = None
 
     def fit(self, X: Any, y: Any = None) -> UnsupervisedFeatureAugmenter:
-        values = X.toarray() if hasattr(X, "toarray") else np.asarray(X)
+        if self.online and self.include_dbscan:
+            raise ValueError("DBSCAN is offline-only and cannot be used in online feature generation")
+        values = self.analyzer._as_dense(X)
         self.n_input_features_ = int(values.shape[1])
         if self.include_kmeans:
             self.analyzer.fit_kmeans(values, n_clusters=self.n_clusters)
@@ -58,7 +61,7 @@ class UnsupervisedFeatureAugmenter:
     def transform(self, X: Any) -> np.ndarray:
         if not self._fitted:
             raise RuntimeError("UnsupervisedFeatureAugmenter must be fit on training data first")
-        values = X.toarray() if hasattr(X, "toarray") else np.asarray(X)
+        values = self.analyzer._as_dense(X)
         if values.shape[1] != self.n_input_features_:
             raise ValueError("Input feature dimension differs from the fitted training schema")
         extras: list[np.ndarray] = []

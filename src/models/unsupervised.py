@@ -12,8 +12,9 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from scipy import sparse
 from sklearn.cluster import DBSCAN, AgglomerativeClustering, KMeans, MiniBatchKMeans
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.ensemble import IsolationForest
 from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score
@@ -36,13 +37,22 @@ class UnsupervisedAnalyzer:
         self.minibatch_kmeans: MiniBatchKMeans | None = None
         self.hierarchical: AgglomerativeClustering | None = None
         self.dbscan: DBSCAN | None = None
-        self.pca: PCA | None = None
+        self.pca: PCA | TruncatedSVD | None = None
         self.pca_scaler: StandardScaler | None = None
+        self.svd: TruncatedSVD | None = None
         self.isolation_forest: IsolationForest | None = None
 
-    @staticmethod
-    def _as_dense(matrix: Any) -> np.ndarray:
-        values = matrix.toarray() if hasattr(matrix, "toarray") else np.asarray(matrix)
+    def _as_dense(self, matrix: Any) -> np.ndarray:
+        if sparse.issparse(matrix):
+            if self.svd is None:
+                rows, columns = matrix.shape
+                components = max(1, min(128, rows - 1 if rows > 1 else 1, columns - 1 if columns > 1 else 1))
+                self.svd = TruncatedSVD(n_components=components, random_state=self.random_state)
+                values = self.svd.fit_transform(matrix)
+            else:
+                values = self.svd.transform(matrix)
+        else:
+            values = np.asarray(matrix)
         if values.ndim != 2:
             raise ValueError("Unsupervised representations must be a two-dimensional matrix")
         return values.astype(np.float32, copy=False)
@@ -227,7 +237,8 @@ def reduce_for_visualization(
     matrix: Any, method: str = "pca", random_state: int = 42, standardize: bool = True, **kwargs: Any
 ) -> np.ndarray:
     """Fit a visualization-only reducer on the supplied reference matrix."""
-    values = UnsupervisedAnalyzer._as_dense(matrix)
+    values = UnsupervisedAnalyzer(random_state=random_state)._as_dense(matrix)
+
     if standardize:
         values = StandardScaler().fit_transform(values)
     n_components = kwargs.get("n_components", 2)

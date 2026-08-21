@@ -198,3 +198,7 @@ NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nlt
 ### SRC-036 — DVC data versioning
 
 [DVC documentation](https://dvc.org/doc), [DVC repository](https://github.com/iterative/dvc), and [DVC package metadata](https://pypi.org/project/dvc/). **Use:** `.dvc/`, `.dvcignore`, `dvc.yaml`, `params.yaml`, `requirements.txt`, and `pyproject.toml`. **Accessed:** 2026-08-20. **Terms:** DVC is open-source software; retain the package license and record the selected DVC version in reproducibility metadata.
+
+### SRC-037 — Redis atomic Lua scripting
+
+[Redis Lua scripting documentation](https://redis.io/docs/latest/develop/programmability/lua-api/). **Use:** atomic increment, expiry, and fixed-window decision logic in `src/serving/rate_limiter.py`, the Redis service wiring in `docker-compose.yml`, and the Phase 7 zero-trust documentation. **Accessed:** 2026-08-21. **Terms:** Redis open-source documentation and software terms apply; production operators must review the selected Redis image and deployment license. **Files:** `src/serving/rate_limiter.py`, `docker-compose.yml`, `docs/security_hardening.md`, `docs/deployment.md`, `docs/compliance_matrix.md`.

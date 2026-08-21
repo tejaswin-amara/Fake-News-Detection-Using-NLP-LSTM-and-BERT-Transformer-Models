@@ -7,6 +7,8 @@ neural operation without changing inference semantics.
 
 from __future__ import annotations
 
+import base64
+import copy
 import hashlib
 import json
 import platform
@@ -38,6 +40,43 @@ def save_native_artifact(model: Any, path: str | Path, metadata: dict[str, Any])
     return output
 
 
+def _canonical_manifest_bytes(manifest: dict[str, Any]) -> bytes:
+    unsigned = copy.deepcopy(manifest)
+    unsigned.pop("signature", None)
+    return json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def verify_package_manifest(
+    manifest_path: str | Path,
+    native_path: str | Path,
+    *,
+    public_key_b64: str,
+    require_signature: bool = True,
+) -> dict[str, Any]:
+    """Verify manifest integrity, artifact digest, and optional Ed25519 signature."""
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError("Package manifest must be a JSON object")
+    declared = str(manifest.get("native_artifact", {}).get("sha256", "")).lower()
+    actual = sha256_file(native_path)
+    if not declared or declared != actual:
+        raise ValueError("Native artifact digest does not match package manifest")
+    signature = manifest.get("signature")
+    if require_signature and not isinstance(signature, dict):
+        raise ValueError("Signed package manifest is required")
+    if signature is not None:
+        if not public_key_b64:
+            raise ValueError("A manifest public key is required to verify the signature")
+        try:
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+            public_key = Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key_b64, validate=True))
+            public_key.verify(base64.b64decode(str(signature["signature_b64"]), validate=True), _canonical_manifest_bytes(manifest))
+        except (KeyError, ValueError, TypeError) as exc:
+            raise ValueError("Package manifest signature verification failed") from exc
+    return manifest
+
+
 def load_native_artifact(path: str | Path, expected_sha256: str | None = None) -> dict[str, Any]:
     """Verify an optional trusted digest before crossing the joblib boundary."""
     artifact_path = Path(path)
@@ -53,6 +92,17 @@ def load_native_artifact(path: str | Path, expected_sha256: str | None = None) -
     if not isinstance(artifact, dict) or "model" not in artifact:
         raise ValueError("Native artifact must contain model and metadata keys")
     return artifact
+
+
+def load_verified_native_artifact(
+    path: str | Path,
+    manifest_path: str | Path,
+    *,
+    public_key_b64: str,
+    require_signature: bool = True,
+) -> dict[str, Any]:
+    verify_package_manifest(manifest_path, path, public_key_b64=public_key_b64, require_signature=require_signature)
+    return load_native_artifact(path, sha256_file(path))
 
 
 def artifact_metadata(
@@ -95,6 +145,7 @@ def build_package_manifest(
         "created_at": datetime.now(UTC).isoformat(),
         "runtime": {"python": sys.version, "platform": platform.platform()},
         "source_ids": metadata.get("source_ids", ["SRC-008", "SRC-010", "SRC-031", "SRC-034"]),
+        "signature": None,
     }
     return manifest
 
@@ -105,7 +156,9 @@ def export_onnx_sklearn(model: Any, output_path: str | Path, sample_features: An
         from skl2onnx.common.data_types import FloatTensorType
     except ImportError as exc:
         raise RuntimeError("Install skl2onnx to export sklearn models to ONNX") from exc
-    features = sample_features.toarray() if hasattr(sample_features, "toarray") else np.asarray(sample_features)
+    if hasattr(sample_features, "tocsr") or hasattr(sample_features, "toarray"):
+        raise ValueError("ONNX sklearn export does not support sparse TF-IDF features; use native sparse serving")
+    features = np.asarray(sample_features)
     if features.ndim != 2 or features.shape[1] == 0:
         raise ValueError("sample_features must be a non-empty two-dimensional feature matrix")
     initial_type = [("features", FloatTensorType([None, features.shape[1]]))]
@@ -124,7 +177,9 @@ def onnx_predict_proba(onnx_path: str | Path, features: Any) -> FloatMatrix:
         import onnxruntime as ort
     except ImportError as exc:
         raise RuntimeError("Install onnxruntime to execute ONNX artifacts") from exc
-    matrix = features.toarray() if hasattr(features, "toarray") else np.asarray(features)
+    if hasattr(features, "tocsr") or hasattr(features, "toarray"):
+        raise ValueError("ONNX inference does not support sparse TF-IDF features; use native sparse serving")
+    matrix = np.asarray(features)
     session = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
     input_name = session.get_inputs()[0].name
     outputs = session.run(None, {input_name: matrix.astype(np.float32)})

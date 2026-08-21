@@ -160,6 +160,9 @@ serving:
   model_artifact: artifacts/models/logistic_l2.joblib
   model_artifact_sha256: ""
   package_manifest: artifacts/models/package_manifest.json
+  require_signed_artifact: false
+  artifact_public_key_b64: ""
+  hf_model_dir: ""
   onnx_model_path: ""
   serving_mode: native
   max_batch_size: 64
@@ -177,6 +180,12 @@ serving:
   trusted_proxy_ips: []
   web_concurrency: 1
   distributed_rate_limiter: ""
+  redis_url: redis://redis:6379/0
+  redis_rate_limit_key_prefix: "fake-news:ratelimit:"
+  max_inflight_inference: 4
+  drift_queue_maxsize: 128
+  drift_workers: 2
+  drift_job_ttl_seconds: 900
   reject_unknown_fields: true
   reject_control_characters: true
   onnx_execution_providers: [CPUExecutionProvider]

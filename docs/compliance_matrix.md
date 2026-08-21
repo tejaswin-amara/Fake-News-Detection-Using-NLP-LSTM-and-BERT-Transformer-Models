@@ -107,3 +107,37 @@ The hardening controls are engineering safeguards rather than a security certifi
 | L-3 | `docs/deployment.md` specifies Uvicorn/Gunicorn worker, replica, CPU, ONNX-thread, and distributed-limiter relationships | Deployment scaling table | Complete |
 
 The matrix distinguishes implementation closure from benchmark availability. No full-data metric is claimed unless the governed ISOT/WELFake lifecycle has actually executed with the required raw data and pretrained assets.
+
+## Phase 7 EX-01–EX-15 zero-trust closure matrix
+
+The following controls close the Phase 7 extreme-scale, air-gapped, and zero-trust serving requirements. They are implementation claims backed by repository tests and configuration contracts; production load, image, and vulnerability evidence remains authoritative when the corresponding CI or deployment runner executes.
+
+| EX ID | Requirement | Implementation evidence | Verification evidence | Status |
+|---|---|---|---|---|
+| EX-01 | Bounded streaming MinHash/LSH near-duplicate detection with no all-pairs matrix | `src/features/minhash.py`; `src/data/ingestion.py` | `tests/test_ingestion.py`; `tests/test_zero_trust.py` near-duplicate test | Complete |
+| EX-02 | Sparse TF-IDF must not be densified at the ONNX boundary | `src/serving/export.py`; `src/serving/predictor.py` | Sparse export/runtime rejection tests; 200,000-feature stress test | Complete |
+| EX-03 | Sparse unsupervised representations use bounded TruncatedSVD | `src/models/unsupervised.py`; `src/features/unsupervised_features.py` | Phase 2 dimensionality and schema tests | Complete |
+| EX-04 | DBSCAN is blocked for online feature augmentation | `UnsupervisedFeatureAugmenter(online=True)` guard | `tests/test_zero_trust.py` online DBSCAN guard | Complete |
+| EX-05 | Air-gapped BERT loading uses local files only | `src/models/bert.py`, `validate_offline_bundle`, offline environment flags | `tests/test_zero_trust.py` valid/missing bundle tests | Complete |
+| EX-06 | BERT bundle requires model configuration, vocabulary, and safetensors | `config.json`, `vocab.txt`, `model.safetensors` validation | Offline bundle validation regression test | Complete |
+| EX-07 | Signed native artifacts use Ed25519 manifest verification | `src/serving/export.py`; canonical manifest bytes; `REQUIRE_SIGNED_ARTIFACT` | Valid signature and digest-mismatch tests | Complete |
+| EX-08 | Artifact integrity fails closed before native deserialization | `load_verified_native_artifact()` and SHA-256 manifest checks | Existing artifact-integrity tests and signed-manifest tests | Complete |
+| EX-09 | Distributed multi-worker limiting uses atomic Redis Lua fixed windows | `src/serving/rate_limiter.py`; Compose Redis service | Mocked Redis `eval` contract; startup multi-worker assertion | Complete |
+| EX-10 | Inference concurrency is explicitly budgeted | `asyncio.Semaphore(MAX_INFLIGHT_INFERENCE)` and threadpool inference | Exhausted-budget `429` test | Complete |
+| EX-11 | Drift monitoring is asynchronous and bounded | `src/monitoring/jobs.py`; `DRIFT_QUEUE_MAXSIZE`; worker and TTL controls | `202` enqueue plus status polling tests | Complete |
+| EX-12 | Drift results have bounded lifecycle states and no autonomous retraining | Job TTL/status states; signal-only retraining hook | Drift completion and human-approval assertions | Complete |
+| EX-13 | Container base image is immutable and runtime is rootless | Digest-pinned multi-stage `Dockerfile`; non-root `appuser`; Compose read-only controls | Dockerfile/Compose contract tests and CI image assertion | Complete |
+| EX-14 | Runtime configuration exposes all zero-trust controls without secrets | `.env.example`; `configs/default.yaml`; read-only mounts | YAML/Compose parsing and source/config validation gates | Complete |
+| EX-15 | Phase 7 evidence is traceable to the handout and repository sources | This matrix; `docs/security_hardening.md`; `docs/deployment.md`; README; source register | `scripts/source_audit.py`, full test/lint/type/compile gates | Complete |
+
+These EX controls extend, rather than replace, the CO1–CO6 and M1–M6 matrix above. No row authorizes fabricated full-data metrics, test-set leakage, unreviewed retraining, or a claim that a local fixture is a production benchmark.
+
+## Completion and truthfulness rule
+
+A row is complete only when its code path, documentation path, and executable test or generated evidence artifact are present. A source citation alone is not implementation evidence, and implementation without a source-to-file mapping is not source-governed. A dynamic metric is reportable only when it comes from an executed artifact; unavailable full-data results remain explicitly unavailable rather than being represented by an unexecuted stand-in or invented benchmark.
+
+[1]: https://scikit-learn.org/stable/modules/clustering.html "scikit-learn clustering documentation"
+[2]: https://onnxruntime.ai/docs/ "ONNX Runtime documentation"
+[3]: https://huggingface.co/docs/transformers/index "Hugging Face Transformers documentation"
+[4]: https://redis.io/docs/latest/develop/programmability/lua-api/ "Redis Lua scripting documentation"
+[5]: https://docs.docker.com/reference/dockerfile/ "Dockerfile reference"

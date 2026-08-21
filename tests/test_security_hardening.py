@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,19 @@ from src.monitoring.drift import (
 from src.serving.app import PredictionResponse, RateLimiter, create_app
 from src.serving.predictor import OnnxRuntimeConfig
 from src.tracking import initialize_tracking
+
+
+def poll_drift(client: TestClient, response) -> dict[str, Any]:
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    for _ in range(100):
+        payload = client.get(f"/monitoring/drift/{job_id}")
+        assert payload.status_code == 200
+        status = payload.json()
+        if status["status"] in {"completed", "failed", "expired"}:
+            return status
+        time.sleep(0.01)
+    pytest.fail("Drift job did not reach a terminal state")
 
 
 class HardenedFakeService:
@@ -159,13 +173,14 @@ def test_low_signal_flag_for_punctuation_payload() -> None:
 
 
 def test_benjamini_hochberg_metadata_is_present() -> None:
-    client = TestClient(create_app(HardenedFakeService(), RateLimiter(limit=100, window_seconds=60)))
-    response = client.post(
-        "/monitoring/drift",
-        json={"reference": {"a": [0.0, 0.0, 0.0], "b": [0.0, 0.0, 0.0]}, "current": {"a": [0.0, 0.0, 0.0], "b": [1.0, 1.0, 1.0]}},
-    )
-    assert response.status_code == 200
-    assert response.json()["numeric"]["multiple_testing"]["method"] == "benjamini_hochberg"
+    with TestClient(create_app(HardenedFakeService(), RateLimiter(limit=100, window_seconds=60))) as client:
+        response = client.post(
+            "/monitoring/drift",
+            json={"reference": {"a": [0.0, 0.0, 0.0], "b": [0.0, 0.0, 0.0]}, "current": {"a": [0.0, 0.0, 0.0], "b": [1.0, 1.0, 1.0]}},
+        )
+        payload = poll_drift(client, response)
+        assert payload["status"] == "completed"
+        assert payload["result"]["numeric"]["multiple_testing"]["method"] == "benjamini_hochberg"
 
 
 def test_multi_worker_without_distributed_limiter_is_blocked(monkeypatch: pytest.MonkeyPatch) -> None:

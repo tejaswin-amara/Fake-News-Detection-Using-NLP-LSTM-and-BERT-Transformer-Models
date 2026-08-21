@@ -34,7 +34,8 @@ docker run --rm -p 8000:8000 \
 | `/ready` | GET | Strict readiness probe; returns 200 only when a prediction-capable artifact is loaded |
 | `/predict` | POST | One validated title/body request |
 | `/predict/batch` | POST | Bounded ordered batch of requests |
-| `/monitoring/drift` | POST | Numeric, prediction-probability, and text-domain drift reports plus retraining signal |
+| `/monitoring/drift` | POST | Validate and enqueue numeric, prediction-probability, and text-domain drift work; returns `202` and `job_id` |
+| `/monitoring/drift/{job_id}` | GET | Poll bounded drift-job state and completed result |
 
 Every prediction response contains label, label name, real/fake probabilities, raw and calibrated probability fields, nullable confidence-interval bounds, model name, artifact version, calibration status, and serving mode. Every HTTP response exposes `X-Process-Time-Ms`. Confidence intervals remain `null` unless a validated uncertainty manifest is included; the service never fabricates uncertainty.
 
@@ -55,6 +56,8 @@ curl -s -X POST http://localhost:8000/predict/batch \
 curl -s -X POST http://localhost:8000/monitoring/drift \
   -H 'Content-Type: application/json' \
   -d '{"reference_probabilities":[0.1,0.2,0.3,0.4],"current_probabilities":[0.8,0.9,0.9,0.95],"baseline_revision":"training-reference-v1","window_id":"2026-08-20"}'
+# Read the returned job_id, then poll it until status is completed, failed, or expired.
+curl -s http://localhost:8000/monitoring/drift/<job_id>
 ```
 
 Empty or whitespace-only text, oversized text, empty batches, malformed JSON, and invalid probability/reference arrays are rejected with validation errors. `/ready` returns 503 when the configured model artifact cannot be loaded.
@@ -118,11 +121,12 @@ The runner uses `MLFLOW_TRACKING_URI`, `MLFLOW_EXPERIMENT_NAME`, `MODEL_ARTIFACT
 
 ## Docker Compose orchestration
 
-`docker-compose.yml` defines three health-aware services on an isolated bridge network:
+`docker-compose.yml` defines four health-aware services on an isolated bridge network:
 
 | Service | Role | Persistent state and boundary |
 |---|---|---|
-| `api` | Rootless FastAPI serving image | Read-only `artifacts/` and `configs/` mounts; `/ready` healthcheck; port 8000 |
+| `api` | Rootless FastAPI serving image | Read-only `artifacts/` and `configs/` mounts; `/ready` healthcheck; port 8000; depends on healthy Redis |
+| `redis` | Atomic distributed rate-limit store | Read-only root filesystem with named `fake-news-detection-redis` data volume; healthchecked on the isolated network |
 | `mlflow` | Local MLflow tracking server | Named `fake-news-detection-mlflow` volume under the appuser-owned `/app/mlflow`; port 5000 |
 | `traffic` | Synthetic prediction/drift generator | No data volume; logs statuses/latency only; depends on API and MLflow health |
 
@@ -137,7 +141,7 @@ curl -s http://localhost:5000/health
 docker compose down
 ```
 
-The traffic service invokes `/predict` at `TRAFFIC_INTERVAL_SECONDS` and `/monitoring/drift` every `TRAFFIC_DRIFT_EVERY` requests. It can be run as a finite smoke test outside Compose:
+The traffic service invokes `/predict` at `TRAFFIC_INTERVAL_SECONDS` and submits `/monitoring/drift` every `TRAFFIC_DRIFT_EVERY` requests. Drift submission is asynchronous and returns `202`; the service records the submission status and does not trigger retraining. It can be run as a finite smoke test outside Compose:
 
 ```bash
 python scripts/synthetic_traffic.py \
@@ -199,7 +203,15 @@ The Compose stack runs each service with a read-only root filesystem, `cap_drop:
 
 The lifecycle runner validates the DVC cache path before running and retries idempotent `dvc repro` a bounded number of times. MLflow initialization retries transient failures and can use the explicitly configured local fallback. Neither path deletes caches, fabricates data, suppresses provenance failures, nor performs autonomous retraining.
 
-See [`docs/security_hardening.md`](security_hardening.md) for the threat model, request-boundary policy, logging/secrets policy, drift safeguards, CI security gates, and rollback response.
+See [`docs/security_hardening.md`](security_hardening.md) for the threat model, request-boundary policy, signed-artifact and air-gapped BERT controls, sparse/dense serving boundary, Redis/semaphore/queue safeguards, logging/secrets policy, drift safeguards, CI security gates, and rollback response.
+
+## Phase 7 zero-trust operating profile
+
+Production artifact promotion should set `REQUIRE_SIGNED_ARTIFACT=true`, provide `PACKAGE_MANIFEST` and `ARTIFACT_PUBLIC_KEY_B64`, and mount the artifact directory read-only. `MODEL_ARTIFACT_SHA256` remains a valid single-artifact integrity fallback only when signed manifests are explicitly disabled for development. BERT deployments must point `HF_MODEL_DIR` at a pre-staged local `bert-base-uncased` bundle containing `config.json`, `vocab.txt`, and `model.safetensors`; outbound Hub access is disabled by the loader.
+
+ONNX is a dense-only serving format in this project. Native TF-IDF models retain sparse matrices, while ONNX export and runtime reject sparse feature objects rather than densifying them. For online unsupervised augmentation, keep DBSCAN disabled and use the bounded SVD-backed path. Near-duplicate filtering is streaming MinHash/LSH with bounded buckets and no all-pairs matrix.
+
+For more than one worker or replica, set `DISTRIBUTED_RATE_LIMITER=redis` and `REDIS_URL` and ensure the Redis service or an equivalent shared gateway is healthy before admitting traffic. Set `MAX_INFLIGHT_INFERENCE`, `DRIFT_QUEUE_MAXSIZE`, `DRIFT_WORKERS`, and `DRIFT_JOB_TTL_SECONDS` from observed capacity. A full drift queue returns `503`, inference-budget exhaustion returns `429`, and expired job IDs return a non-success status; none of these conditions silently execute unbounded work.
 
 ## Scaling, workers, and rate limiting
 

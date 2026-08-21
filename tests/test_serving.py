@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +15,19 @@ from src.monitoring.drift import (
 )
 from src.serving.app import create_app
 from src.serving.export import assert_onnx_parity, export_onnx_sklearn, onnx_predict_proba
+
+
+def poll_drift(client: TestClient, response) -> dict:
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    for _ in range(100):
+        status_response = client.get(f"/monitoring/drift/{job_id}")
+        assert status_response.status_code == 200
+        payload = status_response.json()
+        if payload["status"] in {"completed", "failed", "expired"}:
+            return payload
+        time.sleep(0.01)
+    pytest.fail("Drift job did not reach a terminal state")
 
 
 class FakeService:
@@ -64,19 +79,20 @@ def test_validation_rejects_empty_text():
 
 
 def test_drift_monitoring_hook_reports_ks_and_psi():
-    client = TestClient(create_app(FakeService()))
-    reference = {"feature_0": list(range(100))}
-    current = {"feature_0": list(range(50, 150))}
-    response = client.post(
-        "/monitoring/drift",
-        json={"reference": reference, "current": current, "psi_threshold": 0.0},
-    )
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["drift_detected"] is True
-    assert "ks" in payload["features"]["feature_0"]
-    assert "psi" in payload["features"]["feature_0"]
-    assert client.post("/predict", json={"text": "fake report"}).status_code == 200
+    with TestClient(create_app(FakeService())) as client:
+        reference = {"feature_0": list(range(100))}
+        current = {"feature_0": list(range(50, 150))}
+        response = client.post(
+            "/monitoring/drift",
+            json={"reference": reference, "current": current, "psi_threshold": 0.0},
+        )
+        payload = poll_drift(client, response)
+        assert payload["status"] == "completed"
+        result = payload["result"]
+        assert result["drift_detected"] is True
+        assert "ks" in result["features"]["feature_0"]
+        assert "psi" in result["features"]["feature_0"]
+        assert client.post("/predict", json={"text": "fake report"}).status_code == 200
     direct = monitor_features(reference, current, psi_threshold=0.0)
     assert direct["drift_detected"] is True
 
@@ -156,27 +172,29 @@ def test_readiness_fails_when_artifact_is_missing(tmp_path):
 
 
 def test_drift_endpoint_accepts_probability_and_text_payloads():
-    client = TestClient(create_app(FakeService()))
-    probability_response = client.post(
-        "/monitoring/drift",
-        json={
-            "reference_probabilities": [0.1] * 20,
-            "current_probabilities": [0.9] * 20,
-            "psi_threshold": 0.01,
-            "baseline_revision": "fixture-v1",
-            "window_id": "window-1",
-        },
-    )
-    assert probability_response.status_code == 200
-    assert probability_response.json()["probability"]["drift_detected"] is True
-    text_response = client.post(
-        "/monitoring/drift",
-        json={
-            "reference_texts": ["short known report"] * 20,
-            "current_texts": ["unseen phrase " * 10] * 20,
-            "oov_threshold": 0.01,
-            "length_threshold": 0.01,
-        },
-    )
-    assert text_response.status_code == 200
-    assert text_response.json()["text"]["drift_detected"] is True
+    with TestClient(create_app(FakeService())) as client:
+        probability_response = client.post(
+            "/monitoring/drift",
+            json={
+                "reference_probabilities": [0.1] * 20,
+                "current_probabilities": [0.9] * 20,
+                "psi_threshold": 0.01,
+                "baseline_revision": "fixture-v1",
+                "window_id": "window-1",
+            },
+        )
+        probability_payload = poll_drift(client, probability_response)
+        assert probability_payload["status"] == "completed"
+        assert probability_payload["result"]["probability"]["drift_detected"] is True
+        text_response = client.post(
+            "/monitoring/drift",
+            json={
+                "reference_texts": ["short known report"] * 20,
+                "current_texts": ["unseen phrase " * 10] * 20,
+                "oov_threshold": 0.01,
+                "length_threshold": 0.01,
+            },
+        )
+        text_payload = poll_drift(client, text_response)
+        assert text_payload["status"] == "completed"
+        assert text_payload["result"]["text"]["drift_detected"] is True

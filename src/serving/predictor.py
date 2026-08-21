@@ -116,8 +116,9 @@ class OnnxTextModel:
     def predict_proba(self, texts: Iterable[str]) -> FloatMatrix:
         values = list(texts)
         transformed = self.text_pipeline.transform(values)
-        dense = transformed.toarray() if hasattr(transformed, "toarray") else transformed
-        matrix = np.asarray(dense, dtype=np.float32)
+        if hasattr(transformed, "tocsr") or hasattr(transformed, "toarray"):
+            raise RuntimeError("ONNX dense serving cannot accept sparse TF-IDF features; use native sparse serving")
+        matrix = np.asarray(transformed, dtype=np.float32)
         outputs = self.session.run(None, {self.input_name: matrix})
         if len(outputs) < 2:
             raise RuntimeError("ONNX classifier must expose label and probability outputs")

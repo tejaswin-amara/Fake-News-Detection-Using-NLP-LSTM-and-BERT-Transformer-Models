@@ -274,3 +274,10 @@ sources:
     accessed: "2026-08-20"
     license_or_terms: "Open-source software; retain package license and record the selected version."
     supports: [.dvc/config, .dvcignore, dvc.yaml, params.yaml, requirements.txt, pyproject.toml]
+  - id: SRC-037
+    category: distributed_rate_limiting
+    citation: "Redis Lua scripting documentation for atomic server-side scripts."
+    url: https://redis.io/docs/latest/develop/programmability/lua-api/
+    accessed: "2026-08-21"
+    license_or_terms: "Redis documentation and selected Redis image/software terms must be reviewed for deployment."
+    supports: [src/serving/rate_limiter.py, docker-compose.yml, docs/security_hardening.md, docs/deployment.md, docs/compliance_matrix.md]

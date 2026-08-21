@@ -19,7 +19,7 @@ The repository is **100% implemented across CO1–CO6 and Modules M1–M6** agai
 
 ## Deep Audit hardening
 
-The final hardening pass adds strict Pydantic request validation, deny-by-default CORS, bounded rate limiting, sanitized error responses, lifespan-managed model/session loading, explicit ONNX provider/thread controls, finite probability validation, stable KS/PSI drift mathematics, MLflow retry/fallback behavior, DVC cache validation, and rootless read-only Compose controls. The evidence is documented in [`docs/security_hardening.md`](docs/security_hardening.md) and mapped in [`docs/compliance_matrix.md`](docs/compliance_matrix.md).
+The final hardening pass adds strict Pydantic request validation, deny-by-default CORS, bounded rate limiting, sanitized error responses, lifespan-managed model/session loading, explicit ONNX provider/thread controls, finite probability validation, stable KS/PSI drift mathematics, MLflow retry/fallback behavior, DVC cache validation, and rootless read-only Compose controls. Phase 7 extends this with Ed25519-signed manifests, air-gapped `bert-base-uncased` bundles, sparse-safe dense/ONNX boundaries, streaming MinHash/LSH duplicate control, Redis-backed distributed limiting, bounded inference concurrency, and an asynchronous drift queue. The evidence is documented in [`docs/security_hardening.md`](docs/security_hardening.md) and mapped in [`docs/compliance_matrix.md`](docs/compliance_matrix.md).
 
 CI now runs Ruff, strict mypy, Bandit SAST, pip-audit dependency scanning, the complete pytest suite, MLflow smoke operation, the rootless image-user assertion, and Trivy container scanning. The local rate limiter is explicitly a single-instance fallback; multi-replica production deployments require a shared gateway or Redis-backed limiter.
 
@@ -65,9 +65,9 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `src/evaluation/plots.py` | Confusion, ROC/PR, reliability, calibration comparison, learning, and validation curves | CO5/M5 |
 | `src/evaluation/search.py` | Grid/random/Bayesian search, result schemas, and serialization | CO5/M5 |
 | `src/train.py` and `src/evaluate.py` | Search orchestration, serving-safe packaging, held-out test reporting, calibration, plots, MLflow logging, and executable `logistic_*`, tree, `xgboost`, `lightgbm`, `unsupervised`, `lstm`, and `bert` dispatch paths | CO1/M1, CO5/M5, CO6/M6 |
-| `src/serving/app.py` | FastAPI `/health`, `/ready`, `/predict`, `/predict/batch`, and `/monitoring/drift` with schema validation and latency headers | CO6/M6 |
+| `src/serving/app.py` | FastAPI `/health`, `/ready`, `/predict`, `/predict/batch`, asynchronous `/monitoring/drift` enqueue/status endpoints, schema validation, concurrency budget, and latency headers | CO6/M6 |
 | `src/serving/predictor.py` | Bound preprocessing-plus-model inference contract | CO1/M1, CO6/M6 |
-| `src/serving/export.py` | Native package manifests, checksums, trusted SHA-256 verification before joblib deserialization, ONNX/TorchScript export, ONNX Runtime parity | CO6/M6 |
+| `src/serving/export.py` | Native package manifests, SHA-256 and Ed25519 verification before joblib deserialization, dense-only ONNX/TorchScript export, and ONNX Runtime parity | CO6/M6 |
 | `src/monitoring/drift.py` | KS/PSI feature and probability drift, Benjamini–Hochberg correction, text/OOV monitoring, retraining signals | CO6/M6 |
 | `src/tracking.py` | Optional MLflow experiment and artifact tracking | CO6/M6 |
 | `src/train.py` | Reproducible classical training entry point | CO1/M1, CO2/M2, CO3/M3 |
@@ -88,7 +88,7 @@ A single online request follows the path **HTTP validation → text normalizatio
 | `scripts/generate_reports.py` | Best finalized MLflow run selection, artifact download, plot normalization, checksums, and report manifest | CO5/M5, CO6/M6 |
 | `scripts/synthetic_traffic.py` | Configurable prediction and drift traffic with finite test mode and signal-aware shutdown | CO6/M6 |
 | `scripts/run_pipeline.sh` | One-command validation, DVC repro, MLflow evaluation, ONNX export, tests, and report generation | CO1/M1, CO5/M5, CO6/M6 |
-| `docker-compose.yml` | FastAPI, MLflow, and synthetic traffic orchestration with healthchecks and named volumes | CO6/M6 |
+| `docker-compose.yml` | FastAPI, Redis, MLflow, and synthetic traffic orchestration with healthchecks, read-only controls, and named volumes | CO6/M6 |
 | `.github/workflows/ci.yml` | Pull-request/main CI, pinned dependencies, DVC validation, MLflow startup, tests, image build, and Trivy scan | CO6/M6 |
 
 ## Data and label policy
@@ -155,7 +155,9 @@ The supervised benchmark compares Ridge, Lasso, ElasticNet, binary/multinomial L
 
 ## Serving and monitoring scope
 
-The FastAPI service will expose `/health`, `/predict`, and `/predict/batch` with Pydantic validation, bounded payloads, model/version metadata, structured errors, and latency headers. Supported models will be exportable to ONNX and TorchScript where technically valid, with a tested native fallback for unsupported operations. Monitoring will include feature and embedding distribution checks using the Kolmogorov–Smirnov test and Population Stability Index, together with hooks for latency, throughput, delayed-label performance, data drift, concept drift, and label drift.
+The FastAPI service exposes `/health`, `/ready`, `/predict`, and `/predict/batch` with Pydantic validation, bounded payloads, model/version metadata, structured errors, and latency headers. Native sparse TF-IDF serving remains authoritative where appropriate; ONNX conversion and inference reject sparse matrices rather than densifying high-dimensional inputs. Signed package manifests can be required before native deserialization, and BERT loading is air-gapped through a validated local `bert-base-uncased` bundle.
+
+Monitoring includes feature and embedding distribution checks using the Kolmogorov–Smirnov test and Population Stability Index, together with latency, throughput, delayed-label performance, data drift, concept drift, and label drift hooks. Drift submissions return `202` and a bounded job ID for polling. Retraining remains a human-approved signal only. Redis-backed rate limiting is required for distributed workers or replicas, while `MAX_INFLIGHT_INFERENCE` bounds CPU work in each process.
 
 ## Source policy
 
@@ -165,15 +167,15 @@ The FastAPI service will expose `/health`, `/predict`, and `/predict/batch` with
 
 The complete bibliography is reproduced below so that the README is self-contained. The detailed, file-mapped source register remains in [`docs/sources.md`](docs/sources.md), and machine-readable provenance remains in [`docs/sources.yaml`](docs/sources.yaml). Those files additionally record source IDs, access dates, versions or revisions, checksums, license/usage terms, and exact repository-file mappings. The README list and both source-register files are intended to remain synchronized.
 
-## Final Phase 5 completion trace
+## Final Phase 7 completion trace
 
-The final production path is **governed raw data → DVC ingest/train/evaluate → MLflow run and held-out plots → native package and optional ONNX parity `<1e-5` → rootless API container → HTTP validation → fitted text transformation/tokenization → inference → calibrated/raw response metadata → probability/text/feature drift logging → signal-only retraining review**. GitHub Actions runs pinned dependency installation, Ruff, compilation, YAML/source/DVC validation, a local MLflow server, the complete test suite, rootless image build, and Trivy high/critical vulnerability scanning. Docker Compose starts FastAPI, MLflow, and synthetic traffic with healthchecks and read-only artifact/config mounts.
+The final production path is **governed raw data → DVC ingest/train/evaluate → MLflow run and held-out plots → native package plus optional ONNX parity `<1e-5` → SHA-256/Ed25519 artifact verification → rootless API container → strict HTTP validation → fitted sparse-safe transformation/tokenization → bounded inference semaphore and threadpool execution → calibrated/raw response metadata → asynchronous probability/text/feature drift job → signal-only retraining review**. GitHub Actions runs pinned dependency installation, Ruff, compilation, YAML/source/DVC validation, a local MLflow server, the complete test suite, rootless image build, and Trivy high/critical vulnerability scanning. Docker Compose starts FastAPI, Redis, MLflow, and synthetic traffic with healthchecks and read-only artifact/config mounts. Air-gapped BERT loading, bounded MinHash/LSH duplicate filtering, sparse-safe SVD paths, and online DBSCAN guards are covered by the Phase 7 evidence matrix.
 
 `docs/compliance_matrix.md` declares completion across all CO1–CO6 and M1–M6 requirements. `docs/model_cards.md`, `docs/dataset_card.md`, and `docs/mathematical_formulation.md` provide the final model, data, ethics, provenance, and mathematical evidence. `docs/deployment.md` remains the operational request-to-monitoring guide.
 
 ## Status
 
-The repository is **Complete through Phase 5**. Reproducibility, source governance, handout traceability, production packaging, orchestration, CI/CD, monitoring boundaries, report provenance, and test evidence are treated as acceptance criteria rather than after-the-fact documentation. The final test suite is executed by CI with `python -m pytest -q`; it is not restricted to a hard-coded historical test count.
+The repository is **Complete through Phase 7**. Reproducibility, source governance, handout traceability, production packaging, zero-trust artifact verification, air-gapped model loading, bounded extreme-scale serving, orchestration, CI/CD, monitoring boundaries, report provenance, and test evidence are treated as acceptance criteria rather than after-the-fact documentation. The final test suite is executed by CI with `python -m pytest -q`; it is not restricted to a hard-coded historical test count.
 
 ## References
 

@@ -35,13 +35,15 @@ def test_ci_workflow_contains_required_phase5_gates():
         assert required in workflow
 
 
-def test_compose_declares_health_checked_api_mlflow_and_traffic_services():
+def test_compose_declares_health_checked_api_redis_mlflow_and_traffic_services():
     compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
-    assert set(compose["services"]) == {"api", "mlflow", "traffic"}
+    assert set(compose["services"]) == {"api", "redis", "mlflow", "traffic"}
     assert "healthcheck" in compose["services"]["api"]
+    assert "healthcheck" in compose["services"]["redis"]
     assert "healthcheck" in compose["services"]["mlflow"]
     assert compose["services"]["api"]["volumes"] == ["./artifacts:/app/artifacts:ro", "./configs:/app/configs:ro"]
     assert "scripts/synthetic_traffic.py" in compose["services"]["traffic"]["command"]
+    assert compose["services"]["api"]["depends_on"]["redis"]["condition"] == "service_healthy"
     assert compose["services"]["traffic"]["depends_on"]["api"]["condition"] == "service_healthy"
     for service in compose["services"].values():
         assert service["read_only"] is True
@@ -157,8 +159,8 @@ def test_final_documentation_contains_required_phase5_contracts():
         (model_card, ["Out-of-scope use", "Ethical considerations", "Brier score", "bert-base-uncased"]),
         (dataset_card, ["WELFake", "0 = real", "1 = fake", "Privacy, ethics, and security"]),
         (mathematics, ["LSTM", "scaled dot-product attention", "density-reachable", "Isolation Forest", "PSI"]),
-        (compliance, ["CO6 / M6", "Phase 5 completion matrix", "Complete"]),
-        (readme, ["100% implemented", "docker-compose.yml", "scripts/run_pipeline.sh", "Complete through Phase 5"]),
+        (compliance, ["CO6 / M6", "Phase 5 completion matrix", "EX-01", "Complete"]),
+        (readme, ["100% implemented", "docker-compose.yml", "scripts/run_pipeline.sh", "Complete through Phase 7"]),
     ]:
         for term in terms:
             assert term in text
