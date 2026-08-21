@@ -13,6 +13,7 @@ import hashlib
 import json
 import platform
 import sys
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -231,7 +232,8 @@ def export_torchscript(model: Any, output_path: str | Path, example_inputs: Any)
     except ImportError as exc:
         raise RuntimeError("Install torch to export TorchScript models") from exc
     model.eval()
-    scripted = torch.jit.trace(model, example_inputs)
+    trace = cast(Callable[[Any, Any], Any], torch.jit.trace)
+    scripted = trace(model, example_inputs)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     scripted.save(str(output))
