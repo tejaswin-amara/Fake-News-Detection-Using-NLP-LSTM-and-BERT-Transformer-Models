@@ -141,3 +141,14 @@ A row is complete only when its code path, documentation path, and executable te
 [3]: https://huggingface.co/docs/transformers/index "Hugging Face Transformers documentation"
 [4]: https://redis.io/docs/latest/develop/programmability/lua-api/ "Redis Lua scripting documentation"
 [5]: https://docs.docker.com/reference/dockerfile/ "Dockerfile reference"
+
+## Day 3 vulnerability closure matrix
+
+| Day 3 ID | Vulnerability/control | Implementation evidence | Verification evidence | Status |
+|---|---|---|---|---|
+| EX-16 | Drift queue exhaustion is an overload condition with retryable admission control | `src/monitoring/jobs.py` raises `OverflowError` on bounded admission failure; `src/serving/app.py` returns HTTP 429 and `Retry-After: 5` | `tests/test_zero_trust.py` queue saturation and endpoint 429 tests | Complete |
+| EX-17 | Python allocator fragmentation is mitigated in the runtime image | `Dockerfile` runtime stage installs `libjemalloc2` and sets the immutable preload path | `tests/test_zero_trust.py` Dockerfile contract; CI container build remains authoritative | Complete |
+| EX-18 | Redis SSRF/network exposure and unauthenticated access are reduced | `docker-compose.yml` requires `REDIS_PASSWORD`, uses `--requirepass`, authenticated `REDIS_URL`, and isolated `redis-internal` network | Compose topology/authentication contract tests and source/config audits | Complete |
+| EX-19 | Regex denial of service is bounded and fail-safe | `requirements.txt` pins `regex==2024.11.6`; `src/features/text.py` caps input at 50,000 characters and regex execution at 0.050 seconds | Bounded-input, timeout-fallback, cleaning, tokenization, and statistics tests | Complete |
+
+The Day 3 controls extend the Phase 7 matrix and retain the project’s core truthfulness rules: no test-set leakage, no fabricated metrics, no autonomous retraining, no committed runtime secrets, and no claim that static container contracts replace CI image execution.

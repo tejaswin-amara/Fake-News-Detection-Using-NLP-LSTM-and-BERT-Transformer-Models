@@ -10,13 +10,21 @@ from typing import Any
 
 import numpy as np
 import pytest
+import regex
 from fastapi.testclient import TestClient
 from scipy.sparse import csr_matrix
 
 from src.features.minhash import find_near_duplicate_groups
-from src.features.text import TfidfTextPipeline
+from src.features.text import (
+    TextStatisticsTransformer,
+    TfidfTextPipeline,
+    _bounded_regex_findall,
+    _bounded_regex_search,
+    clean_text,
+)
 from src.features.unsupervised_features import UnsupervisedFeatureAugmenter
 from src.models.bert import validate_offline_bundle
+from src.monitoring.jobs import DriftJobManager
 from src.serving.app import PredictionResponse, RateLimiter, create_app
 from src.serving.export import (
     _canonical_manifest_bytes,
@@ -27,6 +35,8 @@ from src.serving.export import (
     verify_package_manifest,
 )
 from src.serving.rate_limiter import RedisRateLimiter
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReadyService:
@@ -70,6 +80,32 @@ def poll_drift(client: TestClient, response: Any) -> dict[str, Any]:
         if payload["status"] in {"completed", "failed", "expired"}:
             return payload
     pytest.fail("Drift job did not reach a terminal state")
+
+
+def test_drift_queue_admission_rejects_saturation_without_orphan_jobs() -> None:
+    async def exercise() -> None:
+        manager = DriftJobManager(lambda payload: payload, maxsize=1, workers=1)
+        first_job = await manager.submit({"value": 1})
+        assert first_job in manager.jobs
+        with pytest.raises(OverflowError, match="full"):
+            await manager.submit({"value": 2})
+        assert len(manager.jobs) == 1
+        await manager.stop()
+
+    asyncio.run(exercise())
+
+
+def test_drift_endpoint_maps_queue_saturation_to_429(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def saturated_submit(self: DriftJobManager, payload: dict[str, Any]) -> str:
+        del self, payload
+        raise OverflowError("Drift job queue is full")
+
+    monkeypatch.setattr(DriftJobManager, "submit", saturated_submit)
+    with TestClient(create_app(ReadyService(), RateLimiter(limit=100, window_seconds=60))) as client:
+        response = client.post("/monitoring/drift", json={"reference": {"a": [1, 2]}, "current": {"a": [2, 3]}})
+        assert response.status_code == 429
+        assert response.headers["Retry-After"] == "5"
+        assert response.json()["detail"] == "Drift monitoring queue is full; retry later"
 
 
 def test_inference_semaphore_returns_429_when_budget_is_exhausted(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -167,6 +203,50 @@ def test_streaming_minhash_detects_near_duplicates() -> None:
 def test_online_unsupervised_features_reject_dbscan() -> None:
     with pytest.raises(ValueError, match="offline-only"):
         UnsupervisedFeatureAugmenter(online=True, include_dbscan=True).fit(np.zeros((4, 2)))
+
+
+def test_bounded_regex_helpers_limit_input_and_timeout() -> None:
+    bounded_pattern = regex.compile(r"^.{0,}$", flags=regex.DOTALL)
+    match = _bounded_regex_search(bounded_pattern, "x" * 60_000)
+    assert match is not None
+    assert len(match.group(0)) == 50_000
+
+    class TimeoutPattern:
+        def search(self, value: str, *, timeout: float) -> Any:
+            del value, timeout
+            raise TimeoutError
+
+        def findall(self, value: str, *, timeout: float) -> list[str]:
+            del value, timeout
+            raise TimeoutError
+
+    timeout_pattern = TimeoutPattern()
+    assert _bounded_regex_search(timeout_pattern, "adversarial") is None
+    assert _bounded_regex_findall(timeout_pattern, "adversarial") == []
+
+
+def test_text_cleaning_and_statistics_use_bounded_regex_paths() -> None:
+    cleaned = clean_text("<p>" + ("word " * 20_000) + "</p>")
+    assert 0 < len(cleaned) <= 50_000
+    transformer = TextStatisticsTransformer().fit([cleaned])
+    result = transformer.transform([cleaned])
+    assert result.shape == (1, len(transformer.feature_names))
+
+
+def test_docker_and_compose_day3_hardening_contracts() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert "libjemalloc2" in dockerfile
+    assert "LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2" in dockerfile
+
+    import yaml
+
+    compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
+    assert compose["networks"]["redis-internal"]["internal"] is True
+    assert compose["services"]["redis"]["networks"] == ["redis-internal"]
+    assert compose["services"]["api"]["networks"] == ["fake-news-net", "redis-internal"]
+    assert "REDIS_PASSWORD" in compose["services"]["redis"]["environment"]
+    assert "--requirepass" in compose["services"]["redis"]["command"]
+    assert "REDIS_PASSWORD" in compose["services"]["api"]["environment"]
 
 
 def test_redis_limiter_uses_atomic_eval_result(monkeypatch: pytest.MonkeyPatch) -> None:

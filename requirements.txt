@@ -1,5 +1,5 @@
 # Fake News Detection project dependencies
-# Source register: docs/sources.md (SRC-011 through SRC-034)
+# Source register: docs/sources.md (SRC-011 through SRC-038)
 # Python target: 3.11
 # Install with: python -m pip install -r requirements.txt
 
@@ -82,3 +82,4 @@ types-pytz==2026.3.1.20260727
 # Zero-trust artifact signatures and distributed concurrency controls
 cryptography==43.0.3
 redis==5.2.0
+regex==2024.11.6

@@ -30,7 +30,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     SERVING_MODE=native \
     MODEL_ARTIFACT=/app/artifacts/models/logistic_l2.joblib \
     HOME=/tmp \
-    TMPDIR=/tmp
+    TMPDIR=/tmp \
+    LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libjemalloc2 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv

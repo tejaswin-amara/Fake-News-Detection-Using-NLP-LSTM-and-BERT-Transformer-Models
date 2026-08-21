@@ -226,3 +226,13 @@ For a larger deployment, choose one scaling dimension deliberately:
 | Multiple replicas | Prefer one worker per CPU-bounded replica and scale replicas through the orchestrator | Enforce a shared limiter and trusted proxy policy before the replicas |
 
 Gunicorn workers multiply model memory, preprocessing state, and request concurrency. Replicas multiply that cost again. Do not increase workers while leaving `cpus: 1.0` and ONNX intra/inter-op threads at one without load evidence. Re-run `tests/test_serving_stress.py` or an equivalent production load test after changing vocabulary size, batch size, worker count, or replica count. The stress evidence is written to `reports/serving_stress_memory.json` when the test runs.
+
+## Day 3 zero-trust deployment controls
+
+Drift admission is bounded and non-blocking. `POST /monitoring/drift` returns `202` with a `job_id` when work is accepted, `429` with `Retry-After: 5` when the queue is full, and `503` only when the queue manager is stopping or unavailable. Clients should retry 429 responses with backoff and poll `GET /monitoring/drift/{job_id}` only for accepted jobs. Queue capacity, worker count, and job TTL are controlled by `DRIFT_QUEUE_MAXSIZE`, `DRIFT_WORKERS`, and `DRIFT_JOB_TTL_SECONDS`.
+
+The Compose deployment requires a URL-safe `REDIS_PASSWORD`. The API uses an authenticated URL such as `redis://:${REDIS_PASSWORD}@redis:6379/0`, while Redis starts with `--requirepass`. Redis is attached only to the internal `redis-internal` network, and the API is attached to both `fake-news-net` and `redis-internal`. MLflow and synthetic traffic remain on `fake-news-net` only. Do not commit the password; inject it through an untracked `.env`, an orchestrator secret, or an equivalent secret manager. If a password contains URL-reserved characters, percent-encode it before constructing `REDIS_URL`.
+
+The runtime Docker stage installs `libjemalloc2` and preloads `/usr/lib/x86_64-linux-gnu/libjemalloc.so.2`. This reduces allocator fragmentation risk for repeated sparse operations, but operators must still size memory, batch limits, workers, and ONNX threads from load evidence. The setting is validated statically and by the authoritative container build in CI.
+
+All regex execution in `src/features/text.py` uses the pinned `regex` package with a 50,000-character bound and a 0.050-second timeout. Timeout-safe fallbacks prevent an adversarial article from monopolizing a request worker. The bound complements, rather than replaces, API-level `MAX_TEXT_CHARACTERS` and request-body limits.

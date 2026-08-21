@@ -587,8 +587,15 @@ def create_app(
 
     @application.post("/monitoring/drift", status_code=202)
     async def monitoring_drift(request: DriftRequest) -> dict[str, Any]:
+        """Enqueue bounded drift-monitoring work without blocking the request."""
         try:
             job_id = await drift_jobs.submit(request.model_dump())
+        except OverflowError as exc:
+            raise HTTPException(
+                status_code=429,
+                detail="Drift monitoring queue is full; retry later",
+                headers={"Retry-After": "5"},
+            ) from exc
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail="Drift job queue unavailable") from exc
         return {"job_id": job_id, "status": "queued"}

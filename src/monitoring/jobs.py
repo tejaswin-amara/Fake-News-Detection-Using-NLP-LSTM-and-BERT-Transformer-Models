@@ -45,11 +45,18 @@ class DriftJobManager:
         self.tasks = []
 
     async def submit(self, payload: dict[str, Any]) -> str:
-        if self._stopping or self.queue.full():
-            raise RuntimeError("Drift job queue is unavailable or full")
+        """Atomically reserve a bounded queue slot without blocking."""
+        if self._stopping:
+            raise RuntimeError("Drift job queue is unavailable")
+        if self.queue.full():
+            raise OverflowError("Drift job queue is full")
         job_id = uuid.uuid4().hex
         self.jobs[job_id] = _Job(status="queued", created_at=time.time())
-        self.queue.put_nowait((job_id, payload))
+        try:
+            self.queue.put_nowait((job_id, payload))
+        except asyncio.QueueFull as exc:
+            self.jobs.pop(job_id, None)
+            raise OverflowError("Drift job queue is full") from exc
         return job_id
 
     def status(self, job_id: str) -> dict[str, Any] | None:

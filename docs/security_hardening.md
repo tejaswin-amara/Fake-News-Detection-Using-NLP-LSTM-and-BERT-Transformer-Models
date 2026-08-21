@@ -66,3 +66,15 @@ The hardening tests cover CORS allowlists, wildcard/credential rejection, rate-l
 ## Incident and rollback response
 
 A readiness failure is a deployment failure, not a reason to serve an unverified artifact. Operators should remove the unhealthy revision from traffic, preserve the sanitized diagnostics and CI scan reports, inspect model/package manifests and MLflow/DVC provenance, and roll back to the last parity-verified artifact. Drift signals recommend review and retraining but never retrain or replace a model automatically. Secrets must be rotated through the deployment platform rather than committed to `.env`, Compose, MLflow artifacts, or reports.
+
+## Day 3 vulnerability closure
+
+The asynchronous drift queue now treats saturation as a normal overload condition rather than a service failure. `DriftJobManager.submit()` checks the bounded queue without awaiting, reserves a job record only for an admitted slot, rolls back defensively on `asyncio.QueueFull`, and raises `OverflowError` when capacity is exhausted. The API maps that condition to HTTP 429 with `Retry-After: 5`; manager shutdown remains HTTP 503. This distinction gives callers a retryable back-pressure signal without masking process or lifecycle failure.
+
+The runtime image installs `libjemalloc2` and sets `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2` in the runtime stage. This is an allocator mitigation for high-frequency sparse-matrix workloads, not a substitute for bounded request sizes, sparse-safe model paths, process limits, or load testing. The image remains digest-pinned, multi-stage, rootless, read-only at runtime, and subject to CI container verification.
+
+Redis is now authenticated and isolated. Compose requires `REDIS_PASSWORD`, starts Redis with `--requirepass`, passes an authenticated `REDIS_URL` to the API, and places Redis and the API on an `internal: true` `redis-internal` network. MLflow and synthetic traffic remain only on `fake-news-net`, while the API is the sole bridge between the application network and the Redis network. Deployment secrets must be injected through the runtime environment or secret manager; no real password belongs in Git.
+
+Untrusted text processing in `src/features/text.py` uses the pinned `regex` package rather than direct stdlib `re` execution. Search, substitution, and find-all operations are capped at 50,000 characters and receive a 50-millisecond timeout. Timeout fallbacks are safe (`None`, an empty result, or the bounded input for substitution), and tokenization, HTML/URL/email removal, sentence counting, and syllable counting all use the bounded helpers. This reduces ReDoS exposure while preserving the existing normalization and feature-schema contracts.
+
+The Day 3 controls are covered by queue saturation and HTTP 429 tests, bounded-regex fallback and input-bound tests, jemalloc/Dockerfile contract tests, Redis authentication/network topology tests, source-audit registration, and the complete repository quality gate.

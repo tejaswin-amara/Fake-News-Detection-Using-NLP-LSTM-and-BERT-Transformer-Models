@@ -202,3 +202,7 @@ NLTK, spaCy, Gensim, and skl2onnx official documentation: [NLTK](https://www.nlt
 ### SRC-037 — Redis atomic Lua scripting
 
 [Redis Lua scripting documentation](https://redis.io/docs/latest/develop/programmability/lua-api/). **Use:** atomic increment, expiry, and fixed-window decision logic in `src/serving/rate_limiter.py`, the Redis service wiring in `docker-compose.yml`, and the Phase 7 zero-trust documentation. **Accessed:** 2026-08-21. **Terms:** Redis open-source documentation and software terms apply; production operators must review the selected Redis image and deployment license. **Files:** `src/serving/rate_limiter.py`, `docker-compose.yml`, `docs/security_hardening.md`, `docs/deployment.md`, `docs/compliance_matrix.md`.
+
+### SRC-038 — Python regex timeout-capable regular expressions
+
+[Python `regex` package documentation and release record](https://pypi.org/project/regex/). **Use:** timeout-bounded regular-expression search, substitution, and token/statistics extraction in `src/features/text.py`. **Accessed:** 2026-08-21. **Terms:** package license and release metadata apply; the exact pinned version is recorded in `requirements.txt`. **Files:** `requirements.txt`, `src/features/text.py`, `tests/test_zero_trust.py`, `docs/security_hardening.md`.

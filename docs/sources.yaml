@@ -281,3 +281,11 @@ sources:
     accessed: "2026-08-21"
     license_or_terms: "Redis documentation and selected Redis image/software terms must be reviewed for deployment."
     supports: [src/serving/rate_limiter.py, docker-compose.yml, docs/security_hardening.md, docs/deployment.md, docs/compliance_matrix.md]
+  - id: SRC-038
+    category: security_and_text_processing_library
+    citation: "Python regex package documentation and release record."
+    url: https://pypi.org/project/regex/
+    accessed: "2026-08-21"
+    version: "2024.11.6"
+    license_or_terms: "Follow the package license and retain the pinned release for reproducibility."
+    supports: [requirements.txt, src/features/text.py, tests/test_zero_trust.py, docs/security_hardening.md]

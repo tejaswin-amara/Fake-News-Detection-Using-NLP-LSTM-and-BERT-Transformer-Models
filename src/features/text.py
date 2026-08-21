@@ -6,23 +6,52 @@ text only. References: SRC-004, SRC-005, SRC-006, and SRC-015.
 
 from __future__ import annotations
 
-import re
 import unicodedata
 from collections.abc import Iterable
 from typing import Any
 
 import numpy as np
 import pandas as pd
+import regex
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
 from sklearn.pipeline import Pipeline
 
-_URL_RE = re.compile(r"https?://\S+|www\.\S+", flags=re.IGNORECASE)
-_EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b")
-_HTML_RE = re.compile(r"<[^>]+>")
-_SPACE_RE = re.compile(r"\s+")
-_TOKEN_RE = re.compile(r"[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)?")
-_SENTENCE_RE = re.compile(r"[.!?]+")
+_REGEX_TIMEOUT_SECONDS = 0.050
+_REGEX_INPUT_MAX_CHARS = 50_000
+
+
+def _bounded_regex_search(pattern: regex.Pattern[str], value: str) -> regex.Match[str] | None:
+    bounded_value = value[:_REGEX_INPUT_MAX_CHARS]
+    try:
+        return pattern.search(bounded_value, timeout=_REGEX_TIMEOUT_SECONDS)
+    except TimeoutError:
+        return None
+
+
+def _bounded_regex_sub(pattern: regex.Pattern[str], replacement: str, value: str) -> str:
+    bounded_value = value[:_REGEX_INPUT_MAX_CHARS]
+    try:
+        return pattern.sub(replacement, bounded_value, timeout=_REGEX_TIMEOUT_SECONDS)
+    except TimeoutError:
+        return bounded_value
+
+
+def _bounded_regex_findall(pattern: regex.Pattern[str], value: str) -> list[str]:
+    bounded_value = value[:_REGEX_INPUT_MAX_CHARS]
+    try:
+        return pattern.findall(bounded_value, timeout=_REGEX_TIMEOUT_SECONDS)
+    except TimeoutError:
+        return []
+
+
+_URL_RE = regex.compile(r"https?://\S+|www\.\S+", flags=regex.IGNORECASE)
+_EMAIL_RE = regex.compile(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b")
+_HTML_RE = regex.compile(r"<[^>]+>")
+_SPACE_RE = regex.compile(r"\s+")
+_TOKEN_RE = regex.compile(r"[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)?")
+_SENTENCE_RE = regex.compile(r"[.!?]+")
+_SYLLABLE_RE = regex.compile(r"[aeiouy]+")
 
 
 def clean_text(
@@ -39,19 +68,19 @@ def clean_text(
         return ""
     text = unicodedata.normalize("NFKC", str(value))
     if remove_html:
-        text = _HTML_RE.sub(" ", text)
+        text = _bounded_regex_sub(_HTML_RE, " ", text)
     if remove_urls:
-        text = _URL_RE.sub(" ", text)
+        text = _bounded_regex_sub(_URL_RE, " ", text)
     if remove_email_addresses:
-        text = _EMAIL_RE.sub(" ", text)
-    text = _SPACE_RE.sub(" ", text).strip()
+        text = _bounded_regex_sub(_EMAIL_RE, " ", text)
+    text = _bounded_regex_sub(_SPACE_RE, " ", text).strip()
     if lowercase:
         text = text.lower()
     return text[:max_characters] if max_characters else text
 
 
 def tokenize_text(text: str) -> list[str]:
-    return _TOKEN_RE.findall(clean_text(text))
+    return _bounded_regex_findall(_TOKEN_RE, clean_text(text))
 
 
 def _stem_tokens(tokens: list[str]) -> list[str]:
@@ -158,11 +187,11 @@ class TextStatisticsTransformer(BaseEstimator, TransformerMixin):
         rows = []
         for value in X:
             raw = clean_text(value, lowercase=False)
-            words = _TOKEN_RE.findall(raw)
+            words = _bounded_regex_findall(_TOKEN_RE, raw)
             chars = len(raw)
             word_count = len(words)
-            sentence_count = max(1, len(_SENTENCE_RE.findall(raw))) if raw else 0
-            syllables = sum(max(1, len(re.findall(r"[aeiouy]+", word.lower()))) for word in words)
+            sentence_count = max(1, len(_bounded_regex_findall(_SENTENCE_RE, raw))) if raw else 0
+            syllables = sum(max(1, len(_bounded_regex_findall(_SYLLABLE_RE, word.lower()))) for word in words)
             flesch = (
                 206.835 - 1.015 * (word_count / sentence_count) - 84.6 * (syllables / word_count)
                 if word_count and sentence_count
