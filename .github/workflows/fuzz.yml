@@ -50,7 +50,7 @@ jobs:
             exit 2
           fi
           mkdir -p .fuzz-artifacts
-          timeout "$((INPUT_DURATION + 5))s" python tests/fuzz/fuzz_text_parsing.py \
+          timeout "$((INPUT_DURATION + 5))s" python -m tests.fuzz.fuzz_text_parsing \
             --corpus fuzz/corpus/claimreview_metadata.json \
             --seed 20260822 \
             --cases 2048 \

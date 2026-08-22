@@ -11,15 +11,10 @@ import argparse
 import json
 import random
 import string
-import sys
 import time
 from datetime import date
 from pathlib import Path
 from typing import Any
-
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from src.data.claimreview import _record_from_review
 
