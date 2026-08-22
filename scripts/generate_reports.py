@@ -6,11 +6,16 @@ import argparse
 import hashlib
 import json
 import shutil
+import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from src.tracking import resolve_tracking_uri
 
 
 def _sha256(path: Path) -> str:
@@ -167,8 +172,9 @@ def generate_report_bundle(
         from mlflow.tracking import MlflowClient  # type: ignore
     except ImportError as exc:
         raise RuntimeError("MLflow is required to generate finalized run reports") from exc
-    mlflow.set_tracking_uri(tracking_uri)
-    active_client = client or MlflowClient(tracking_uri=tracking_uri)
+    resolved_tracking_uri, _ = resolve_tracking_uri(tracking_uri)
+    mlflow.set_tracking_uri(resolved_tracking_uri)
+    active_client = client or MlflowClient(tracking_uri=resolved_tracking_uri)
     experiment = active_client.get_experiment_by_name(experiment_name)
     if experiment is None:
         raise RuntimeError(f"MLflow experiment does not exist: {experiment_name}")
@@ -184,7 +190,7 @@ def generate_report_bundle(
     summary = {
         "experiment_name": experiment.name,
         "experiment_id": experiment.experiment_id,
-        "tracking_uri": tracking_uri,
+        "tracking_uri": resolved_tracking_uri,
         "selection": {"metric": primary_metric, "direction": "maximize" if maximize else "minimize"},
         "best_run": {
             "run_id": best.info.run_id,

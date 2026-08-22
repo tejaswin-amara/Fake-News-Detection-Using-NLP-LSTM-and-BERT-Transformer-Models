@@ -80,6 +80,8 @@ def test_local_mlflow_initialization_is_idempotent(tmp_path):
         tracking_uri=str(tmp_path / "mlruns"),
         experiment_name="fixture-experiment",
     )
+    assert first["tracking_uri"].startswith("sqlite:///")
+    assert first["artifact_location"].startswith("file://")
     assert first["experiment_id"] == second["experiment_id"]
     assert first["experiment_name"] == "fixture-experiment"
 

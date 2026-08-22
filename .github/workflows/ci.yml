@@ -116,22 +116,10 @@ jobs:
         env:
           REPORT_TRACKING_URI: ${{ runner.temp }}/mlflow-report-store
         run: |
-          python - <<'PY'
-          import json
-          import mlflow
-          from pathlib import Path
-
-          mlflow.set_tracking_uri(Path("${{ runner.temp }}") / "mlflow-report-store")
-          mlflow.set_experiment("fake-news-detection-report-ci")
-          fixture = Path("reports") / "ci_fixture_evaluation.json"
-          fixture.parent.mkdir(parents=True, exist_ok=True)
-          fixture.write_text(json.dumps({"status": "fixture", "test_data_used_for_selection": False}), encoding="utf-8")
-          with mlflow.start_run(run_name="fixture-report"):
-              mlflow.log_metric("pr_auc", 1.0)
-              mlflow.log_param("model", "fixture-logistic-l2")
-              mlflow.log_param("test_data_used_for_selection", "false")
-              mlflow.log_artifact(str(fixture))
-          PY
+          python scripts/create_mlflow_report_fixture.py \
+            --tracking-uri "$REPORT_TRACKING_URI" \
+            --experiment-name fake-news-detection-report-ci \
+            --fixture-path reports/ci_fixture_evaluation.json
           python scripts/generate_reports.py \
             --tracking-uri "$REPORT_TRACKING_URI" \
             --experiment-name fake-news-detection-report-ci \

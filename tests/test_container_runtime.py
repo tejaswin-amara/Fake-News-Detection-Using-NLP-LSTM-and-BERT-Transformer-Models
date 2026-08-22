@@ -16,8 +16,10 @@ def test_runtime_requirements_exclude_training_and_tracking_tools() -> None:
     assert "mlflow==" not in requirements
     assert "dvc==" not in requirements
     assert "pytest==" not in requirements
-    assert "torch==2.6.0" in requirements
-    assert "python-multipart==0.0.30" in requirements
+    assert "torch==2.13.0" in requirements
+    assert "python-multipart==0.0.32" in requirements
+    assert "torchaudio==" not in requirements
+    assert "torchvision==" not in requirements
 
 
 def test_container_workflow_reports_high_and_blocks_critical() -> None:

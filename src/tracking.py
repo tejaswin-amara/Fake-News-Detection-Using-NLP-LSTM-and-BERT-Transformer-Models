@@ -18,8 +18,8 @@ from urllib.parse import urlparse
 LOGGER = logging.getLogger(__name__)
 
 
-def _local_uri(value: str | Path) -> str:
-    """Convert a local path to a stable MLflow file URI and create it."""
+def _filesystem_uri(value: str | Path) -> str:
+    """Convert a local path to a stable filesystem URI and create it."""
     candidate = str(value)
     parsed = urlparse(candidate)
     if parsed.scheme:
@@ -29,6 +29,17 @@ def _local_uri(value: str | Path) -> str:
     return path.as_uri()
 
 
+def resolve_tracking_uri(value: str | Path) -> tuple[str, str | None]:
+    """Use SQLite metadata for local tracking paths and retain filesystem artifacts."""
+    candidate = str(value)
+    parsed = urlparse(candidate)
+    if parsed.scheme:
+        return candidate, None
+    path = Path(candidate).expanduser().resolve()
+    path.mkdir(parents=True, exist_ok=True)
+    return f"sqlite:///{path / 'mlflow.db'}", (path / "artifacts").as_uri()
+
+
 def _initialize_tracking_once(
     tracking_uri: str,
     experiment_name: str,
@@ -36,8 +47,8 @@ def _initialize_tracking_once(
 ) -> dict[str, str]:
     import mlflow
 
-    resolved_uri = _local_uri(tracking_uri)
-    resolved_artifacts = _local_uri(artifact_location) if artifact_location else None
+    resolved_uri, default_artifacts = resolve_tracking_uri(tracking_uri)
+    resolved_artifacts = _filesystem_uri(artifact_location) if artifact_location else default_artifacts
     mlflow.set_tracking_uri(resolved_uri)
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
@@ -86,8 +97,10 @@ def initialize_tracking(
     if last_error is None:
         raise RuntimeError("MLflow tracking initialization failed without an exception")
     if fail_on_remote_error or len(candidates) == 1:
-        raise RuntimeError(f"MLflow tracking initialization failed: {type(last_error).__name__}") from last_error
-    raise RuntimeError(f"MLflow local fallback failed: {type(last_error).__name__}") from last_error
+        raise RuntimeError(
+            f"MLflow tracking initialization failed: {type(last_error).__name__}: {last_error}"
+        ) from last_error
+    raise RuntimeError(f"MLflow local fallback failed: {type(last_error).__name__}: {last_error}") from last_error
 
 
 @contextmanager
