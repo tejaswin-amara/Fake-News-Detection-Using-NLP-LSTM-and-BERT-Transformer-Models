@@ -1,6 +1,6 @@
 schema_version: "1.0"
 project: "Fake News Detection Using NLP, BiLSTM, and BERT"
-last_reviewed: "2026-08-21"
+last_reviewed: "2026-08-22"
 policy: "Every external source used or referred to must appear here and in docs/sources.md. Restricted materials are linked with metadata rather than redistributed."
 sources:
   - id: SRC-001
@@ -417,3 +417,13 @@ sources:
     accessed: "2026-08-22"
     license_or_terms: "Follow ClusterFuzzLite and Atheris licensing and runtime requirements; fuzz only synthetic in-memory metadata."
     supports: [.clusterfuzzlite, fuzz/atheris_claimreview_fuzzer.py, .github/workflows/clusterfuzzlite.yml, tests/test_clusterfuzzlite.py, docs/sources.md]
+  - id: SRC-052
+    category: security_audit_evidence
+    citation: "OpenSSF Scorecard check documentation, final repository Scorecard workflow run, and OSV PYSEC-2026-3552 advisory."
+    urls:
+      - https://github.com/ossf/scorecard/blob/main/docs/checks.md
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/runs/32565674353
+      - https://osv.dev/PYSEC-2026-3552
+    accessed: "2026-08-22"
+    license_or_terms: "Workflow evidence and public advisory metadata are time-sensitive; re-run or re-check before future remediation decisions."
+    supports: [docs/security/code-scanning-remediation.md, docs/sources.md, docs/sources.yaml]

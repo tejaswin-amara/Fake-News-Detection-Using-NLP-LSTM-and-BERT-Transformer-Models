@@ -13,10 +13,10 @@
 - [x] Remediate verified Scorecard workflow findings with least-privilege release permissions, safe main checkout, direct CodeQL analysis, and private-reporting linkage.
 - [ ] Remediate verified actionable code-scanning findings without weakening repository security controls.
 - [ ] Merge all eligible CI-validated branches into main and confirm final main-branch CI.
-- [ ] Create a code-scanning remediation ledger with exact SARIF evidence and alert dispositions.
+- [x] Create a code-scanning remediation ledger with exact SARIF evidence and alert dispositions.
 - [x] Pin all active GitHub Actions to verified immutable commits and the Python 3.11 Docker base image to a verified digest.
 - [x] Investigate and remediate each Scorecard-reported dependency vulnerability without relaxing dependency boundaries.
 - [x] Add bounded privacy-safe parser fuzzing, its scheduled/manual workflow, and deterministic regression coverage.
-- [ ] Document history-, age-, and external-program Scorecard findings without fabricated compliance claims.
+- [x] Document history-, age-, and external-program Scorecard findings without fabricated compliance claims.
 - [x] Integrate ClusterFuzzLite coverage-guided Python fuzzing to address the remaining recognized Fuzzing check.
 - [x] Upgrade final Scorecard-affected direct dependencies and remove unused PyTorch satellite packages that block a secure PyTorch pin.
