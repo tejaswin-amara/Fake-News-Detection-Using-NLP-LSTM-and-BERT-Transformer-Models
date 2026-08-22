@@ -43,6 +43,7 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
         ".github/dependabot.yml",
         ".github/labeler.yml",
         ".github/workflows/ci.yml",
+        ".github/workflows/clusterfuzzlite.yml",
         ".github/workflows/codeql.yml",
         ".github/workflows/fuzz.yml",
         ".github/workflows/release.yml",
@@ -80,11 +81,16 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
     assert "timeout-minutes: 5" in fuzz_workflow
     assert "retention-days: 7" in fuzz_workflow
 
+    clusterfuzzlite_workflow = read(".github/workflows/clusterfuzzlite.yml")
+    assert "google/clusterfuzzlite/actions/build_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c" in clusterfuzzlite_workflow
+    assert "google/clusterfuzzlite/actions/run_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c" in clusterfuzzlite_workflow
+
 
 def test_workflow_actions_and_python_base_image_are_immutable() -> None:
     """Require full action commits and matching Python image digests."""
     workflow_paths = (
         ".github/workflows/ci.yml",
+        ".github/workflows/clusterfuzzlite.yml",
         ".github/workflows/codeql.yml",
         ".github/workflows/fuzz.yml",
         ".github/workflows/release.yml",
