@@ -16,5 +16,5 @@
 - [ ] Create a code-scanning remediation ledger with exact SARIF evidence and alert dispositions.
 - [x] Pin all active GitHub Actions to verified immutable commits and the Python 3.11 Docker base image to a verified digest.
 - [x] Investigate and remediate each Scorecard-reported dependency vulnerability without relaxing dependency boundaries.
-- [ ] Add bounded privacy-safe parser fuzzing, its scheduled/manual workflow, and deterministic regression coverage.
+- [x] Add bounded privacy-safe parser fuzzing, its scheduled/manual workflow, and deterministic regression coverage.
 - [ ] Document history-, age-, and external-program Scorecard findings without fabricated compliance claims.

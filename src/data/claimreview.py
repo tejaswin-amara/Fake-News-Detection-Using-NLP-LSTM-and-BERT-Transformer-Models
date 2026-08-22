@@ -122,7 +122,9 @@ def _rating_name(review: Mapping[str, Any]) -> str:
 
 
 def _review_language(review: Mapping[str, Any]) -> object:
-    return review.get("inLanguage") or review.get("itemReviewed", {}).get("inLanguage", "")
+    item_reviewed = review.get("itemReviewed", {})
+    item_language = item_reviewed.get("inLanguage", "") if isinstance(item_reviewed, Mapping) else ""
+    return review.get("inLanguage") or item_language
 
 
 def _record_from_review(
@@ -158,7 +160,8 @@ def _record_from_review(
     normalized_claim = normalize_text(claim).casefold()
     content_hash = hashlib.sha256(normalized_claim.encode("utf-8")).hexdigest()
     record_id = hashlib.sha256(f"{review_url}\x1f{content_hash}".encode()).hexdigest()[:24]
-    claimant = _organization_name(review.get("itemReviewed", {}).get("author", ""))
+    item_reviewed = review.get("itemReviewed", {})
+    claimant = _organization_name(item_reviewed.get("author", "") if isinstance(item_reviewed, Mapping) else "")
     return {
         "id": record_id,
         "dataset": "claimreview_current",

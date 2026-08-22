@@ -51,8 +51,13 @@ def _stable_id(dataset: str, title: str, text: str, row_number: int) -> str:
 
 def normalize_text(value: object) -> str:
     """Normalize a raw cell without learning from any split."""
-    if value is None or pd.isna(value):
+    if value is None:
         return ""
+    try:
+        if pd.api.types.is_scalar(value) and bool(pd.isna(value)):
+            return ""
+    except (TypeError, ValueError):
+        pass
     text = unicodedata.normalize("NFKC", str(value))
     text = re.sub(r"<[^>]+>", " ", text)
     text = re.sub(r"^\s*[A-Z][A-Z .'-]{1,48}\s+\((?:Reuters|AP|AFP|Associated Press)\)\s*[-:–—]\s*", " ", text, flags=re.IGNORECASE)
