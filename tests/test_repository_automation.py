@@ -179,3 +179,18 @@ def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
     assert len(topics) == 20
     assert all(topic == topic.lower() and " " not in topic for topic in topics)
     assert "not independent fact verification" in blueprint.lower()
+
+
+def test_scorecard_remediation_ledger_preserves_evidence_and_open_dispositions() -> None:
+    """Keep final remediation reporting explicit about resolved and owner-controlled work."""
+    ledger = read("docs/security/code-scanning-remediation.md")
+    assert "32565674353" in ledger
+    assert "PYSEC-2026-3552" in ledger
+    assert "FuzzingID" in ledger
+    assert "no SARIF finding was filtered or dismissed" in ledger
+    assert "owner action" in ledger.lower()
+
+    sources = read("docs/sources.md")
+    sources_yaml = read("docs/sources.yaml")
+    assert "SRC-052" in sources
+    assert "SRC-052" in sources_yaml
