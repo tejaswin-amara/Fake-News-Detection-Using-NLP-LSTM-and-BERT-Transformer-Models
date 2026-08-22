@@ -96,6 +96,34 @@ def test_workflow_actions_and_python_base_image_are_immutable() -> None:
     assert len(set(base_digests)) == 1
 
 
+def test_scorecard_remediated_dependency_pins_cannot_be_downgraded() -> None:
+    """Preserve the minimum versions that resolve verified Scorecard advisories."""
+    development_pins = dict(
+        line.split("==", maxsplit=1)
+        for line in read("requirements.txt").splitlines()
+        if "==" in line and not line.lstrip().startswith("#")
+    )
+
+    expected_pins = {
+        "cryptography": "44.0.1",
+        "datasets": "5.0.1",
+        "lightgbm": "4.6.0",
+        "mlflow": "3.2.0",
+        "nltk": "3.10.3",
+        "onnx": "1.16.2  # Compatible with skl2onnx 1.18.0",
+        "pytest": "9.0.3",
+        "python-multipart": "0.0.30",
+        "torch": "2.6.0",
+        "torchaudio": "2.6.0",
+        "torchvision": "0.21.0",
+    }
+    assert {name: development_pins[name] for name in expected_pins} == expected_pins
+
+    pyproject = read("pyproject.toml")
+    assert 'tracking = ["mlflow==3.2.0"]' in pyproject
+    assert '"pytest==9.0.3"' in pyproject
+
+
 def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
     """Ensure agents and discovery guidance retain quality and classification limits."""
     for path in ("CLAUDE.md", ".cursorrules", ".github/copilot-instructions.md"):
