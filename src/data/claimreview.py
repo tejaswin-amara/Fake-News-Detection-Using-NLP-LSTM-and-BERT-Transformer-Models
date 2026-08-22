@@ -175,7 +175,7 @@ def _record_from_review(
         "publisher": publisher,
         "claimant": claimant,
         "review_url": review_url,
-        "claim_url": str(review.get("itemReviewed", {}).get("url") or "").strip(),
+        "claim_url": str(item_reviewed.get("url") or "") if isinstance(item_reviewed, Mapping) else "",
         "review_date": review_date.isoformat(),
         "declared_language": str(_review_language(review) or ""),
         "source_id": SOURCE_ID,
