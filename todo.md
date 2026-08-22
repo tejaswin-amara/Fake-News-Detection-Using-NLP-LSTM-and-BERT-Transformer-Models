@@ -19,3 +19,4 @@
 - [x] Add bounded privacy-safe parser fuzzing, its scheduled/manual workflow, and deterministic regression coverage.
 - [ ] Document history-, age-, and external-program Scorecard findings without fabricated compliance claims.
 - [x] Integrate ClusterFuzzLite coverage-guided Python fuzzing to address the remaining recognized Fuzzing check.
+- [x] Upgrade final Scorecard-affected direct dependencies and remove unused PyTorch satellite packages that block a secure PyTorch pin.

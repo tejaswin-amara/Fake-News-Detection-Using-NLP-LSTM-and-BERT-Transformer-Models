@@ -120,22 +120,40 @@ def test_scorecard_remediated_dependency_pins_cannot_be_downgraded() -> None:
     )
 
     expected_pins = {
-        "cryptography": "44.0.1",
+        "cryptography": "49.0.0",
         "datasets": "5.0.1",
+        "fastapi": "0.141.1",
         "lightgbm": "4.6.0",
-        "mlflow": "3.2.0",
+        "mlflow": "3.15.1",
         "nltk": "3.10.3",
-        "onnx": "1.16.2  # Compatible with skl2onnx 1.18.0",
+        "onnx": "1.22.0  # Compatible with skl2onnx 1.18.0",
         "pytest": "9.0.3",
-        "python-multipart": "0.0.30",
-        "torch": "2.6.0",
-        "torchaudio": "2.6.0",
-        "torchvision": "0.21.0",
+        "python-multipart": "0.0.32",
+        "torch": "2.13.0",
     }
     assert {name: development_pins[name] for name in expected_pins} == expected_pins
+    assert "torchaudio" not in development_pins
+    assert "torchvision" not in development_pins
+
+    runtime_pins = dict(
+        line.split("==", maxsplit=1)
+        for line in read("requirements-runtime.txt").splitlines()
+        if "==" in line and not line.lstrip().startswith("#")
+    )
+    assert {
+        "cryptography": runtime_pins["cryptography"],
+        "python-multipart": runtime_pins["python-multipart"],
+        "torch": runtime_pins["torch"],
+    } == {
+        "cryptography": "49.0.0",
+        "python-multipart": "0.0.32",
+        "torch": "2.13.0",
+    }
+    assert "torchaudio" not in runtime_pins
+    assert "torchvision" not in runtime_pins
 
     pyproject = read("pyproject.toml")
-    assert 'tracking = ["mlflow==3.2.0"]' in pyproject
+    assert 'tracking = ["mlflow==3.15.1"]' in pyproject
     assert '"pytest==9.0.3"' in pyproject
 
 
