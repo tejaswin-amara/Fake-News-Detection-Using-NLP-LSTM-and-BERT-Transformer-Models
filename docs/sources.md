@@ -256,3 +256,7 @@ Potential manual, curator-controlled discovery destinations: [Awesome Fake News 
 ### SRC-050 — GitHub-native private vulnerability reporting
 
 Private advisory submission route: [Report a vulnerability](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/security/advisories/new). **Use:** the explicit private-reporting link in `SECURITY.md`; reports remain subject to the repository’s GitHub private vulnerability-reporting availability and access controls. **Accessed:** 2026-08-21. **Terms:** GitHub platform feature; no external security contact or response-time commitment is implied.
+
+### SRC-051 — ClusterFuzzLite Python integration
+
+[ClusterFuzzLite Python build integration](https://google.github.io/clusterfuzzlite/build-integration/python-lang/), [GitHub Actions execution guide](https://google.github.io/clusterfuzzlite/running-clusterfuzzlite/github-actions/), and [ClusterFuzzLite repository](https://github.com/google/clusterfuzzlite). **Use:** bounded coverage-guided Python/Atheris fuzzing of synthetic ClaimReview metadata through `.clusterfuzzlite/`, `fuzz/atheris_claimreview_fuzzer.py`, and `.github/workflows/clusterfuzzlite.yml`. **Accessed:** 2026-08-22. **Terms:** ClusterFuzzLite and Atheris licensing and usage requirements apply; the workflow fuzzes only synthetic in-memory metadata and has a 60-second fuzzer budget.

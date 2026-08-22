@@ -18,3 +18,4 @@
 - [x] Investigate and remediate each Scorecard-reported dependency vulnerability without relaxing dependency boundaries.
 - [x] Add bounded privacy-safe parser fuzzing, its scheduled/manual workflow, and deterministic regression coverage.
 - [ ] Document history-, age-, and external-program Scorecard findings without fabricated compliance claims.
+- [x] Integrate ClusterFuzzLite coverage-guided Python fuzzing to address the remaining recognized Fuzzing check.

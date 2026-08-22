@@ -407,3 +407,13 @@ sources:
     accessed: "2026-08-21"
     license_or_terms: "GitHub platform feature; availability and access are governed by repository settings."
     supports: [SECURITY.md, docs/sources.md]
+  - id: SRC-051
+    category: coverage_guided_python_fuzzing
+    citation: "ClusterFuzzLite Python build integration, GitHub Actions execution guide, and source repository."
+    urls:
+      - https://google.github.io/clusterfuzzlite/build-integration/python-lang/
+      - https://google.github.io/clusterfuzzlite/running-clusterfuzzlite/github-actions/
+      - https://github.com/google/clusterfuzzlite
+    accessed: "2026-08-22"
+    license_or_terms: "Follow ClusterFuzzLite and Atheris licensing and runtime requirements; fuzz only synthetic in-memory metadata."
+    supports: [.clusterfuzzlite, fuzz/atheris_claimreview_fuzzer.py, .github/workflows/clusterfuzzlite.yml, tests/test_clusterfuzzlite.py, docs/sources.md]
