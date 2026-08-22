@@ -29,7 +29,7 @@ def _filesystem_uri(value: str | Path) -> str:
     return path.as_uri()
 
 
-def _tracking_uri(value: str | Path) -> tuple[str, str | None]:
+def resolve_tracking_uri(value: str | Path) -> tuple[str, str | None]:
     """Use SQLite metadata for local tracking paths and retain filesystem artifacts."""
     candidate = str(value)
     parsed = urlparse(candidate)
@@ -47,7 +47,7 @@ def _initialize_tracking_once(
 ) -> dict[str, str]:
     import mlflow
 
-    resolved_uri, default_artifacts = _tracking_uri(tracking_uri)
+    resolved_uri, default_artifacts = resolve_tracking_uri(tracking_uri)
     resolved_artifacts = _filesystem_uri(artifact_location) if artifact_location else default_artifacts
     mlflow.set_tracking_uri(resolved_uri)
     experiment = mlflow.get_experiment_by_name(experiment_name)
