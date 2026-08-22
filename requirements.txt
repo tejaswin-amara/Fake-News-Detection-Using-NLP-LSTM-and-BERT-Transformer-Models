@@ -15,25 +15,25 @@ pydantic==2.9.2
 pydantic-settings==2.6.1
 
 # NLP preprocessing and embeddings (SRC-011, SRC-014, SRC-015)
-nltk==3.9.1
+nltk==3.9.3
 spacy==3.8.2
 gensim==4.3.3
 sentence-transformers==6.0.0
 
 # Classical tree/boosting models and explainability (SRC-022, SRC-023)
 xgboost==2.1.2
-lightgbm==4.5.0
+lightgbm==4.6.0
 shap==0.46.0
 
 # Deep learning and transformers (SRC-011 through SRC-013)
-torch==2.5.1
-torchaudio==2.5.1
-torchvision==0.20.1
+torch==2.6.0
+torchaudio==2.6.0
+torchvision==0.21.0
 tensorflow-cpu==2.17.1
 transformers==5.15.0
 tokenizers==0.22.2
 safetensors==0.8.0
-datasets==3.1.0
+datasets==5.0.1
 accelerate==1.1.1
 
 # Dimensionality reduction and visualization (SRC-016 through SRC-020)
@@ -53,21 +53,21 @@ psutil==6.1.0
 fastapi==0.115.5
 uvicorn[standard]==0.32.0
 httpx==0.27.2
-python-multipart==0.0.17
+python-multipart==0.0.18
 
 # Portable packaging and inference (SRC-031)
-onnx==1.16.1  # Compatible with skl2onnx 1.18.0
+onnx==1.16.2  # Compatible with skl2onnx 1.18.0
 onnxruntime==1.20.1
 onnxscript==0.1.0
 skl2onnx==1.18.0
 
 # Experiment tracking, data versioning, and model registry hooks (SRC-033, SRC-036)
-mlflow==2.17.2
+mlflow==3.2.0
 dvc==3.58.0
 pathspec==0.12.1  # DVC 3.58 compatibility; newer pathspec removes _DIR_MARK
 
 # Quality, tests, and developer tooling (SRC-034)
-pytest==8.3.3
+pytest==9.0.3
 pytest-cov==6.0.0
 ruff==0.7.4
 mypy==1.13.0
@@ -81,7 +81,7 @@ pandas-stubs==3.0.5.260730
 types-pytz==2026.3.1.20260727
 
 # Zero-trust artifact signatures and distributed concurrency controls
-cryptography==43.0.3
+cryptography==44.0.1
 redis==5.2.0
 regex==2025.10.23
 prometheus-client==0.21.0
