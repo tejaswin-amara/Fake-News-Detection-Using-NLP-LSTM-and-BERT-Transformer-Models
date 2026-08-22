@@ -126,7 +126,7 @@ def test_scorecard_remediated_dependency_pins_cannot_be_downgraded() -> None:
         "lightgbm": "4.6.0",
         "mlflow": "3.15.1",
         "nltk": "3.10.3",
-        "onnx": "1.22.0  # Compatible with skl2onnx 1.18.0",
+        "onnx": "1.22.0  # Compatible with skl2onnx 1.20.0",
         "pytest": "9.0.3",
         "python-multipart": "0.0.32",
         "torch": "2.13.0",
