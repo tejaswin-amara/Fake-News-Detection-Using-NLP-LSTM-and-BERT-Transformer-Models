@@ -44,6 +44,7 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
         ".github/labeler.yml",
         ".github/workflows/ci.yml",
         ".github/workflows/codeql.yml",
+        ".github/workflows/fuzz.yml",
         ".github/workflows/release.yml",
         ".github/workflows/scorecards.yml",
         ".github/workflows/labeler.yml",
@@ -72,12 +73,20 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
     assert "ENABLE_PATH_LABELER == 'true'" in labeler_workflow
     assert "actions/checkout" not in labeler_workflow
 
+    fuzz_workflow = read(".github/workflows/fuzz.yml")
+    assert "workflow_dispatch:" in fuzz_workflow
+    assert "schedule:" in fuzz_workflow
+    assert 'cron: "20 3 * * 1"' in fuzz_workflow
+    assert "timeout-minutes: 5" in fuzz_workflow
+    assert "retention-days: 7" in fuzz_workflow
+
 
 def test_workflow_actions_and_python_base_image_are_immutable() -> None:
     """Require full action commits and matching Python image digests."""
     workflow_paths = (
         ".github/workflows/ci.yml",
         ".github/workflows/codeql.yml",
+        ".github/workflows/fuzz.yml",
         ".github/workflows/release.yml",
         ".github/workflows/scorecards.yml",
         ".github/workflows/labeler.yml",
