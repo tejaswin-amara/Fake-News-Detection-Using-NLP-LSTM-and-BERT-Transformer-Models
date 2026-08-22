@@ -86,8 +86,10 @@ def initialize_tracking(
     if last_error is None:
         raise RuntimeError("MLflow tracking initialization failed without an exception")
     if fail_on_remote_error or len(candidates) == 1:
-        raise RuntimeError(f"MLflow tracking initialization failed: {type(last_error).__name__}") from last_error
-    raise RuntimeError(f"MLflow local fallback failed: {type(last_error).__name__}") from last_error
+        raise RuntimeError(
+            f"MLflow tracking initialization failed: {type(last_error).__name__}: {last_error}"
+        ) from last_error
+    raise RuntimeError(f"MLflow local fallback failed: {type(last_error).__name__}: {last_error}") from last_error
 
 
 @contextmanager
