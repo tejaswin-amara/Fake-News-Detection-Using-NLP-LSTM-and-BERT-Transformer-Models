@@ -17,13 +17,13 @@ def test_ci_workflow_contains_required_phase5_gates():
     workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     for required in [
         "pull_request",
-        "actions/setup-python@v",
+        "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
         "pip install -r requirements.txt",
         "ruff check src scripts tests",
         "dvc stage list",
         "mlflow server",
         "python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=95",
-        "docker/build-push-action@v",
+        "docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a",
         "cache-from: type=gha",
         "scripts/gate_on_severity.py",
         "aquasecurity/trivy-action",
