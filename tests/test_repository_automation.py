@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import yaml
@@ -54,8 +55,8 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
     assert "container-build-and-scan" in ci_workflow
 
     codeql_workflow = read(".github/workflows/codeql.yml")
-    assert "github/codeql-action/init@v4" in codeql_workflow
-    assert "github/codeql-action/analyze@v4" in codeql_workflow
+    assert "github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28" in codeql_workflow
+    assert "github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28" in codeql_workflow
     assert "security-events: write" in codeql_workflow
 
     release_workflow = read(".github/workflows/release.yml")
@@ -70,6 +71,29 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
     assert "pull_request_target:" in labeler_workflow
     assert "ENABLE_PATH_LABELER == 'true'" in labeler_workflow
     assert "actions/checkout" not in labeler_workflow
+
+
+def test_workflow_actions_and_python_base_image_are_immutable() -> None:
+    """Require full action commits and matching Python image digests."""
+    workflow_paths = (
+        ".github/workflows/ci.yml",
+        ".github/workflows/codeql.yml",
+        ".github/workflows/release.yml",
+        ".github/workflows/scorecards.yml",
+        ".github/workflows/labeler.yml",
+    )
+    action_pattern = re.compile(r"^\s*uses:\s*[^@\s]+@([0-9a-f]{40})(?:\s+#.*)?$", re.MULTILINE)
+
+    for path in workflow_paths:
+        workflow = read(path)
+        action_lines = [line for line in workflow.splitlines() if line.strip().startswith("uses:")]
+        assert action_lines, f"Expected action references in {path}"
+        assert len(action_pattern.findall(workflow)) == len(action_lines), path
+
+    dockerfile = read("Dockerfile")
+    base_digests = re.findall(r"FROM python:3\.11-slim@sha256:([0-9a-f]{64})", dockerfile)
+    assert len(base_digests) == 2
+    assert len(set(base_digests)) == 1
 
 
 def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
