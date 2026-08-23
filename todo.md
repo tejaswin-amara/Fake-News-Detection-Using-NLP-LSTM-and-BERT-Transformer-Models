@@ -12,7 +12,7 @@
 - [ ] Obtain access to GitHub code-scanning alerts and remediate any verified findings.
 - [x] Remediate verified Scorecard workflow findings with least-privilege release permissions, safe main checkout, direct CodeQL analysis, and private-reporting linkage.
 - [x] Remediate verified actionable code-scanning findings without weakening repository security controls.
-- [ ] Merge all eligible CI-validated branches into main and confirm final main-branch CI.
+- [x] Merge all eligible CI-validated branches into main and confirm final main-branch CI.
 - [x] Create a code-scanning remediation ledger with exact SARIF evidence and alert dispositions.
 - [x] Pin all active GitHub Actions to verified immutable commits and the Python 3.11 Docker base image to a verified digest.
 - [x] Investigate and remediate each Scorecard-reported dependency vulnerability without relaxing dependency boundaries.
@@ -30,5 +30,5 @@
 - [x] Formalize the safe FastAPI OpenAPI contract and add metadata-only API/privacy regression coverage.
 - [x] Add bounded, opt-in performance smoke testing and document safe load-test operation without retaining article text.
 - [x] Publish version-controlled architecture, data-flow, observability, and operational runbooks with adoption gates for non-applicable platforms.
-- [ ] Validate every adoption change through protected-main PRs, main CI, CodeQL, container checks, Scorecard evidence, source audit, and branch consolidation.
+- [x] Validate every adoption change through protected-main PRs, main CI, CodeQL, container checks, Scorecard evidence, source audit, and branch consolidation.
 - [x] Correct the Trivy image-analysis timeout while retaining the required vulnerability scan and the separate immutable secret-detection control.
