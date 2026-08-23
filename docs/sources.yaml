@@ -419,12 +419,13 @@ sources:
     supports: [.clusterfuzzlite, fuzz/atheris_claimreview_fuzzer.py, .github/workflows/clusterfuzzlite.yml, tests/test_clusterfuzzlite.py, docs/sources.md]
   - id: SRC-052
     category: security_audit_evidence
-    citation: "OpenSSF Scorecard check documentation, final repository Scorecard workflow run, and OSV PYSEC-2026-3552 advisory."
+    citation: "OpenSSF Scorecard check documentation, prior and current repository Scorecard workflow runs, and OSV PYSEC-2026-3552 advisory."
     urls:
       - https://github.com/ossf/scorecard/blob/main/docs/checks.md
       - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/runs/32565674353
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/runs/32641697857
       - https://osv.dev/PYSEC-2026-3552
-    accessed: "2026-08-22"
+    accessed: "2026-08-23"
     license_or_terms: "Workflow evidence and public advisory metadata are time-sensitive; re-run or re-check before future remediation decisions."
     supports: [docs/security/code-scanning-remediation.md, docs/sources.md, docs/sources.yaml]
   - id: SRC-053

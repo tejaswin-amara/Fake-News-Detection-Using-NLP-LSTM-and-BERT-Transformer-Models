@@ -11,7 +11,7 @@
 - [x] Inventory all remote branches, open pull requests, and GitHub code-scanning access constraints for safe consolidation.
 - [ ] Obtain access to GitHub code-scanning alerts and remediate any verified findings.
 - [x] Remediate verified Scorecard workflow findings with least-privilege release permissions, safe main checkout, direct CodeQL analysis, and private-reporting linkage.
-- [ ] Remediate verified actionable code-scanning findings without weakening repository security controls.
+- [x] Remediate verified actionable code-scanning findings without weakening repository security controls.
 - [ ] Merge all eligible CI-validated branches into main and confirm final main-branch CI.
 - [x] Create a code-scanning remediation ledger with exact SARIF evidence and alert dispositions.
 - [x] Pin all active GitHub Actions to verified immutable commits and the Python 3.11 Docker base image to a verified digest.
@@ -23,4 +23,4 @@
 - [x] Reconcile supplied GitHub Code Scanning alerts #22–#29 and #48, #54–#58 against the latest final-main SARIF evidence and the remediation ledger.
 - [x] Determine whether the seven remaining Pinned-Dependencies alerts can be safely remediated through reviewed, platform-aware transitive hash locks without weakening resolver or runtime controls.
 - [x] Verify the unresolved Maintained, Code-Review, Vulnerabilities, SAST, CI-Tests, and CII-Best-Practices alerts are accurately classified as historical, owner-controlled, or upstream-constrained where applicable.
-- [ ] Update the evidence ledger and source register only when verified alert-level evidence materially changes the documented disposition.
+- [x] Update the evidence ledger and source register only when verified alert-level evidence materially changes the documented disposition.
