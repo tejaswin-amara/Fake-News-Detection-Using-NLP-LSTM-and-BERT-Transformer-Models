@@ -218,9 +218,11 @@ def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
 def test_scorecard_remediation_ledger_preserves_evidence_and_open_dispositions() -> None:
     """Keep final remediation reporting explicit about resolved and owner-controlled work."""
     ledger = read("docs/security/code-scanning-remediation.md")
-    assert "32565674353" in ledger
+    assert "32641697857" in ledger
     assert "PYSEC-2026-3552" in ledger
     assert "FuzzingID" in ledger
+    assert "PinnedDependenciesID" in ledger
+    assert "23 | 0" in ledger
     assert "no SARIF finding was filtered or dismissed" in ledger
     assert "owner action" in ledger.lower()
 
