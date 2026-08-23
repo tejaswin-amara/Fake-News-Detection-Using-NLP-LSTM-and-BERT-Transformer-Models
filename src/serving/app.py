@@ -54,6 +54,14 @@ _CONTROL_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _REQUEST_ID_SAFE = re.compile(r"[^A-Za-z0-9._:-]")
 _SAFE_TEXT_MAX = 50_000
 _SAFE_BATCH_MAX = 64
+_JSON_REQUEST_PATHS = frozenset({"/predict", "/predict/batch", "/monitoring/drift"})
+_PUBLIC_DIAGNOSTIC_FIELDS = (
+    "model_ready",
+    "model_name",
+    "artifact_version",
+    "serving_mode",
+    "calibration_status",
+)
 
 HTTP_REQUEST_LATENCY = Histogram(
     "fake_news_http_request_latency_seconds",
@@ -92,6 +100,11 @@ def _metrics_route(path: str) -> str:
 
 def _finalize_http_response(request: Request, response: Response, request_id: str) -> Response:
     response.headers["X-Request-ID"] = request_id
+    response.headers.setdefault("Cache-Control", "no-store")
+    response.headers.setdefault("Content-Security-Policy", "frame-ancestors 'none'")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
     started = getattr(request.state, "started", time.perf_counter())
     elapsed = time.perf_counter() - started
     response.headers["X-Process-Time-Ms"] = f"{elapsed * 1000:.3f}"
@@ -477,6 +490,12 @@ def _service_diagnostics(service: Any) -> dict[str, Any]:
     }
 
 
+def _public_service_diagnostics(service: Any) -> dict[str, Any]:
+    """Return readiness metadata without filesystem, runtime, or exception detail."""
+    diagnostics = _service_diagnostics(service)
+    return {field: diagnostics.get(field) for field in _PUBLIC_DIAGNOSTIC_FIELDS}
+
+
 def _client_key(request: Request, trusted_proxy_ips: set[str]) -> str:
     host = request.client.host if request.client else "unknown"
     if host in trusted_proxy_ips:
@@ -599,7 +618,20 @@ def create_app(
             if hasattr(result, "__await__"):
                 await result
 
-    application = FastAPI(title="Fake News Detection API", version="0.3.0", lifespan=lifespan)
+    application = FastAPI(
+        title="Fake News Detection API",
+        description=(
+            "Bounded text-classification and drift-monitoring API. The OpenAPI contract contains "
+            "metadata only: clients must not place credentials or sensitive article text in public logs, issues, or examples."
+        ),
+        version="0.3.0",
+        openapi_tags=[
+            {"name": "service", "description": "Health, readiness, and metrics endpoints."},
+            {"name": "prediction", "description": "Bounded inference endpoints."},
+            {"name": "monitoring", "description": "Asynchronous metadata and drift monitoring endpoints."},
+        ],
+        lifespan=lifespan,
+    )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(origins),
@@ -639,6 +671,19 @@ def create_app(
                     )
                     logger.warning("request_rejected", reason="request_too_large", status_code=413)
                     return response
+            if request.method == "POST" and request.url.path in _JSON_REQUEST_PATHS:
+                media_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+                if media_type != "application/json":
+                    response = _finalize_http_response(
+                        request,
+                        JSONResponse(
+                            status_code=415,
+                            content={"detail": "This endpoint requires application/json", "request_id": request_id},
+                        ),
+                        request_id,
+                    )
+                    logger.warning("request_rejected", reason="unsupported_media_type", status_code=415)
+                    return response
             if request.method != "OPTIONS" and request.url.path not in {"/health", "/ready", "/metrics"}:
                 allowed, retry_after = await limiter.check_async(_client_key(request, trusted_proxy_ips))
                 if not allowed:
@@ -669,7 +714,7 @@ def create_app(
         request.state.started = time.perf_counter()
         return await call_next(request)
 
-    @application.get("/metrics")
+    @application.get("/metrics", tags=["service"], include_in_schema=False)
     def metrics() -> Response:
         # Inference uses immediate 429 admission control rather than an unbounded
         # backlog, so no request is ever kept waiting for an inference permit.
@@ -677,26 +722,23 @@ def create_app(
         DRIFT_QUEUE_DEPTH.set(float(drift_jobs.queue.qsize()))
         return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-    @application.get("/health")
+    @application.get("/health", tags=["service"])
     def health() -> dict[str, Any]:
-        diagnostics = _service_diagnostics(model_service)
+        diagnostics = _public_service_diagnostics(model_service)
         warmup_complete = bool(getattr(application.state, "warmup_complete", model_service.ready))
         diagnostics["warmup_complete"] = warmup_complete
         diagnostics["warmup_error"] = getattr(application.state, "warmup_error", None)
         diagnostics["status"] = "ready" if model_service.ready and warmup_complete else "degraded"
         return diagnostics
 
-    @application.get("/ready")
+    @application.get("/ready", tags=["service"])
     def ready() -> dict[str, Any]:
         warmup_complete = bool(getattr(application.state, "warmup_complete", model_service.ready))
         if not model_service.ready or not warmup_complete:
-            diagnostics = _service_diagnostics(model_service)
-            diagnostics["warmup_complete"] = warmup_complete
-            diagnostics["warmup_error"] = getattr(application.state, "warmup_error", None)
-            raise HTTPException(status_code=503, detail=diagnostics)
-        return {"status": "ready", "warmup_complete": True, **_service_diagnostics(model_service)}
+            raise HTTPException(status_code=503, detail="Serving readiness check failed")
+        return {"status": "ready", "warmup_complete": True, **_public_service_diagnostics(model_service)}
 
-    @application.post("/monitoring/drift", status_code=202)
+    @application.post("/monitoring/drift", status_code=202, tags=["monitoring"])
     async def monitoring_drift(request: DriftRequest) -> dict[str, Any]:
         """Enqueue bounded drift-monitoring work without blocking the request."""
         try:
@@ -715,7 +757,7 @@ def create_app(
         logger.info("drift_job_enqueued", job_id=job_id)
         return {"job_id": job_id, "status": "queued"}
 
-    @application.get("/monitoring/drift/{job_id}")
+    @application.get("/monitoring/drift/{job_id}", tags=["monitoring"])
     async def monitoring_drift_status(job_id: str) -> dict[str, Any]:
         status = drift_jobs.status(job_id)
         if status is None:
@@ -737,7 +779,7 @@ def create_app(
             ).observe(time.perf_counter() - started)
             inference_budget.release()
 
-    @application.post("/predict", response_model=PredictionResponse)
+    @application.post("/predict", response_model=PredictionResponse, tags=["prediction"])
     async def predict(request: PredictionRequest) -> PredictionResponse:
         try:
             return _enrich_prediction((await bounded_predict([request]))[0], request.content())
@@ -747,7 +789,7 @@ def create_app(
         except (ValueError, TypeError) as exc:
             raise HTTPException(status_code=422, detail="Prediction request rejected") from exc
 
-    @application.post("/predict/batch", response_model=BatchPredictionResponse)
+    @application.post("/predict/batch", response_model=BatchPredictionResponse, tags=["prediction"])
     async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
         try:
             predictions = [_enrich_prediction(prediction, request_item.content()) for prediction, request_item in zip(await bounded_predict(request.requests), request.requests, strict=True)]

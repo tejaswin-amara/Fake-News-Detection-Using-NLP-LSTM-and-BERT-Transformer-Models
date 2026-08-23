@@ -1,6 +1,6 @@
 schema_version: "1.0"
 project: "Fake News Detection Using NLP, BiLSTM, and BERT"
-last_reviewed: "2026-08-22"
+last_reviewed: "2026-08-23"
 policy: "Every external source used or referred to must appear here and in docs/sources.md. Restricted materials are linked with metadata rather than redistributed."
 sources:
   - id: SRC-001
@@ -437,3 +437,32 @@ sources:
     accessed: "2026-08-23"
     license_or_terms: "Follow pip and uv documentation, review all lock diffs, and retain complete SHA-256 coverage for every installed dependency."
     supports: [requirements/fuzz.in, requirements/locks, scripts/generate_hash_locks.sh, docs/security/hash-lock-maintenance.md, Dockerfile, .github/workflows/ci.yml, .github/workflows/fuzz.yml, .clusterfuzzlite/build.sh, tests/test_repository_automation.py, docs/sources.md]
+  - id: SRC-054
+    category: secret_detection
+    citation: "Gitleaks repository documentation and Gitleaks Action v2 migration notes."
+    urls:
+      - https://github.com/gitleaks/gitleaks
+      - https://github.com/gitleaks/gitleaks-action/blob/master/v2.md
+    accessed: "2026-08-23"
+    license_or_terms: "Gitleaks is MIT-licensed. Review Action licensing and ownership requirements if repository ownership changes. Findings require private rotation and investigation; do not use broad baselines, broad allowlists, or inline production suppressions."
+    supports: [.github/workflows/secret-scan.yml, .gitleaks.toml, docs/security/secret-handling.md, CONTRIBUTING.md, CLAUDE.md, .cursorrules, .github/copilot-instructions.md, tests]
+  - id: SRC-055
+    category: api_and_logging_security
+    citation: "OWASP API Security Project, REST Security Cheat Sheet, and Logging Cheat Sheet."
+    urls:
+      - https://owasp.org/www-project-api-security/
+      - https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html
+      - https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+    accessed: "2026-08-23"
+    license_or_terms: "OWASP API Security project content is CC BY-SA 4.0; use guidance with attribution and do not copy text beyond permitted quotation."
+    supports: [src/serving/app.py, tests, docs/security/api-and-observability.md, docs/security/secret-handling.md, docs/developer-pipeline-adoption.md, docs/ADR/0006-full-relevant-developer-pipeline-adoption.md]
+  - id: SRC-056
+    category: performance_test_design
+    citation: "Grafana k6 scenarios and thresholds documentation."
+    urls:
+      - https://grafana.com/docs/k6/latest/using-k6/scenarios/
+      - https://grafana.com/docs/k6/latest/using-k6/thresholds/
+      - https://github.com/grafana/setup-k6-action
+    accessed: "2026-08-23"
+    license_or_terms: "Follow current Grafana k6 terms and package license. Do not target production or external systems without owner approval, documented capacity, and consent."
+    supports: [tests/performance, .github/workflows/performance-smoke.yml, docs/performance-testing.md, docs/developer-pipeline-adoption.md]

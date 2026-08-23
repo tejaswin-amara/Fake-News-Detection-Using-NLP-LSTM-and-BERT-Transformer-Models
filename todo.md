@@ -24,3 +24,10 @@
 - [x] Determine whether the seven remaining Pinned-Dependencies alerts can be safely remediated through reviewed, platform-aware transitive hash locks without weakening resolver or runtime controls.
 - [x] Verify the unresolved Maintained, Code-Review, Vulnerabilities, SAST, CI-Tests, and CII-Best-Practices alerts are accurately classified as historical, owner-controlled, or upstream-constrained where applicable.
 - [x] Update the evidence ledger and source register only when verified alert-level evidence materially changes the documented disposition.
+- [x] Create a source-governed developer-pipeline adoption matrix that maps every supplied default to adopted, already implemented, or deferred-with-trigger status.
+- [x] Strengthen conventional-commit, contributor, review, and AI-agent operating guidance without claiming independent human review.
+- [x] Add immutable, least-privilege secret-scanning controls and a privacy-preserving secret-handling incident runbook.
+- [x] Formalize the safe FastAPI OpenAPI contract and add metadata-only API/privacy regression coverage.
+- [x] Add bounded, opt-in performance smoke testing and document safe load-test operation without retaining article text.
+- [x] Publish version-controlled architecture, data-flow, observability, and operational runbooks with adoption gates for non-applicable platforms.
+- [ ] Validate every adoption change through protected-main PRs, main CI, CodeQL, container checks, Scorecard evidence, source audit, and branch consolidation.

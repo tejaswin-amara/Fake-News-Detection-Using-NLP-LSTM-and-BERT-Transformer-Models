@@ -2,10 +2,10 @@
 
 Before editing, read the target code, its tests, related configs, and the source register. Work in Python 3.11 and preserve the established FastAPI, DVC, MLflow, ONNX, Docker, and Kubernetes contracts.
 
-Do not weaken Ruff, mypy, Bandit, pip-audit, source-audit, kubeconform, coverage, rootless-container, or critical-CVE gates. Do not add unpinned libraries, unrelated frameworks, broad ignores, fake tests, fake data, or invented metrics.
+Do not weaken Ruff, mypy, Bandit, pip-audit, source-audit, kubeconform, coverage, rootless-container, critical-CVE, CodeQL, fuzzing, secret-scanning, or complete-hash-lock gates. Do not add unpinned libraries, unrelated frameworks, broad ignores, broad secret baselines/allowlists, fake tests, fake data, or invented metrics.
 
 Maintain strict split-before-fit behavior: validation and test data must never influence learned transformations, calibration, thresholds, model selection, or fit calls. This project classifies dataset-label patterns; never describe it as autonomous fact verification or web search.
 
-Never store or log raw article text, secrets, credentials, API tokens, DVC remote settings, model weights, generated artifacts, MLflow stores, or signing keys. Register every external URL, source, package, action, or copied implementation pattern in both docs/sources.md and docs/sources.yaml.
+Never store or log raw article text, secrets, credentials, API tokens, DVC remote settings, model weights, generated artifacts, MLflow stores, or signing keys. Never add `gitleaks:allow` or unreviewed third-party automation/agent tooling. Register every external URL, source, package, action, or copied implementation pattern in both docs/sources.md and docs/sources.yaml. Before proposing new infrastructure, read docs/developer-pipeline-adoption.md and provide its adoption trigger, ADR, privacy/license analysis, owner, and validation plan.
 
-Run the relevant checks before handoff: Ruff, mypy, source audit, DVC stage listing, Kubernetes validation when applicable, the 95% coverage pytest command, and git diff --check. Do not change GitHub settings, releases, tags, topics, social-preview media, deployment secrets, or third-party content without explicit approval.
+Run the relevant checks before handoff: Ruff, mypy, source audit, DVC stage listing, Kubernetes validation when applicable, the 95% coverage pytest command, secret scan when workflow/configuration changes, and git diff --check. Do not change GitHub settings, releases, tags, topics, social-preview media, deployment secrets, or third-party content without explicit approval. Use a focused conventional commit and do not claim independent review or alert closure without evidence.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 
 import numpy as np
@@ -70,6 +71,52 @@ def test_health_predict_batch_and_latency():
     )
     assert batch.status_code == 200
     assert batch.json()["count"] == 2
+
+
+def test_openapi_contract_headers_and_json_boundary_are_safe():
+    client = TestClient(create_app(FakeService()))
+    schema_response = client.get("/openapi.json")
+    assert schema_response.status_code == 200
+    schema = schema_response.json()
+    assert schema["info"]["title"] == "Fake News Detection API"
+    assert set(("/health", "/ready", "/predict", "/predict/batch", "/monitoring/drift")).issubset(schema["paths"])
+    assert "/metrics" not in schema["paths"]
+    assert "System startup warm-up article." not in json.dumps(schema)
+
+    response = client.post("/predict", json={"text": "synthetic contract fixture"})
+    assert response.status_code == 200
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.headers["Content-Security-Policy"] == "frame-ancestors 'none'"
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+
+    sentinel = "raw-article-content-must-not-appear-in-error"
+    rejected = client.post("/predict", content=sentinel, headers={"Content-Type": "text/plain"})
+    assert rejected.status_code == 415
+    assert sentinel not in rejected.text
+    assert rejected.json()["detail"] == "This endpoint requires application/json"
+
+
+def test_health_and_readiness_never_expose_internal_diagnostics():
+    class UnavailableService:
+        ready = False
+        error = "sensitive internal diagnostic /private/artifact.path"
+        artifact_path = "/private/artifact.path"
+
+        def predict(self, requests):
+            raise RuntimeError("not available")
+
+    with TestClient(create_app(UnavailableService())) as client:
+        health = client.get("/health")
+        ready = client.get("/ready")
+    assert health.status_code == 200
+    assert health.json()["status"] == "degraded"
+    assert "sensitive internal diagnostic" not in health.text
+    assert "/private/artifact.path" not in health.text
+    assert ready.status_code == 503
+    assert ready.json()["detail"] == "Serving readiness check failed"
+    assert "sensitive internal diagnostic" not in ready.text
 
 
 def test_validation_rejects_empty_text():

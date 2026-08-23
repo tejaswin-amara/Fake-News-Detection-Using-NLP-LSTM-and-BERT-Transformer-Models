@@ -46,11 +46,57 @@ FastAPI exposes health, readiness, metrics, single prediction, batch prediction,
 
 The native packaged model is authoritative for sparse feature workflows. ONNX export is only available through dense-compatible paths and is guarded by parity checks. Redis is used for distributed rate-limiting when configured; circuit-breaker degradation is fail-open to protect inference availability during a Redis outage, with a critical log signal.
 
+```mermaid
+sequenceDiagram
+    participant Client as Authorized API client
+    participant API as FastAPI boundary
+    participant Limit as Admission and rate limiter
+    participant Model as Verified model artifact
+    participant Drift as Bounded drift worker
+    participant Obs as Metrics and redacted logs
+
+    Client->>API: JSON request with bounded text
+    API->>API: Validate type, length, content type, request ID
+    API->>Limit: Apply bounded admission control
+    alt admitted
+        API->>Model: Predict using warm artifact
+        Model-->>API: Label and probabilities
+        API->>Obs: Aggregate latency/status only
+        API-->>Client: JSON response with security headers
+    else rate or concurrency limit reached
+        API->>Obs: Aggregate rejection reason only
+        API-->>Client: 429 and retry guidance
+    end
+    Client->>API: Optional bounded drift request
+    API->>Drift: Queue metadata/statistical work
+    Drift->>Obs: Aggregate queue/error metrics only
+```
+
+The diagram intentionally omits request bodies from logs, metrics, and diagrammed data stores. Raw article text is accepted only for bounded in-memory inference or drift calculations and must not become a log field, metric label, test fixture artifact, or dashboard record.[SRC-055]
+
 ## Deployment and trust boundaries
 
 The production image is multi-stage and runs as non-root `appuser`. Docker Compose models the API, Redis, MLflow, and synthetic traffic services with bounded resource and filesystem controls. Kubernetes assets add Deployment, HPA, NetworkPolicy, ingress, and ServiceMonitor declarations; their schemas are checked in CI. Production operators must supply environment-specific secrets, TLS provisioning, model artifacts, external storage, and monitoring configuration.
 
 GitHub Actions validates source registration, configuration, DVC stages, Kubernetes manifests, linting, strict typing, Bandit, dependency advisories, compilation, MLflow smoke operation, tests with a 95% source-coverage threshold, non-root image identity, and actionable critical image CVEs. High-severity image findings are reported but do not block the build under the current policy.
+
+```mermaid
+flowchart LR
+    PR[Focused protected-main pull request] --> Source[Source audit and policy tests]
+    PR --> Secret[Immutable secret detection]
+    PR --> Static[Ruff, mypy, Bandit, CodeQL]
+    PR --> Repro[DVC graph, MLflow smoke, pytest coverage]
+    PR --> Platform[Kubernetes schema and rootless image scan]
+    PR --> Review[Independent human review when branch policy requires it]
+    Source --> Merge{Required checks and review evidence}
+    Secret --> Merge
+    Static --> Merge
+    Repro --> Merge
+    Platform --> Merge
+    Review --> Merge
+    Merge --> Main[Protected main]
+    Main --> Scorecard[Scorecard/SARIF evidence]
+```
 
 ## Directory guide
 
