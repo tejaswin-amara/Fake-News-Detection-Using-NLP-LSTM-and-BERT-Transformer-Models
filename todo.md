@@ -31,3 +31,4 @@
 - [x] Add bounded, opt-in performance smoke testing and document safe load-test operation without retaining article text.
 - [x] Publish version-controlled architecture, data-flow, observability, and operational runbooks with adoption gates for non-applicable platforms.
 - [ ] Validate every adoption change through protected-main PRs, main CI, CodeQL, container checks, Scorecard evidence, source audit, and branch consolidation.
+- [x] Correct the Trivy image-analysis timeout while retaining the required vulnerability scan and the separate immutable secret-detection control.

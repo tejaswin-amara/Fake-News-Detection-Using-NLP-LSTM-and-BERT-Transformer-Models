@@ -135,6 +135,19 @@ def test_secret_detection_is_immutable_least_privilege_and_without_suppression()
     assert "rotate" in runbook.lower()
 
 
+def test_container_vulnerability_scan_is_bounded_without_disabling_vulnerabilities() -> None:
+    """Keep Trivy vulnerability analysis active while Gitleaks owns repository secret detection."""
+    ci_workflow = read(".github/workflows/ci.yml")
+    assert ci_workflow.count("scanners: vuln") == 2
+    assert ci_workflow.count("timeout: 15m") == 2
+    assert ci_workflow.count("vuln-type: os,library") == 2
+    assert "severity: CRITICAL,HIGH" in ci_workflow
+    assert "severity: CRITICAL" in ci_workflow
+    assert "gitleaks/gitleaks-action@bcfb9cce635345aac9996cedc19b2de8e01b894f" in read(
+        ".github/workflows/secret-scan.yml"
+    )
+
+
 def test_performance_smoke_is_explicitly_authorized_and_bounded() -> None:
     """Keep performance validation manual, finite, synthetic-only, and threshold-gated."""
     workflow = read(".github/workflows/performance-smoke.yml")
