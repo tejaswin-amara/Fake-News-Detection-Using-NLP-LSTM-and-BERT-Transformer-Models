@@ -2,7 +2,7 @@
 
 The repository uses complete, transitive, SHA-256-hashed requirement locks for the **Linux x86_64 / Python 3.11 / manylinux 2.28** execution boundary used by the protected-main CI, rootless container build, and synthetic parser-fuzzing jobs. The source input files remain human-reviewable (`requirements.txt`, `requirements-runtime.txt`, and `requirements/fuzz.in`); only the committed files under `requirements/locks/` are installation inputs for automated environments.
 
-> Hash checking is deliberately all-or-nothing. Every installed direct and transitive distribution is version-pinned and carries one or more SHA-256 hashes. Installation also uses `--only-binary=:all:` so unreviewed source builds cannot introduce undeclared build-time downloads. See **SRC-053**.
+> Hash checking is deliberately all-or-nothing. Every installed direct and transitive distribution is version-pinned and carries one or more SHA-256 hashes. Runtime and fuzz jobs also use `--only-binary=:all:`. The full development lock retains its hash-verified `antlr4-python3-runtime==4.9.3` source distribution because that required upstream version publishes no compatible wheel; it therefore uses `--require-hashes` without `--only-binary`. See **SRC-053**.
 
 ## Regeneration procedure
 
@@ -11,7 +11,7 @@ Run the following on a reviewed Linux x86_64 maintainer environment with Python 
 ```bash
 uv --version
 ./scripts/generate_hash_locks.sh
-python -m pip install --dry-run --require-hashes --only-binary=:all: \
+python -m pip install --dry-run --require-hashes \
   -r requirements/locks/development-py311-manylinux_2_28.txt
 python -m pip install --dry-run --require-hashes --only-binary=:all: \
   -r requirements/locks/runtime-py311-manylinux_2_28.txt

@@ -36,7 +36,7 @@ jobs:
           cache-dependency-path: requirements/locks/development-py311-manylinux_2_28.txt
 
       - name: Install complete hash-locked dependencies
-        run: "python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/development-py311-manylinux_2_28.txt"
+        run: "python -m pip install --require-hashes -r requirements/locks/development-py311-manylinux_2_28.txt"
 
       - name: Validate configuration and DVC graph
         run: |

@@ -18,7 +18,7 @@ def test_ci_workflow_contains_required_phase5_gates():
     for required in [
         "pull_request",
         "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
-        "pip install --require-hashes --only-binary=:all: -r requirements/locks/development-py311-manylinux_2_28.txt",
+        "pip install --require-hashes -r requirements/locks/development-py311-manylinux_2_28.txt",
         "ruff check src scripts tests",
         "dvc stage list",
         "mlflow server",

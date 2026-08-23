@@ -176,15 +176,19 @@ def test_automated_python_installs_use_complete_platform_hash_locks() -> None:
 
     for automated_install in (ci_workflow, fuzz_workflow, clusterfuzzlite_build, dockerfile):
         assert "--require-hashes" in automated_install
-        assert "--only-binary=:all:" in automated_install
         assert "pip install --upgrade pip" not in automated_install
+
+    for binary_only_install in (fuzz_workflow, clusterfuzzlite_build, dockerfile):
+        assert "--only-binary=:all:" in binary_only_install
 
     assert "development-py311-manylinux_2_28.txt" in ci_workflow
     assert "fuzz-py311-manylinux_2_28.txt" in fuzz_workflow
     assert "fuzz-py311-manylinux_2_28.txt" in clusterfuzzlite_build
     assert "runtime-py311-manylinux_2_28.txt" in dockerfile
     assert "requirements/fuzz.in" in read("scripts/generate_hash_locks.sh")
-    assert "SRC-053" in read("docs/security/hash-lock-maintenance.md")
+    hash_lock_documentation = read("docs/security/hash-lock-maintenance.md")
+    assert "SRC-053" in hash_lock_documentation
+    assert "antlr4-python3-runtime==4.9.3" in hash_lock_documentation
 
 
 def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
