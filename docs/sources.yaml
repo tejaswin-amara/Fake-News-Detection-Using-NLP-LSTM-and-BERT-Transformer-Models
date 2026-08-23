@@ -427,3 +427,12 @@ sources:
     accessed: "2026-08-22"
     license_or_terms: "Workflow evidence and public advisory metadata are time-sensitive; re-run or re-check before future remediation decisions."
     supports: [docs/security/code-scanning-remediation.md, docs/sources.md, docs/sources.yaml]
+  - id: SRC-053
+    category: complete_python_dependency_hash_locks
+    citation: "Python Packaging Authority secure-install guidance and Astral uv pip compile locking documentation."
+    urls:
+      - https://pip.pypa.io/en/stable/topics/secure-installs/
+      - https://docs.astral.sh/uv/pip/compile/
+    accessed: "2026-08-23"
+    license_or_terms: "Follow pip and uv documentation, review all lock diffs, and retain complete SHA-256 coverage for every installed dependency."
+    supports: [requirements/fuzz.in, requirements/locks, scripts/generate_hash_locks.sh, docs/security/hash-lock-maintenance.md, Dockerfile, .github/workflows/ci.yml, .github/workflows/fuzz.yml, .clusterfuzzlite/build.sh, tests/test_repository_automation.py, docs/sources.md]

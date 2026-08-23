@@ -133,3 +133,5 @@ def test_unsupervised_augmenter_fit_train_transform_held_out_schema():
     assert train_output.shape == held_out_output.shape
     assert train_output.shape[1] == X.shape[1] + 4
     assert len(augmenter.get_feature_names_out()) == train_output.shape[1]
+    with pytest.raises(ValueError, match="Input feature dimension"):
+        augmenter.transform(np.column_stack([held_out, np.zeros(len(held_out))]))

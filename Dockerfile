@@ -14,9 +14,9 @@ RUN python -m venv "$VIRTUAL_ENV" \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
-COPY requirements-runtime.txt pyproject.toml ./
-RUN pip install --upgrade pip \
-    && pip install -r requirements-runtime.txt
+COPY requirements/locks/runtime-py311-manylinux_2_28.txt requirements/locks/
+RUN pip install --no-cache-dir --require-hashes --only-binary=:all: \
+    -r requirements/locks/runtime-py311-manylinux_2_28.txt
 
 FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS runtime
 
