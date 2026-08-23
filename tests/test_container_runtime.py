@@ -7,8 +7,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_dockerfile_installs_serving_only_dependencies() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    assert "COPY requirements-runtime.txt pyproject.toml ./" in dockerfile
-    assert "pip install -r requirements-runtime.txt" in dockerfile
+    assert "COPY requirements/locks/runtime-py311-manylinux_2_28.txt requirements/locks/" in dockerfile
+    assert "pip install --no-cache-dir --require-hashes --only-binary=:all:" in dockerfile
+    assert "requirements/locks/runtime-py311-manylinux_2_28.txt" in dockerfile
 
 
 def test_runtime_requirements_exclude_training_and_tracking_tools() -> None:

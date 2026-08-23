@@ -20,3 +20,7 @@
 - [x] Document history-, age-, and external-program Scorecard findings without fabricated compliance claims.
 - [x] Integrate ClusterFuzzLite coverage-guided Python fuzzing to address the remaining recognized Fuzzing check.
 - [x] Upgrade final Scorecard-affected direct dependencies and remove unused PyTorch satellite packages that block a secure PyTorch pin.
+- [x] Reconcile supplied GitHub Code Scanning alerts #22–#29 and #48, #54–#58 against the latest final-main SARIF evidence and the remediation ledger.
+- [x] Determine whether the seven remaining Pinned-Dependencies alerts can be safely remediated through reviewed, platform-aware transitive hash locks without weakening resolver or runtime controls.
+- [x] Verify the unresolved Maintained, Code-Review, Vulnerabilities, SAST, CI-Tests, and CII-Best-Practices alerts are accurately classified as historical, owner-controlled, or upstream-constrained where applicable.
+- [ ] Update the evidence ledger and source register only when verified alert-level evidence materially changes the documented disposition.
