@@ -1,0 +1,4 @@
+title = "Fake News Detection repository secret detection policy"
+
+[extend]
+useDefault = true

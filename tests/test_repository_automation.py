@@ -46,8 +46,10 @@ def test_issue_forms_and_automation_workflows_are_parseable_and_guarded() -> Non
         ".github/workflows/clusterfuzzlite.yml",
         ".github/workflows/codeql.yml",
         ".github/workflows/fuzz.yml",
+        ".github/workflows/performance-smoke.yml",
         ".github/workflows/release.yml",
         ".github/workflows/scorecards.yml",
+        ".github/workflows/secret-scan.yml",
         ".github/workflows/labeler.yml",
     ):
         assert isinstance(yaml.safe_load(read(path)), dict), f"Invalid YAML: {path}"
@@ -93,8 +95,10 @@ def test_workflow_actions_and_python_base_image_are_immutable() -> None:
         ".github/workflows/clusterfuzzlite.yml",
         ".github/workflows/codeql.yml",
         ".github/workflows/fuzz.yml",
+        ".github/workflows/performance-smoke.yml",
         ".github/workflows/release.yml",
         ".github/workflows/scorecards.yml",
+        ".github/workflows/secret-scan.yml",
         ".github/workflows/labeler.yml",
     )
     action_pattern = re.compile(r"^\s*uses:\s*[^@\s]+@([0-9a-f]{40})(?:\s+#.*)?$", re.MULTILINE)
@@ -109,6 +113,45 @@ def test_workflow_actions_and_python_base_image_are_immutable() -> None:
     base_digests = re.findall(r"FROM python:3\.11-slim@sha256:([0-9a-f]{64})", dockerfile)
     assert len(base_digests) == 2
     assert len(set(base_digests)) == 1
+
+
+def test_secret_detection_is_immutable_least_privilege_and_without_suppression() -> None:
+    """Require credential detection without baselines, broad ignores, or persisted checkout tokens."""
+    workflow = read(".github/workflows/secret-scan.yml")
+    config = read(".gitleaks.toml")
+    runbook = read("docs/security/secret-handling.md")
+
+    assert "gitleaks/gitleaks-action@bcfb9cce635345aac9996cedc19b2de8e01b894f" in workflow
+    assert "permissions: read-all" in workflow
+    assert "fetch-depth: 0" in workflow
+    assert "persist-credentials: false" in workflow
+    assert "GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}" in workflow
+    assert "schedule:" in workflow and "workflow_dispatch:" in workflow
+    assert "useDefault = true" in config
+    assert "allowlist" not in config.lower()
+    assert "baseline" not in config.lower()
+    assert "gitleaks:allow" not in config.lower()
+    assert "gitleaks:allow" in runbook
+    assert "rotate" in runbook.lower()
+
+
+def test_performance_smoke_is_explicitly_authorized_and_bounded() -> None:
+    """Keep performance validation manual, finite, synthetic-only, and threshold-gated."""
+    workflow = read(".github/workflows/performance-smoke.yml")
+    profile = read("tests/performance/api_smoke.js")
+    documentation = read("docs/performance-testing.md")
+
+    assert "workflow_dispatch:" in workflow
+    assert "pull_request:" not in workflow and "push:" not in workflow and "schedule:" not in workflow
+    assert "inputs.authorize_target == 'yes'" in workflow
+    assert "grafana/setup-k6-action@85119162329017cffa5e1450d8caef5780543201" in workflow
+    assert "K6_AUTHORIZE_TARGET: yes" in workflow
+    assert "iterations: 3" in profile
+    assert 'maxDuration: "30s"' in profile
+    assert "K6_AUTHORIZE_TARGET" in profile
+    assert "http_req_failed" in profile and "http_req_duration" in profile
+    assert "raw article" in documentation.lower()
+    assert "production slo" in documentation.lower()
 
 
 def test_scorecard_remediated_dependency_pins_cannot_be_downgraded() -> None:
@@ -198,6 +241,28 @@ def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
         assert "split-before-fit" in content
         assert "raw article text" in content
         assert "source" in content
+        assert "unreviewed third-party" in content or "secret-scanning" in content
+
+    adoption_matrix = read("docs/developer-pipeline-adoption.md").lower()
+    adoption_adr = read("docs/ADR/0006-full-relevant-developer-pipeline-adoption.md").lower()
+    observability_runbook = read("docs/security/api-and-observability.md").lower()
+    architecture = read("ARCHITECTURE.md").lower()
+    assert "full relevant adoption" in adoption_matrix
+    assert "deferred" in adoption_matrix
+    assert "adoption trigger" in adoption_matrix
+    assert "full relevant developer-pipeline adoption" in adoption_adr
+    assert "raw article text" in observability_runbook
+    assert "fake_news_http_request_latency_seconds" in observability_runbook
+    assert "mermaid" in architecture
+    assert "immutable secret detection" in architecture
+
+    contribution_guide = read("CONTRIBUTING.md").lower()
+    pr_template = read(".github/PULL_REQUEST_TEMPLATE.md").lower()
+    assert "conventional" in contribution_guide
+    assert "independent reviewer" in contribution_guide
+    assert "gitleaks:allow" in contribution_guide
+    assert "conventional commit title" in pr_template
+    assert "independent reviewer" in pr_template
 
     blueprint = read("github-seo-growth-strategy.md")
     description = (

@@ -10,7 +10,7 @@ Read the affected implementation, its tests, related configuration, and relevant
 
 ## Python, quality, and dependency policy
 
-Target Python 3.11 and retain the existing pinned dependency model. Do not add an unpinned library, a broad static-analysis suppression, an untyped escape hatch, or a weaker test/coverage threshold to make a change pass. Prefer the implemented FastAPI, scikit-learn, PyTorch, Transformers, DVC, MLflow, ONNX, Prometheus, and Kubernetes boundaries over introducing duplicate frameworks.
+Target Python 3.11 and retain the existing complete hash-locked dependency model. Do not add an unpinned library, a broad static-analysis suppression, an untyped escape hatch, a secret-scanning ignore/baseline, or a weaker test/coverage threshold to make a change pass. Prefer the implemented FastAPI, scikit-learn, PyTorch, Transformers, DVC, MLflow, ONNX, Prometheus, and Kubernetes boundaries over introducing duplicate frameworks.
 
 Run the applicable verification commands before delivery:
 
@@ -29,16 +29,16 @@ When deployment files change, preserve kubeconform validation, the rootless imag
 
 Preserve split-before-fit discipline. Fit vocabulary, imputation, encoding, scaling, reduction, clustering, anomaly detection, calibration, thresholds, and models only on their permitted training data. The validation and test partitions are never input to fitting or model-selection decisions. Do not fabricate datasets, records, metrics, benchmarks, model artifacts, test outcomes, or user feedback.
 
-Never commit or log credentials, API keys, tokens, DVC remote details, raw article text, private dataset content, model weights, generated artifacts, MLflow stores, signing keys, or production URLs containing credentials. Keep runtime artifacts in governed external storage and ensure sanitized errors remain sanitized. Security vulnerabilities use the private GitHub reporting process in `SECURITY.md`, not public issues.
+Never commit or log credentials, API keys, tokens, DVC remote details, raw article text, private dataset content, model weights, generated artifacts, MLflow stores, signing keys, or production URLs containing credentials. Keep runtime artifacts in governed external storage and ensure sanitized errors remain sanitized. Do not add `gitleaks:allow`, a broad `.gitleaksignore`, a broad secret baseline, or example credentials. Security vulnerabilities and suspected credential exposure use the private GitHub reporting process in `SECURITY.md`, not public issues.
 
 ## Documentation and source governance
 
-Every new external URL, dataset, paper, documentation page, dependency, action, copied algorithmic pattern, or discoverability destination must be registered in **both** `docs/sources.md` and `docs/sources.yaml` before it appears elsewhere in tracked text. Keep the README reference section intact and never invent an author, contact channel, capability, score, deployment, or compliance result.
+Every new external URL, dataset, paper, documentation page, dependency, action, copied algorithmic pattern, or discoverability destination must be registered in **both** `docs/sources.md` and `docs/sources.yaml` before it appears elsewhere in tracked text. Read `docs/developer-pipeline-adoption.md` before proposing a new platform and add its ADR, trigger, ownership, privacy, license, and validation evidence. Keep the README reference section intact and never invent an author, contact channel, capability, score, deployment, or compliance result.
 
 ## Automation and external side effects
 
-Do not modify repository settings, branch protection, DVC remotes, release tokens, GitHub secrets, public topics, social-preview media, releases, tags, deployment environments, or third-party pages without explicit user authorization. Workflows that can create tags, releases, labels, or external requests must be safe by default and explain their activation preconditions.
+Do not install, execute, or import unreviewed third-party agent skills, MCP servers, automation platforms, or post-install scripts. Do not modify repository settings, branch protection, DVC remotes, release tokens, GitHub secrets, public topics, social-preview media, releases, tags, deployment environments, or third-party pages without explicit user authorization. Workflows that can create tags, releases, labels, or external requests must be safe by default and explain their activation preconditions. Automation and external integrations require an explicit architecture assessment; do not add polling, persistent workers, webhooks, or cloud resources speculatively.
 
 ## Change handoff
 
-Update `todo.md` before implementation, mark completed work immediately when its implementation is complete, and read the full checklist before commit. Use focused, conventional commit messages. Deliver a concise summary of changed files, validations, known constraints, and any owner action that remains necessary.
+Update `todo.md` before implementation, mark completed work immediately when its implementation is complete, and read the full checklist before commit. Use focused, conventional commit messages. Do not claim independent review, alert closure, security remediation, deployment, or production performance without the corresponding evidence. Deliver a concise summary of changed files, validations, known constraints, and any owner action that remains necessary.
