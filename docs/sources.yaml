@@ -467,3 +467,14 @@ sources:
     accessed: "2026-08-23"
     license_or_terms: "Follow current Grafana k6 terms and package license. Do not target production or external systems without owner approval, documented capacity, and consent."
     supports: [tests/performance, .github/workflows/performance-smoke.yml, docs/performance-testing.md, docs/developer-pipeline-adoption.md]
+  - id: SRC-057
+    category: kubernetes_production_readiness_and_secret_management
+    citation: "Kubernetes documentation for liveness, readiness, and startup probes; Deployments; and good practices for Kubernetes Secrets."
+    urls:
+      - https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+      - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+      - https://kubernetes.io/docs/concepts/security/secrets-good-practices/
+    accessed: "2026-08-24"
+    version: "Kubernetes documentation accessed for the repository's declared manifest validation target"
+    license_or_terms: "Use as operational guidance. Do not commit Secret manifests or secret values; values are base64-encoded rather than encrypted by default and require protected storage, least-privilege access, and operator controls."
+    supports: [docs/ADR/0007-production-deployment-boundary.md, docs/deployment/production-readiness.md, docs/deployment/production-rollout.md, scripts/verify_production_readiness.py, tests/test_production_readiness.py, docs/sources.md]

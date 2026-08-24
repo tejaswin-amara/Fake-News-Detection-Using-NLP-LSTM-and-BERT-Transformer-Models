@@ -98,5 +98,8 @@ compose.override.yml
 *.p12
 *.pfx
 
+# Owner-held production release evidence is validated locally and must never enter Git.
+deploy/production-release-contract.env
+
 # Coverage output
 .coverage*
