@@ -32,3 +32,7 @@
 - [x] Publish version-controlled architecture, data-flow, observability, and operational runbooks with adoption gates for non-applicable platforms.
 - [x] Validate every adoption change through protected-main PRs, main CI, CodeQL, container checks, Scorecard evidence, source audit, and branch consolidation.
 - [x] Correct the Trivy image-analysis timeout while retaining the required vulnerability scan and the separate immutable secret-detection control.
+- [x] Publish an evidence-based production-readiness assessment that selects a hosting boundary and lists owner-controlled environment prerequisites.
+- [x] Add production configuration, secret, model-artifact, network, and ingress readiness controls without embedding environment credentials or endpoints.
+- [x] Define a staged rollout, capacity-validation, monitoring, incident-response, and rollback runbook for an authorized deployment target.
+- [ ] Validate production-readiness artifacts through a protected-main pull request without performing an unapproved production deployment.
