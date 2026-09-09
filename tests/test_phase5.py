@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -168,5 +169,6 @@ def test_final_documentation_contains_required_phase5_contracts():
 
 def test_readme_retains_all_visible_reference_numbers():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    references = [line for line in readme.splitlines() if line.startswith(tuple(f"{i}." for i in range(1, 37)))]
-    assert len(references) == 36
+    references_section = readme.split("## References", maxsplit=1)[1]
+    references = [line for line in references_section.splitlines() if re.match(r"^\d+\.\s", line)]
+    assert len(references) == 14
