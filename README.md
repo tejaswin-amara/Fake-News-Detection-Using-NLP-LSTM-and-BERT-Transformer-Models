@@ -2,7 +2,7 @@
 
 [![Continuous integration](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models) [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB)](pyproject.toml) [![License: MIT](https://img.shields.io/badge/License-MIT-1f6f54)](LICENSE)
 
-**Fake News Detection Using NLP, LSTM, and BERT Transformer Models** is a reproducible, production-oriented machine-learning repository for fake-news **classification**, rather than autonomous fact verification. It pairs leakage-safe data ingestion and train/validation/test partitioning with classical, BiLSTM, and BERT modelling paths, evaluation and calibration, FastAPI serving, artifact packaging, monitoring, and CI-controlled deployment assets. The implementation is explicitly mapped to the **Machine Learning (25SC2107E)** syllabus and Course Outcomes **CO1–CO6** in [`docs/compliance_matrix.md`](docs/compliance_matrix.md) [SRC-003].
+**Fake News Detection Using NLP, LSTM, and BERT Transformer Models** is a reproducible, production-oriented machine-learning repository for fake-news **classification**, rather than autonomous fact verification. It pairs leakage-safe data ingestion and train/validation/test partitioning with classical, BiLSTM, and BERT modelling paths, evaluation and calibration, FastAPI serving, artifact packaging, monitoring, and CI-controlled deployment assets. The implementation is explicitly mapped to the **Machine Learning (25SC2107E)** syllabus and Course Outcomes **CO1–CO6** in [`docs/compliance_matrix.md`](docs/compliance_matrix.md) [L1-4].
 
 > **Important limitation:** This project classifies patterns associated with dataset labels. It is not an independent fact-checking system and must not be used as the sole basis for editorial, legal, medical, financial, or public-safety decisions.
 
@@ -120,9 +120,9 @@ A single online request follows the path **HTTP validation → text normalizatio
 
 ## Data and label policy
 
-The ingestion layer accepts ISOT and WELFake through adapters rather than assuming one CSV schema. The ISOT source is documented through Ahmed, Traore, and Saad’s publication [1], while the WELFake record is maintained through Zenodo with DOI `10.5281/zenodo.4561253` [2]. WELFake’s Zenodo record describes the released columns and reports the dataset’s published label convention; the repository normalizes all supported inputs to its explicit internal convention of `0 = real` and `1 = fake`, recording any source-label inversion in the ingestion metadata [2].
+The ingestion layer accepts ISOT and WELFake through adapters rather than assuming one CSV schema. The ISOT source is documented through Ahmed, Traore, and Saad’s publication [L1-1], while the WELFake record is maintained through Zenodo with DOI `10.5281/zenodo.4561253` [L1-2]. WELFake’s Zenodo record describes the released columns and reports the dataset’s published label convention; the repository normalizes all supported inputs to its explicit internal convention of `0 = real` and `1 = fake`, recording any source-label inversion in the ingestion metadata [L1-2].
 
-The repository also defines a new **ClaimReview current fact-checked claims** release from the live Data Commons Fact Check Markup Tool feed [45]. The release is a dated English claim-level dataset, not a scraped news-article corpus or an automated web-search truth engine. Its input is structured fact-check markup only; full publisher fact-check articles are not collected. The release manifest records the feed checksum, retrieval time, original publisher rating, source URL, exclusions, temporal boundaries, and retained records. The current `2026-08-21` release uses a ten-year source window because the current two-year feed segment contained too few unambiguous `real` ratings for valid three-way evaluation; the newest period remains fully held out for testing, and balancing happens only inside each fixed time partition. See [`docs/current_dataset_release.md`](docs/current_dataset_release.md) and [`docs/dataset_card.md`](docs/dataset_card.md).
+The repository also defines a new **ClaimReview current fact-checked claims** release from the live Data Commons Fact Check Markup Tool feed [L1-3]. The release is a dated English claim-level dataset, not a scraped news-article corpus or an automated web-search truth engine. Its input is structured fact-check markup only; full publisher fact-check articles are not collected. The release manifest records the feed checksum, retrieval time, original publisher rating, source URL, exclusions, temporal boundaries, and retained records. The current `2026-08-21` release uses a ten-year source window because the current two-year feed segment contained too few unambiguous `real` ratings for valid three-way evaluation; the newest period remains fully held out for testing, and balancing happens only inside each fixed time partition. See [`docs/current_dataset_release.md`](docs/current_dataset_release.md) and [`docs/dataset_card.md`](docs/dataset_card.md).
 
 Raw datasets, pretrained weights, and generated model artifacts are excluded from version control unless their license and repository size make inclusion appropriate. The repository records URLs, DOIs, access dates, versions, checksums, and license terms in [`docs/sources.md`](docs/sources.md). Dataset download and checksum commands will be added to the data-ingestion documentation once the executable pipeline is present.
 
@@ -209,40 +209,24 @@ The repository is **Complete through Phase 7**. Reproducibility, source governan
 
 ## References
 
-1. [Ahmed H, Traore I, and Saad S. *Detecting opinion spams and fake news using text classification*.](https://doi.org/10.1002/spy2.9)
-2. [Verma PK, Agrawal P, and Prodan R. *WELFake dataset for fake news detection in text data*.](https://doi.org/10.5281/zenodo.4561253) Associated paper: [10.1109/TCSS.2021.3068519](https://doi.org/10.1109/TCSS.2021.3068519).
-45. [Data Commons Fact Check Markup Tool Data Feed and FAQ.](https://datacommons.org/factcheck/download) The live feed uses the ClaimReview schema and the released compilation is CC BY 4.0; individual structured-data licensing is recorded when supplied.
-3. [*Machine Learning*, 25SC2107E, supplied course handout.](docs/references/MachineLearninghandout.pdf) Public course page: [y25btech.klef.in](https://y25btech.klef.in).
-4. [Géron A. *Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow*. 3rd ed. 2022.](https://www.oreilly.com/library/view/hands-on-machine-learning/9781098125974/)
-5. [Hastie T, Tibshirani R, and Friedman J. *The Elements of Statistical Learning*. 2nd ed. 2017.](https://hastie.su.domains/ElemStatLearn/)
-6. [James G, Witten D, Hastie T, Tibshirani R, and Taylor J. *An Introduction to Statistical Learning: With Applications in Python*. 2023.](https://www.statlearning.com/)
-7. [Bishop CM. *Pattern Recognition and Machine Learning*. 2006.](https://link.springer.com/book/9780387310732)
-8. [Huyen C. *Designing Machine Learning Systems*. 2022.](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/)
-9. [Ameisen E. *Building Machine Learning Powered Applications*. 2020.](https://www.oreilly.com/library/view/building-machine-learning/9781492045106/)
-10. [Burkov A. *Machine Learning Engineering*. 2020.](https://www.mlebook.com/)
-11. [Pennington J, Socher R, and Manning CD. *GloVe: Global Vectors for Word Representation*. 2014.](https://nlp.stanford.edu/projects/glove/) [Paper PDF](https://nlp.stanford.edu/pubs/glove.pdf).
-12. [Devlin J, Chang MW, Lee K, and Toutanova K. *BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding*.](https://arxiv.org/abs/1810.04805)
-13. [Hugging Face Transformers documentation](https://huggingface.co/docs/transformers/index) and the [`bert-base-uncased` model card](https://huggingface.co/google-bert/bert-base-uncased).
-14. [UKPLab Sentence Transformers documentation](https://www.sbert.net/) and [repository](https://github.com/UKPLab/sentence-transformers).
-15. [The scikit-learn User Guide.](https://scikit-learn.org/stable/user_guide.html)
-16. [Lloyd S. *Least Squares Quantization in PCM*.](https://doi.org/10.1109/TIT.1982.1056489) [scikit-learn K-Means documentation](https://scikit-learn.org/stable/modules/clustering.html#k-means).
-17. [Müllner D. *Modern hierarchical, agglomerative clustering algorithms*.](https://arxiv.org/abs/1109.2378) [scikit-learn hierarchical-clustering documentation](https://scikit-learn.org/stable/modules/clustering.html#hierarchical-clustering).
-18. [Ester M, Kriegel HP, Sander J, and Xu X. *A density-based algorithm for discovering clusters in large spatial databases with noise*.](https://www.aaai.org/papers/kdd96-037-a-density-based-algorithm-for-discovering-clusters-in-large-spatial-databases-with-noise/)
-19. [Pearson PCA reference.](https://doi.org/10.1080/14786440109462720) [t-SNE paper](https://www.jmlr.org/papers/v9/vandermaaten08a.html) and [UMAP paper](https://arxiv.org/abs/1802.03426).
-20. [Liu FT, Ting KM, and Zhou ZH. *Isolation Forest*.](https://doi.org/10.1109/ICDM.2008.17)
-21. [scikit-learn LogisticRegression and linear-model documentation.](https://scikit-learn.org/stable/modules/linear_model.html)
-22. [scikit-learn trees and ensembles](https://scikit-learn.org/stable/modules/tree.html), [XGBoost documentation](https://xgboost.readthedocs.io/en/stable/), and [LightGBM documentation](https://lightgbm.readthedocs.io/en/latest/).
-23. [Lundberg SM and Lee SI. *A Unified Approach to Interpreting Model Predictions*.](https://arxiv.org/abs/1705.07874) [SHAP documentation](https://shap.readthedocs.io/).
-24. [scikit-learn model selection](https://scikit-learn.org/stable/model_selection.html) and [model evaluation documentation](https://scikit-learn.org/stable/modules/model_evaluation.html).
-25. [Snoek J, Larochelle H, and Adams RP. *Practical Bayesian Optimization of Machine Learning Algorithms*.](https://arxiv.org/abs/1206.2944)
-26. [Platt J. *Probabilistic Outputs for Support Vector Machines*.](https://www.cs.cornell.edu/people/tj/publications/joachims_99a.pdf) [scikit-learn calibration documentation](https://scikit-learn.org/stable/modules/calibration.html).
-27. [Zadrozny B and Elkan C. *Transforming Classifier Scores into Accurate Multiclass Probability Estimates*.](https://doi.org/10.1145/775047.775151)
-28. [McNemar Q. *Note on the sampling error of the difference between correlated proportions or percentages*.](https://doi.org/10.1007/BF02295996)
-29. [SciPy statistical-functions documentation.](https://docs.scipy.org/doc/scipy/reference/stats.html)
-30. [FastAPI documentation.](https://fastapi.tiangolo.com/)
-31. [ONNX documentation](https://onnx.ai/onnx/) and [ONNX Runtime documentation](https://onnxruntime.ai/docs/).
-32. [Dockerfile reference](https://docs.docker.com/reference/dockerfile/) and [Docker Python guide](https://docs.docker.com/guides/python/).
-33. [MLflow Tracking documentation](https://mlflow.org/docs/latest/ml/tracking/) and [Model Registry documentation](https://mlflow.org/docs/latest/ml/model-registry/).
-34. [Python Packaging User Guide](https://packaging.python.org/en/latest/) and [PEP 621](https://peps.python.org/pep-0621/).
-35. [NLTK documentation](https://www.nltk.org/), [spaCy documentation](https://spacy.io/), [Gensim documentation](https://radimrehurek.com/gensim/), and [skl2onnx documentation](https://onnx.ai/sklearn-onnx/).
-36. [DVC documentation](https://dvc.org/doc), [DVC repository](https://github.com/iterative/dvc), and [DVC package metadata](https://pypi.org/project/dvc/).
+The README keeps a deliberately small, curated bibliography. The complete provenance, licensing, access dates, checksums, and file mappings remain in [`docs/sources.md`](docs/sources.md) and [`docs/sources.yaml`](docs/sources.yaml).
+
+### Level 1 — Essential references
+
+1. **Ahmed H, Traore I, and Saad S.** *Detecting opinion spams and fake news using text classification.* Security and Privacy. https://doi.org/10.1002/spy2.9 [L1-1]
+2. **Verma PK, Agrawal P, Amorim I, and Prodan R.** *WELFake: Word Embedding Over Linguistic Features for Fake News Detection.* IEEE Transactions on Computational Social Systems. https://doi.org/10.1109/TCSS.2021.3068519 [L1-2]
+3. **Data Commons.** *Fact Check Markup Tool / ClaimReview Data Feed.* https://datacommons.org/factcheck/download [L1-3]
+4. **Machine Learning (25SC2107E), supplied course handout.** [`docs/references/MachineLearninghandout.pdf`](docs/references/MachineLearninghandout.pdf) [L1-4]
+5. **Pennington J, Socher R, and Manning CD.** *GloVe: Global Vectors for Word Representation.* EMNLP, 2014. https://nlp.stanford.edu/pubs/glove.pdf [L1-5]
+6. **Devlin J, Chang MW, Lee K, and Toutanova K.** *BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding.* https://arxiv.org/abs/1810.04805 [L1-6]
+
+### Level 2 — Relevant supporting papers
+
+1. **Ester M, Kriegel HP, Sander J, and Xu X.** *A density-based algorithm for discovering clusters in large spatial databases with noise.* KDD, 1996. https://www.aaai.org/papers/kdd96-037-a-density-based-algorithm-for-discovering-clusters-in-large-spatial-databases-with-noise/
+2. **Liu FT, Ting KM, and Zhou ZH.** *Isolation Forest.* IEEE ICDM, 2008. https://doi.org/10.1109/ICDM.2008.17
+3. **Lundberg SM and Lee SI.** *A Unified Approach to Interpreting Model Predictions.* NeurIPS, 2017. https://arxiv.org/abs/1705.07874
+4. **Snoek J, Larochelle H, and Adams RP.** *Practical Bayesian Optimization of Machine Learning Algorithms.* NeurIPS, 2012. https://arxiv.org/abs/1206.2944
+5. **Platt J.** *Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods.* 1999. https://www.cs.cornell.edu/people/tj/publications/joachims_99a.pdf
+6. **Zadrozny B and Elkan C.** *Transforming Classifier Scores into Accurate Multiclass Probability Estimates.* KDD, 2002. https://doi.org/10.1145/775047.775151
+7. **McNemar Q.** *Note on the sampling error of the difference between correlated proportions or percentages.* Psychometrika, 1947. https://doi.org/10.1007/BF02295996
+8. **McInnes L, Healy J, and Melville J.** *UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction.* https://arxiv.org/abs/1802.03426
