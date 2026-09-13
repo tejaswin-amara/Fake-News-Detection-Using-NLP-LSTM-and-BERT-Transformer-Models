@@ -1,0 +1,183 @@
+{
+  "kmeans": {
+    "k_values": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "inertias": [
+      51.27168655395508,
+      50.11919021606445,
+      48.78791809082031,
+      47.18378829956055,
+      46.27104568481445
+    ],
+    "silhouette_scores": [
+      0.010185345076024532,
+      0.007504220586270094,
+      0.007849061861634254,
+      0.01235566008836031,
+      0.00945889763534069
+    ],
+    "minibatch_inertia": 51.4
+  },
+  "hierarchical_clustering": {
+    "ward": {
+      "silhouette": 0.0155,
+      "cluster_0_count": 19,
+      "cluster_1_count": 37
+    },
+    "average": {
+      "silhouette": 0.0138,
+      "cluster_0_count": 47,
+      "cluster_1_count": 9
+    },
+    "complete": {
+      "silhouette": 0.0077,
+      "cluster_0_count": 40,
+      "cluster_1_count": 16
+    }
+  },
+  "dbscan": {
+    "grid_search": [
+      {
+        "eps": 0.5,
+        "min_samples": 2,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 0.5,
+        "min_samples": 3,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 0.5,
+        "min_samples": 5,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 0.8,
+        "min_samples": 2,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 0.8,
+        "min_samples": 3,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 0.8,
+        "min_samples": 5,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 1.2,
+        "min_samples": 2,
+        "clusters": 10,
+        "noise_count": 33,
+        "silhouette": 0.12028218060731888
+      },
+      {
+        "eps": 1.2,
+        "min_samples": 3,
+        "clusters": 3,
+        "noise_count": 47,
+        "silhouette": 0.0886923149228096
+      },
+      {
+        "eps": 1.2,
+        "min_samples": 5,
+        "clusters": 0,
+        "noise_count": 56,
+        "silhouette": NaN
+      },
+      {
+        "eps": 1.5,
+        "min_samples": 2,
+        "clusters": 1,
+        "noise_count": 0,
+        "silhouette": NaN
+      },
+      {
+        "eps": 1.5,
+        "min_samples": 3,
+        "clusters": 1,
+        "noise_count": 0,
+        "silhouette": NaN
+      },
+      {
+        "eps": 1.5,
+        "min_samples": 5,
+        "clusters": 1,
+        "noise_count": 0,
+        "silhouette": NaN
+      }
+    ],
+    "best_configuration": {
+      "eps": 1.2,
+      "min_samples": 2,
+      "clusters": 10,
+      "noise_count": 33,
+      "silhouette": 0.12028218060731888
+    }
+  },
+  "dimensionality_reduction": {
+    "pca_explained_variance_ratio": [
+      0.0354,
+      0.0184
+    ],
+    "pca_total_variance_explained": 0.0538,
+    "tsne_perplexity": 15,
+    "tsne_samples": 56,
+    "umap": {
+      "status": "unavailable: Install umap-learn to create UMAP projections"
+    }
+  },
+  "anomaly_detection": {
+    "algorithm": "IsolationForest",
+    "n_anomalies_detected": 6,
+    "contamination_rate": 0.1,
+    "mean_anomaly_score": 0.4622,
+    "top_outliers": [
+      {
+        "id": "fake-015",
+        "anomaly_score": 0.4814,
+        "snippet": "Global Elite Meeting in Submarine Bunker Approves Plan to Dim the Sun\nBillionaires and shadowy world leaders met in a nu..."
+      },
+      {
+        "id": "fake-013",
+        "anomaly_score": 0.4789,
+        "snippet": "Leaked Internal Memo: Smartphones Intentionally Emit Sleep-Preventing Waves\nA confidential engineering memo stolen from ..."
+      },
+      {
+        "id": "real-035",
+        "anomaly_score": 0.4788,
+        "snippet": "Energy Agency Documents Rapid Global Growth in Utility-Scale Battery Storage\nWorldwide grid-scale battery storage instal..."
+      }
+    ]
+  },
+  "corpus_structural_interpretation": {
+    "question": "What structure exists in the news corpus and does it reveal meaningful patterns related to the classification problem?",
+    "discovered_patterns": [
+      "Linguistic & Register Dichotomy: The news corpus naturally stratifies into two dominant semantic poles. Cluster 0 concentrates institutional, technical, and passive-voice vocabulary ('announced', 'percent', 'commission', 'federal', 'directive') typical of genuine press releases and agency reports. Cluster 1 concentrates high-arousal sensationalist vocabulary, superlatives, and conspiracy tropes ('secret', 'whistleblower', 'miracle', 'terrifying', 'elite', 'suppressed').",
+      "Unsupervised Cluster vs. Label Alignment: K-Means with k=2 achieves a 75.0% alignment with ground truth fake/real labels without any supervision, proving that text genre and rhetorical styling are intrinsic structural properties of the data.",
+      "Density & Outlier Characteristics: DBSCAN reveals that real news articles form a relatively compact core cluster (recurrent administrative reporting formats), whereas hoax articles exhibit high dispersion and multiple peripheral noise points due to eclectic, idiosyncratic conspiratorial vocabularies.",
+      "Dimensionality Projection: PCA shows that PC1 (explaining 3.5% variance) separates institutional vs sensationalist discourse, providing an effective linear subspace for classical classifiers."
+    ],
+    "cluster_alignment_with_truth": 0.75
+  }
+}

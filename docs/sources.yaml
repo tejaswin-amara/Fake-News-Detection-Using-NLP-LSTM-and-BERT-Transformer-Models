@@ -1,0 +1,480 @@
+schema_version: "1.0"
+project: "Fake News Detection Using NLP, BiLSTM, and BERT"
+last_reviewed: "2026-08-23"
+policy: "Every external source used or referred to must appear here and in docs/sources.md. Restricted materials are linked with metadata rather than redistributed."
+sources:
+  - id: SRC-001
+    category: dataset_and_primary_publication
+    citation: "Ahmed H, Traore I, Saad S. Detecting opinion spams and fake news using text classification. Security and Privacy. 2018;1:e9."
+    url: https://doi.org/10.1002/spy2.9
+    accessed: "2026-08-20"
+    version: "publisher record; first published 2017-12-29; issue Jan/Feb 2018"
+    license_or_terms: "Publisher and dataset redistribution terms must be checked; raw data is not committed by default."
+    supports: [README.md, src/data/ingestion.py, docs/dataset_card.md, notebooks/01_eda.ipynb]
+  - id: SRC-002
+    category: dataset
+    citation: "Verma PK, Agrawal P, Prodan R. WELFake dataset for fake news detection in text data. Zenodo, v0.1, 2021."
+    url: https://doi.org/10.5281/zenodo.4561253
+    accessed: "2026-08-20"
+    version: "0.1"
+    checksum: "WELFake_Dataset.csv md5 73c9675a4b3d09f86a6933d0b8d7d908"
+    license_or_terms: "CC BY 4.0 for the Zenodo record; review downstream component terms."
+    supports: [README.md, src/data/ingestion.py, docs/dataset_card.md]
+  - id: SRC-003
+    category: course_handout
+    citation: "Machine Learning, 25SC2107E, MachineLearninghandout.pdf, supplied by the project owner, 2026-08-20."
+    url: https://y25btech.klef.in
+    local_copy: docs/references/MachineLearninghandout.pdf
+    accessed: "2026-08-20"
+    license_or_terms: "User-provided course material; local project reference only."
+    supports: [README.md, docs/compliance_matrix.md, src, tests, notebooks]
+  - id: SRC-004
+    category: textbook
+    citation: "Géron A. Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow. 3rd ed. O'Reilly; 2022."
+    url: https://www.oreilly.com/library/view/hands-on-machine-learning/9781098125974/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, notebooks, src, reports]
+  - id: SRC-005
+    category: textbook
+    citation: "Hastie T, Tibshirani R, Friedman J. The Elements of Statistical Learning. 2nd ed. Springer; 2017."
+    url: https://hastie.su.domains/ElemStatLearn/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference and publisher-hosted web edition only."
+    supports: [README.md, docs/compliance_matrix.md, src/models, src/evaluation]
+  - id: SRC-006
+    category: textbook
+    citation: "James G, Witten D, Hastie T, Tibshirani R, Taylor J. An Introduction to Statistical Learning: With Applications in Python. Springer; 2023."
+    url: https://www.statlearning.com/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, notebooks, reports]
+  - id: SRC-007
+    category: textbook
+    citation: "Bishop CM. Pattern Recognition and Machine Learning. Springer; 2006."
+    url: https://link.springer.com/book/9780387310732
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, reports, docs/mathematical_formulation.md]
+  - id: SRC-008
+    category: textbook
+    citation: "Huyen C. Designing Machine Learning Systems. O'Reilly; 2022."
+    url: https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, src/serving, src/monitoring, docs/deployment.md]
+  - id: SRC-009
+    category: textbook
+    citation: "Ameisen E. Building Machine Learning Powered Applications. O'Reilly; 2020."
+    url: https://www.oreilly.com/library/view/building-machine-learning/9781492045106/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, notebooks, src/evaluation, src/serving]
+  - id: SRC-010
+    category: textbook
+    citation: "Burkov A. Machine Learning Engineering. True Positive Inc.; 2020."
+    url: https://www.mlebook.com/
+    accessed: "2026-08-20"
+    license_or_terms: "Copyrighted; bibliographic reference only."
+    supports: [README.md, tests, docs/deployment.md, src/monitoring]
+  - id: SRC-011
+    category: embeddings
+    citation: "Pennington J, Socher R, Manning CD. GloVe: Global Vectors for Word Representation. EMNLP; 2014."
+    url: https://nlp.stanford.edu/projects/glove/
+    paper_url: https://nlp.stanford.edu/pubs/glove.pdf
+    accessed: "2026-08-20"
+    license_or_terms: "Code Apache-2.0; pretrained vector terms vary by release."
+    supports: [src/features, src/models/lstm.py, docs/model_cards.md]
+  - id: SRC-012
+    category: transformer_paper
+    citation: "Devlin J, Chang MW, Lee K, Toutanova K. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. arXiv:1810.04805; 2019 version."
+    url: https://arxiv.org/abs/1810.04805
+    accessed: "2026-08-20"
+    version: "v2"
+    license_or_terms: "arXiv distribution terms; model weights have model-card terms."
+    supports: [src/models/bert.py, README.md, docs/model_cards.md]
+  - id: SRC-013
+    category: model_and_library_documentation
+    citation: "Hugging Face Transformers documentation and google-bert/bert-base-uncased model card."
+    url: https://huggingface.co/docs/transformers/index
+    model_url: https://huggingface.co/google-bert/bert-base-uncased
+    accessed: "2026-08-20"
+    license_or_terms: "Documentation/model-card/weight terms must be followed; record selected revision and checksum."
+    supports: [src/models/bert.py, requirements.txt, configs]
+  - id: SRC-014
+    category: embeddings_library
+    citation: "UKPLab Sentence Transformers documentation and repository."
+    url: https://www.sbert.net/
+    repository: https://github.com/UKPLab/sentence-transformers
+    accessed: "2026-08-20"
+    license_or_terms: "Project and selected model licenses must be checked."
+    supports: [src/features, src/models/unsupervised.py]
+  - id: SRC-015
+    category: library_documentation
+    citation: "scikit-learn User Guide."
+    url: https://scikit-learn.org/stable/user_guide.html
+    accessed: "2026-08-20"
+    license_or_terms: "BSD-3-Clause for scikit-learn."
+    supports: [src/features, src/models, src/evaluation, tests]
+  - id: SRC-016
+    category: unsupervised_algorithm
+    citation: "Lloyd S. Least Squares Quantization in PCM. IEEE Transactions on Information Theory; 1982."
+    url: https://doi.org/10.1109/TIT.1982.1056489
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-017
+    category: unsupervised_algorithm
+    citation: "Müllner D. Modern hierarchical, agglomerative clustering algorithms. arXiv:1109.2378; 2011."
+    url: https://arxiv.org/abs/1109.2378
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-018
+    category: unsupervised_algorithm
+    citation: "Ester M, Kriegel HP, Sander J, Xu X. A density-based algorithm for discovering clusters in large spatial databases with noise. KDD; 1996."
+    url: https://www.aaai.org/papers/kdd96-037-a-density-based-algorithm-for-discovering-clusters-in-large-spatial-databases-with-noise/
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-019
+    category: dimensionality_reduction
+    citation: "Pearson 1901 PCA; van der Maaten and Hinton 2008 t-SNE; McInnes, Healy, and Melville 2018 UMAP."
+    urls:
+      - https://doi.org/10.1080/14786440109462720
+      - https://www.jmlr.org/papers/v9/vandermaaten08a.html
+      - https://arxiv.org/abs/1802.03426
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py, notebooks]
+  - id: SRC-020
+    category: anomaly_detection
+    citation: "Liu FT, Ting KM, Zhou ZH. Isolation Forest. IEEE ICDM; 2008."
+    url: https://doi.org/10.1109/ICDM.2008.17
+    accessed: "2026-08-20"
+    supports: [src/models/unsupervised.py]
+  - id: SRC-021
+    category: linear_models
+    citation: "scikit-learn LogisticRegression and linear-model documentation."
+    url: https://scikit-learn.org/stable/modules/linear_model.html
+    accessed: "2026-08-20"
+    supports: [src/models/classical.py, notebooks]
+  - id: SRC-022
+    category: tree_and_boosting
+    citation: "scikit-learn trees/ensembles, XGBoost, and LightGBM documentation."
+    urls:
+      - https://scikit-learn.org/stable/modules/tree.html
+      - https://scikit-learn.org/stable/modules/ensemble.html
+      - https://xgboost.readthedocs.io/en/stable/
+      - https://lightgbm.readthedocs.io/en/latest/
+    accessed: "2026-08-20"
+    license_or_terms: "scikit-learn BSD-3-Clause; XGBoost Apache-2.0; LightGBM MIT."
+    supports: [src/models/classical.py, notebooks, reports]
+  - id: SRC-023
+    category: explainability
+    citation: "Lundberg SM, Lee SI. A Unified Approach to Interpreting Model Predictions. NeurIPS; 2017."
+    url: https://arxiv.org/abs/1705.07874
+    documentation: https://shap.readthedocs.io/
+    accessed: "2026-08-20"
+    supports: [src/models/classical.py, reports]
+  - id: SRC-024
+    category: evaluation_and_model_selection
+    citation: "scikit-learn model selection and model evaluation documentation."
+    urls:
+      - https://scikit-learn.org/stable/model_selection.html
+      - https://scikit-learn.org/stable/modules/model_evaluation.html
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, notebooks, reports]
+  - id: SRC-025
+    category: Bayesian_optimization
+    citation: "Snoek J, Larochelle H, Adams RP. Practical Bayesian Optimization of Machine Learning Algorithms. NeurIPS; 2012."
+    url: https://arxiv.org/abs/1206.2944
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, configs]
+  - id: SRC-026
+    category: calibration
+    citation: "Platt J. Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods. 1999."
+    url: https://www.cs.cornell.edu/people/tj/publications/joachims_99a.pdf
+    documentation: https://scikit-learn.org/stable/modules/calibration.html
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, reports]
+  - id: SRC-027
+    category: calibration
+    citation: "Zadrozny B, Elkan C. Transforming Classifier Scores into Accurate Multiclass Probability Estimates. KDD; 2002."
+    url: https://doi.org/10.1145/775047.775151
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py]
+  - id: SRC-028
+    category: statistical_test
+    citation: "McNemar Q. Note on the sampling error of the difference between correlated proportions or percentages. Psychometrika; 1947;12:153-157."
+    url: https://doi.org/10.1007/BF02295996
+    accessed: "2026-08-20"
+    supports: [src/evaluation/metrics.py, reports]
+  - id: SRC-029
+    category: statistical_library
+    citation: "SciPy statistical functions documentation."
+    url: https://docs.scipy.org/doc/scipy/reference/stats.html
+    accessed: "2026-08-20"
+    license_or_terms: "BSD-3-Clause."
+    supports: [src/evaluation, src/monitoring]
+  - id: SRC-030
+    category: serving
+    citation: "FastAPI documentation."
+    url: https://fastapi.tiangolo.com/
+    accessed: "2026-08-20"
+    license_or_terms: "MIT."
+    supports: [src/serving/app.py, tests]
+  - id: SRC-031
+    category: packaging_and_runtime
+    citation: "ONNX and ONNX Runtime documentation."
+    urls:
+      - https://onnx.ai/onnx/
+      - https://onnxruntime.ai/docs/
+    accessed: "2026-08-20"
+    supports: [src/serving, tests]
+  - id: SRC-032
+    category: deployment
+    citation: "Dockerfile reference and Docker Python guide."
+    urls:
+      - https://docs.docker.com/reference/dockerfile/
+      - https://docs.docker.com/guides/python/
+    accessed: "2026-08-20"
+    supports: [Dockerfile, docs/deployment.md, .github/workflows]
+  - id: SRC-033
+    category: experiment_tracking
+    citation: "MLflow Tracking and Model Registry documentation."
+    urls:
+      - https://mlflow.org/docs/latest/ml/tracking/
+      - https://mlflow.org/docs/latest/ml/model-registry/
+    accessed: "2026-08-20"
+    license_or_terms: "Apache-2.0."
+    supports: [src/models, src/evaluation, docs/deployment.md]
+  - id: SRC-034
+    category: packaging
+    citation: "Python Packaging Authority Packaging User Guide and PEP 621."
+    urls:
+      - https://packaging.python.org/en/latest/
+      - https://peps.python.org/pep-0621/
+    accessed: "2026-08-20"
+    supports: [pyproject.toml, requirements.txt, docs/deployment.md]
+  - id: SRC-035
+    category: optional_nlp_and_onnx_libraries
+    citation: "Official documentation for NLTK, spaCy, Gensim, and skl2onnx."
+    urls:
+      - https://www.nltk.org/
+      - https://spacy.io/
+      - https://radimrehurek.com/gensim/
+      - https://onnx.ai/sklearn-onnx/
+    accessed: "2026-08-20"
+    license_or_terms: "Record installed package versions and follow each package license."
+    supports: [requirements.txt, src/features, src/serving/export.py]
+  - id: SRC-036
+    category: data_versioning
+    citation: "DVC documentation, repository, and package metadata."
+    urls:
+      - https://dvc.org/doc
+      - https://github.com/iterative/dvc
+      - https://pypi.org/project/dvc/
+    accessed: "2026-08-20"
+    license_or_terms: "Open-source software; retain package license and record the selected version."
+    supports: [.dvc/config, .dvcignore, dvc.yaml, params.yaml, requirements.txt, pyproject.toml]
+  - id: SRC-037
+    category: distributed_rate_limiting
+    citation: "Redis Lua scripting documentation for atomic server-side scripts."
+    url: https://redis.io/docs/latest/develop/programmability/lua-api/
+    accessed: "2026-08-21"
+    license_or_terms: "Redis documentation and selected Redis image/software terms must be reviewed for deployment."
+    supports: [src/serving/rate_limiter.py, docker-compose.yml, docs/security_hardening.md, docs/deployment.md, docs/compliance_matrix.md]
+  - id: SRC-038
+    category: security_and_text_processing_library
+    citation: "Python regex package documentation and release record."
+    url: https://pypi.org/project/regex/
+    accessed: "2026-08-21"
+    version: "2024.11.6"
+    license_or_terms: "Follow the package license and retain the pinned release for reproducibility."
+    supports: [requirements.txt, src/features/text.py, tests/test_zero_trust.py, docs/security_hardening.md]
+  - id: SRC-039
+    category: observability
+    citation: "Prometheus Python client documentation."
+    url: https://prometheus.github.io/client_python/
+    accessed: "2026-08-21"
+    version: "0.21.0"
+    license_or_terms: "Follow the Prometheus client package license and retain the pinned release."
+    supports: [requirements.txt, src/serving/app.py, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-040
+    category: kubernetes_orchestration
+    citation: "Kubernetes Deployment, Horizontal Pod Autoscaling, and NetworkPolicy documentation."
+    urls:
+      - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+      - https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+      - https://kubernetes.io/docs/concepts/services-networking/network-policies/
+    accessed: "2026-08-21"
+    version: "Kubernetes API target 1.30"
+    license_or_terms: "Kubernetes documentation and API compatibility are versioned by the declared validation target."
+    supports: [k8s/base, .github/workflows/ci.yml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-041
+    category: kubernetes_validation
+    citation: "kubeconform Kubernetes schema validator repository and release documentation."
+    url: https://github.com/yannh/kubeconform
+    accessed: "2026-08-21"
+    version: "v0.6.7"
+    license_or_terms: "Use the pinned validator release and follow its license."
+    supports: [.github/workflows/ci.yml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-042
+    category: structured_logging
+    citation: "structlog documentation."
+    url: https://www.structlog.org/en/stable/
+    accessed: "2026-08-21"
+    version: "24.4.0"
+    license_or_terms: "Follow the structlog package license and retain the pinned release."
+    supports: [requirements.txt, src/config.py, src/serving/app.py, tests/test_day4_observability.py, docs/security_hardening.md]
+  - id: SRC-043
+    category: kubernetes_ingress
+    citation: "Kubernetes Ingress documentation."
+    url: https://kubernetes.io/docs/concepts/services-networking/ingress/
+    accessed: "2026-08-21"
+    version: "Kubernetes API target 1.30"
+    license_or_terms: "Deployment requires an NGINX ingress controller, DNS, and an operator-provisioned TLS Secret."
+    supports: [k8s/base/ingress.yaml, k8s/base/kustomization.yaml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-044
+    category: prometheus_operator
+    citation: "Prometheus Operator ServiceMonitor API reference."
+    url: https://prometheus-operator.dev/docs/api-reference/api/
+    accessed: "2026-08-21"
+    version: "Prometheus Operator CRD compatible with the declared cluster"
+    license_or_terms: "The Prometheus Operator CRD and matching release selector must be installed by the cluster operator."
+    supports: [k8s/base/service-monitor.yaml, k8s/base/kustomization.yaml, tests/test_day4_observability.py, docs/deployment.md]
+  - id: SRC-045
+    category: current_fact_checked_claims_feed
+    citation: "Data Commons Fact Check Markup Tool Data Feed, structured ClaimReview fact-check markup, live version retrieved for the ClaimReview current dataset release."
+    url: https://storage.googleapis.com/datacommons-feeds/factcheck/latest/data.json
+    documentation_url: https://datacommons.org/factcheck/download
+    faq_url: https://datacommons.org/factcheck/faq
+    accessed: "2026-08-21"
+    version: "live feed; release-specific SHA-256 and HTTP metadata are recorded in data/raw/claimreview_current/collection_manifest.json"
+    license_or_terms: "The feed compilation is CC BY 4.0. Individual ClaimReview structured-data licenses are recorded as sdLicense when supplied; publisher website terms continue to apply to publisher-hosted content. No full fact-check article text is collected."
+    supports: [src/data/claimreview.py, configs/dataset.yaml, dvc.yaml, docs/dataset_card.md, docs/sources.md, README.md]
+  - id: SRC-046
+    category: repository_status_badges
+    citation: "GitHub Actions workflow badge and Shields.io static badges used as visual status markers in the project README."
+    urls:
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml/badge.svg?branch=main
+      - https://img.shields.io/badge/Python-3.11-3776AB
+      - https://img.shields.io/badge/License-MIT-1f6f54
+    accessed: "2026-08-21"
+    license_or_terms: "Externally served visual indicators only; repository workflow and configuration are authoritative for behavior."
+    supports: [README.md, docs/sources.md]
+  - id: SRC-047
+    category: github_repository_configuration_and_collaboration
+    citation: "GitHub documentation for CODEOWNERS, Issue Forms, Dependabot configuration, development containers, repository topics, and social previews."
+    urls:
+      - https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+      - https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-forms
+      - https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+      - https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/introduction-to-dev-containers
+      - https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics
+      - https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview
+    accessed: "2026-08-21"
+    license_or_terms: "GitHub documentation; repository settings remain owner-controlled."
+    supports: [.github/CODEOWNERS, .github/ISSUE_TEMPLATE, .github/dependabot.yml, .devcontainer/devcontainer.json, github-seo-growth-strategy.md, docs/sources.md]
+  - id: SRC-048
+    category: github_actions_automation_and_supply_chain
+    citation: "GitHub Actions upstream projects, Aqua Security Trivy Action, Python Semantic Release GitHub Actions documentation, and OpenSSF Scorecard action documentation."
+    urls:
+      - https://github.com/actions/checkout
+      - https://github.com/actions/upload-artifact
+      - https://github.com/github/codeql-action
+      - https://github.com/actions/labeler
+      - https://github.com/aquasecurity/trivy-action
+      - https://python-semantic-release.readthedocs.io/en/latest/configuration/automatic-releases/github-actions.html
+      - https://github.com/ossf/scorecard-action
+    accessed: "2026-08-23"
+    license_or_terms: "Follow each action's current license, release, permission, and pinning guidance. Activation of release/label side effects remains owner-controlled."
+    supports: [.github/workflows/ci.yml, .github/workflows/release.yml, .github/workflows/scorecards.yml, .github/workflows/labeler.yml, .github/labeler.yml, docs/sources.md]
+  - id: SRC-049
+    category: discoverability_directories
+    citation: "Curated fake-news, machine-learning, MLOps, and Python machine-learning discovery directories, plus GitHub topic discovery."
+    urls:
+      - https://github.com/wangbing1416/Awesome-Fake-News-Detection
+      - https://github.com/josephmisiti/awesome-machine-learning
+      - https://github.com/kelvins/awesome-mlops
+      - https://github.com/lukasmasuch/best-of-ml-python
+      - https://github.com/topics/
+    accessed: "2026-08-21"
+    license_or_terms: "Directory maintainers control eligibility and acceptance. Review current contribution requirements before any manual, human-authored submission."
+    supports: [github-seo-growth-strategy.md, docs/sources.md]
+  - id: SRC-050
+    category: github_private_vulnerability_reporting
+    citation: "GitHub-native private vulnerability-reporting route for this repository."
+    urls:
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/security/advisories/new
+    accessed: "2026-08-21"
+    license_or_terms: "GitHub platform feature; availability and access are governed by repository settings."
+    supports: [SECURITY.md, docs/sources.md]
+  - id: SRC-051
+    category: coverage_guided_python_fuzzing
+    citation: "ClusterFuzzLite Python build integration, GitHub Actions execution guide, and source repository."
+    urls:
+      - https://google.github.io/clusterfuzzlite/build-integration/python-lang/
+      - https://google.github.io/clusterfuzzlite/running-clusterfuzzlite/github-actions/
+      - https://github.com/google/clusterfuzzlite
+    accessed: "2026-08-22"
+    license_or_terms: "Follow ClusterFuzzLite and Atheris licensing and runtime requirements; fuzz only synthetic in-memory metadata."
+    supports: [.clusterfuzzlite, fuzz/atheris_claimreview_fuzzer.py, .github/workflows/clusterfuzzlite.yml, tests/test_clusterfuzzlite.py, docs/sources.md]
+  - id: SRC-052
+    category: security_audit_evidence
+    citation: "OpenSSF Scorecard check documentation, prior and current repository Scorecard workflow runs, and OSV PYSEC-2026-3552 advisory."
+    urls:
+      - https://github.com/ossf/scorecard/blob/main/docs/checks.md
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/runs/32565674353
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/runs/32641697857
+      - https://osv.dev/PYSEC-2026-3552
+    accessed: "2026-08-23"
+    license_or_terms: "Workflow evidence and public advisory metadata are time-sensitive; re-run or re-check before future remediation decisions."
+    supports: [docs/security/code-scanning-remediation.md, docs/sources.md, docs/sources.yaml]
+  - id: SRC-053
+    category: complete_python_dependency_hash_locks
+    citation: "Python Packaging Authority secure-install guidance and Astral uv pip compile locking documentation."
+    urls:
+      - https://pip.pypa.io/en/stable/topics/secure-installs/
+      - https://docs.astral.sh/uv/pip/compile/
+    accessed: "2026-08-23"
+    license_or_terms: "Follow pip and uv documentation, review all lock diffs, and retain complete SHA-256 coverage for every installed dependency."
+    supports: [requirements/fuzz.in, requirements/locks, scripts/generate_hash_locks.sh, docs/security/hash-lock-maintenance.md, Dockerfile, .github/workflows/ci.yml, .github/workflows/fuzz.yml, .clusterfuzzlite/build.sh, tests/test_repository_automation.py, docs/sources.md]
+  - id: SRC-054
+    category: secret_detection
+    citation: "Gitleaks repository documentation and Gitleaks Action v2 migration notes."
+    urls:
+      - https://github.com/gitleaks/gitleaks
+      - https://github.com/gitleaks/gitleaks-action/blob/master/v2.md
+    accessed: "2026-08-23"
+    license_or_terms: "Gitleaks is MIT-licensed. Review Action licensing and ownership requirements if repository ownership changes. Findings require private rotation and investigation; do not use broad baselines, broad allowlists, or inline production suppressions."
+    supports: [.github/workflows/secret-scan.yml, .gitleaks.toml, docs/security/secret-handling.md, CONTRIBUTING.md, CLAUDE.md, .cursorrules, .github/copilot-instructions.md, tests]
+  - id: SRC-055
+    category: api_and_logging_security
+    citation: "OWASP API Security Project, REST Security Cheat Sheet, and Logging Cheat Sheet."
+    urls:
+      - https://owasp.org/www-project-api-security/
+      - https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html
+      - https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+    accessed: "2026-08-23"
+    license_or_terms: "OWASP API Security project content is CC BY-SA 4.0; use guidance with attribution and do not copy text beyond permitted quotation."
+    supports: [src/serving/app.py, tests, docs/security/api-and-observability.md, docs/security/secret-handling.md, docs/developer-pipeline-adoption.md, docs/ADR/0006-full-relevant-developer-pipeline-adoption.md]
+  - id: SRC-056
+    category: performance_test_design
+    citation: "Grafana k6 scenarios and thresholds documentation."
+    urls:
+      - https://grafana.com/docs/k6/latest/using-k6/scenarios/
+      - https://grafana.com/docs/k6/latest/using-k6/thresholds/
+      - https://github.com/grafana/setup-k6-action
+    accessed: "2026-08-23"
+    license_or_terms: "Follow current Grafana k6 terms and package license. Do not target production or external systems without owner approval, documented capacity, and consent."
+    supports: [tests/performance, .github/workflows/performance-smoke.yml, docs/performance-testing.md, docs/developer-pipeline-adoption.md]
+  - id: SRC-057
+    category: kubernetes_production_readiness_and_secret_management
+    citation: "Kubernetes documentation for liveness, readiness, and startup probes; Deployments; and good practices for Kubernetes Secrets."
+    urls:
+      - https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+      - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+      - https://kubernetes.io/docs/concepts/security/secrets-good-practices/
+    accessed: "2026-08-24"
+    version: "Kubernetes documentation accessed for the repository's declared manifest validation target"
+    license_or_terms: "Use as operational guidance. Do not commit Secret manifests or secret values; values are base64-encoded rather than encrypted by default and require protected storage, least-privilege access, and operator controls."
+    supports: [docs/ADR/0007-production-deployment-boundary.md, docs/deployment/production-readiness.md, docs/deployment/production-rollout.md, scripts/verify_production_readiness.py, tests/test_production_readiness.py, docs/sources.md]

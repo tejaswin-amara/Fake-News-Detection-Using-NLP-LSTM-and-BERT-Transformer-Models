@@ -1,0 +1,6 @@
+# Minimal synthetic parser-fuzzing dependency inputs. The complete transitive
+# lock is requirements/locks/fuzz-py311-manylinux_2_28.txt.
+pandas==2.2.3
+scikit-learn==1.5.2
+ijson==3.3.0
+pyyaml==6.0.2

@@ -1,0 +1,24 @@
+[
+  {
+    "claimReviewed": null,
+    "url": "",
+    "datePublished": "not-a-date",
+    "reviewRating": [],
+    "author": []
+  },
+  {
+    "claimReviewed": ["synthetic", "tokens"],
+    "url": 17,
+    "datePublished": {},
+    "inLanguage": ["en"],
+    "itemReviewed": []
+  },
+  {
+    "claimReviewed": "synthetic metadata test",
+    "url": null,
+    "datePublished": "2026-02-30",
+    "reviewRating": {"alternateName": null},
+    "author": {"name": null},
+    "itemReviewed": {"author": ["synthetic"]}
+  }
+]

@@ -1,0 +1,67 @@
+{
+  "dataset_name": "VERITAS Governed Benchmark Corpus",
+  "benchmark_type": "GOVERNED CURATED BENCHMARK (N=80)",
+  "benchmark_classification": "SMOKE TEST / FIXTURE / CURATED BENCHMARK",
+  "benchmark_purpose": "Designed for fast, reproducible local verification and CI smoke testing with full canonical schema validation and zero data leakage. High-scale production baselines require larger corpus crawls (e.g. Data Commons ClaimReview or ISOT).",
+  "total_articles": 80,
+  "split_ratio": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "counts": {
+    "train": 56,
+    "validation": 12,
+    "test": 12
+  },
+  "class_distribution": {
+    "real": 40,
+    "fake": 40,
+    "train_real": 28,
+    "train_fake": 28,
+    "val_real": 6,
+    "val_fake": 6,
+    "test_real": 6,
+    "test_fake": 6
+  },
+  "text_statistics": {
+    "mean_word_count": 52.2,
+    "median_word_count": 51,
+    "min_word_count": 35,
+    "max_word_count": 84
+  },
+  "leakage_prevention": {
+    "deduplication_exact": "sha256 content_hash pre-split filtering",
+    "deduplication_near": "MinHash LSH 128-permutation near-duplicate filtering (threshold 0.85)",
+    "vectorizer_fitted_on": "train split exclusively (split-before-fit)",
+    "calibrator_fitted_on": "validation split exclusively",
+    "test_set_isolation": "held-out untouched until final verification"
+  },
+  "split_manifest": {
+    "seed": 42,
+    "train_size": 0.7,
+    "validation_size": 0.15,
+    "test_size": 0.15,
+    "train_count": 56,
+    "validation_count": 12,
+    "test_count": 12,
+    "train_label_counts": {
+      "0": 28,
+      "1": 28
+    },
+    "validation_label_counts": {
+      "0": 6,
+      "1": 6
+    },
+    "test_label_counts": {
+      "0": 6,
+      "1": 6
+    },
+    "source_files": [],
+    "notes": [
+      "Exact normalized-content duplicates removed before splitting.",
+      "Near-duplicate MinHash/LSH filtering removed 0 rows before splitting.",
+      "No learned feature transform fitted in this function."
+    ]
+  }
+}

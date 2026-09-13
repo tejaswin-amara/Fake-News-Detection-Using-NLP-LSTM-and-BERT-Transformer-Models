@@ -1,0 +1,300 @@
+{
+  "metrics": {
+    "logistic_l1": {
+      "accuracy": 0.8333,
+      "precision": 0.8333,
+      "recall": 0.8333,
+      "f1": 0.8333,
+      "roc_auc": 0.9028,
+      "pr_auc": 0.8972,
+      "brier_score": 0.1381,
+      "sparsity_pct": 83.67,
+      "n_non_zero_coeffs": 57,
+      "total_features": 349
+    },
+    "logistic_l2": {
+      "accuracy": 0.9167,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "f1": 0.9091,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "brier_score": 0.0985,
+      "sparsity_pct": 0.0,
+      "n_non_zero_coeffs": 349,
+      "total_features": 349
+    },
+    "logistic_elasticnet": {
+      "accuracy": 0.8333,
+      "precision": 0.8333,
+      "recall": 0.8333,
+      "f1": 0.8333,
+      "roc_auc": 0.9722,
+      "pr_auc": 0.9762,
+      "brier_score": 0.0947,
+      "sparsity_pct": 65.33,
+      "n_non_zero_coeffs": 121,
+      "total_features": 349
+    }
+  },
+  "coefficients": {
+    "logistic_l1": {
+      "top_indicative_fake": [
+        {
+          "feature": "leaked",
+          "coefficient": 0.6999822854995728
+        },
+        {
+          "feature": "rights",
+          "coefficient": 0.439136803150177
+        },
+        {
+          "feature": "satellite",
+          "coefficient": 0.3730565309524536
+        },
+        {
+          "feature": "drinking",
+          "coefficient": 0.345199853181839
+        },
+        {
+          "feature": "electromagnetic",
+          "coefficient": 0.3398578464984894
+        },
+        {
+          "feature": "secret",
+          "coefficient": 0.25899288058280945
+        },
+        {
+          "feature": "total",
+          "coefficient": 0.25891536474227905
+        },
+        {
+          "feature": "artificial",
+          "coefficient": 0.23027729988098145
+        },
+        {
+          "feature": "human",
+          "coefficient": 0.1928323656320572
+        },
+        {
+          "feature": "ninety",
+          "coefficient": 0.18594758212566376
+        }
+      ],
+      "top_indicative_real": [
+        {
+          "feature": "data",
+          "coefficient": -0.786436915397644
+        },
+        {
+          "feature": "releases",
+          "coefficient": -0.5522629618644714
+        },
+        {
+          "feature": "department",
+          "coefficient": -0.536097526550293
+        },
+        {
+          "feature": "agency",
+          "coefficient": -0.5213478207588196
+        },
+        {
+          "feature": "active",
+          "coefficient": -0.28954437375068665
+        },
+        {
+          "feature": "annual",
+          "coefficient": -0.2752059996128082
+        },
+        {
+          "feature": "practices",
+          "coefficient": -0.2620030343532562
+        },
+        {
+          "feature": "dollars",
+          "coefficient": -0.23095862567424774
+        },
+        {
+          "feature": "provide",
+          "coefficient": -0.21798762679100037
+        },
+        {
+          "feature": "administration",
+          "coefficient": -0.16440525650978088
+        }
+      ]
+    },
+    "logistic_l2": {
+      "top_indicative_fake": [
+        {
+          "feature": "secret",
+          "coefficient": 0.17815070707706318
+        },
+        {
+          "feature": "leaked",
+          "coefficient": 0.17600290181137626
+        },
+        {
+          "feature": "electromagnetic",
+          "coefficient": 0.16092402253549495
+        },
+        {
+          "feature": "ninety",
+          "coefficient": 0.1541839637542113
+        },
+        {
+          "feature": "citizens",
+          "coefficient": 0.14885510886386322
+        },
+        {
+          "feature": "reveal",
+          "coefficient": 0.14657233743703904
+        },
+        {
+          "feature": "artificial",
+          "coefficient": 0.14466555215643354
+        },
+        {
+          "feature": "satellite",
+          "coefficient": 0.14386999355517047
+        },
+        {
+          "feature": "inside",
+          "coefficient": 0.14267435539485426
+        },
+        {
+          "feature": "classified",
+          "coefficient": 0.1398081575001509
+        }
+      ],
+      "top_indicative_real": [
+        {
+          "feature": "agency",
+          "coefficient": -0.16101761752251617
+        },
+        {
+          "feature": "provide",
+          "coefficient": -0.15032912119569425
+        },
+        {
+          "feature": "data",
+          "coefficient": -0.1482704687550915
+        },
+        {
+          "feature": "annual",
+          "coefficient": -0.14823613093718435
+        },
+        {
+          "feature": "operating",
+          "coefficient": -0.1477203236681686
+        },
+        {
+          "feature": "administration",
+          "coefficient": -0.14724886849585783
+        },
+        {
+          "feature": "academic",
+          "coefficient": -0.13967100964063056
+        },
+        {
+          "feature": "rule",
+          "coefficient": -0.1364502495933426
+        },
+        {
+          "feature": "trade",
+          "coefficient": -0.13309924817731159
+        },
+        {
+          "feature": "clean",
+          "coefficient": -0.1268831587414462
+        }
+      ]
+    },
+    "logistic_elasticnet": {
+      "top_indicative_fake": [
+        {
+          "feature": "leaked",
+          "coefficient": 0.4780985414981842
+        },
+        {
+          "feature": "secret",
+          "coefficient": 0.33223530650138855
+        },
+        {
+          "feature": "electromagnetic",
+          "coefficient": 0.30449745059013367
+        },
+        {
+          "feature": "drinking",
+          "coefficient": 0.25846242904663086
+        },
+        {
+          "feature": "rights",
+          "coefficient": 0.24003872275352478
+        },
+        {
+          "feature": "citizens",
+          "coefficient": 0.23453176021575928
+        },
+        {
+          "feature": "human",
+          "coefficient": 0.1832130253314972
+        },
+        {
+          "feature": "major",
+          "coefficient": 0.1799549162387848
+        },
+        {
+          "feature": "satellite",
+          "coefficient": 0.17919176816940308
+        },
+        {
+          "feature": "dollar",
+          "coefficient": 0.17854081094264984
+        }
+      ],
+      "top_indicative_real": [
+        {
+          "feature": "data",
+          "coefficient": -0.5152671337127686
+        },
+        {
+          "feature": "annual",
+          "coefficient": -0.3557907044887543
+        },
+        {
+          "feature": "department",
+          "coefficient": -0.3202192187309265
+        },
+        {
+          "feature": "releases",
+          "coefficient": -0.3108251690864563
+        },
+        {
+          "feature": "agency",
+          "coefficient": -0.2849256098270416
+        },
+        {
+          "feature": "provide",
+          "coefficient": -0.23007133603096008
+        },
+        {
+          "feature": "dollars",
+          "coefficient": -0.2146081030368805
+        },
+        {
+          "feature": "operating",
+          "coefficient": -0.2001287043094635
+        },
+        {
+          "feature": "academic",
+          "coefficient": -0.18422068655490875
+        },
+        {
+          "feature": "administration",
+          "coefficient": -0.17410051822662354
+        }
+      ]
+    }
+  }
+}

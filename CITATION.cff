@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it using the metadata below."
+title: "Fake News Detection Using NLP, BiLSTM, and BERT"
+abstract: "A reproducible Python machine-learning system for fake-news classification with leakage-safe data handling, classical and neural NLP models, evaluation, FastAPI serving, monitoring, and deployment assets."
+version: 0.1.0
+date-released: 2026-08-21
+license: MIT
+repository-code: "https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models"
+authors:
+  - name: "Manus AI"
+keywords:
+  - fake-news-detection
+  - natural-language-processing
+  - machine-learning
+  - mlops
+  - bert
+  - lstm

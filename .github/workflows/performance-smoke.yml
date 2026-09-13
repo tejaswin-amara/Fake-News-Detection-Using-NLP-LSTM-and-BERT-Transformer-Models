@@ -1,0 +1,36 @@
+name: Authorized performance smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Explicit FastAPI base URL that you own or are authorized to test"
+        required: true
+        type: string
+      authorize_target:
+        description: "Type yes after confirming capacity, ownership, consent, and no production-data retention"
+        required: true
+        type: choice
+        options: ["no", "yes"]
+
+permissions: read-all
+
+jobs:
+  smoke:
+    if: ${{ inputs.authorize_target == 'yes' }}
+    name: Run bounded metadata-only smoke profile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up k6
+        uses: grafana/setup-k6-action@85119162329017cffa5e1450d8caef5780543201 # verified 2026-08-23
+      - name: Run explicitly authorized synthetic smoke profile
+        env:
+          K6_TARGET_URL: ${{ inputs.target_url }}
+          K6_AUTHORIZE_TARGET: yes
+        run: k6 run tests/performance/api_smoke.js

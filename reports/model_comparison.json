@@ -1,0 +1,62 @@
+{
+  "TF-IDF + Logistic Regression (L2 - Champion)": {
+    "family": "Linear / Classical ML",
+    "f1_score": 0.8571,
+    "roc_auc": 0.9444,
+    "brier_score": 0.1365,
+    "inference_latency_ms": 0.3,
+    "model_size_mb": 0.05,
+    "ram_footprint_mb": 45,
+    "interpretability": "High (Sparse linear coefficients directly map words to log-odds shift)",
+    "operational_risk": "Minimal (Deterministic, zero GPU requirement, sub-millisecond serving)",
+    "selected_as_champion": true
+  },
+  "TF-IDF + Random Forest": {
+    "family": "Tree Ensemble / Bagging",
+    "f1_score": 0.8333,
+    "roc_auc": 0.9167,
+    "brier_score": 0.1483,
+    "inference_latency_ms": 33.28,
+    "model_size_mb": 1.2,
+    "ram_footprint_mb": 85,
+    "interpretability": "Moderate (Gini feature importances, Permutation importance, SHAP values)",
+    "operational_risk": "Low (Ensemble variance reduction, slightly higher memory)",
+    "selected_as_champion": false
+  },
+  "TF-IDF + XGBoost": {
+    "family": "Gradient Tree Boosting",
+    "f1_score": 0.8333,
+    "roc_auc": 0.9167,
+    "brier_score": 0.152,
+    "inference_latency_ms": 1.51,
+    "model_size_mb": 0.85,
+    "ram_footprint_mb": 95,
+    "interpretability": "Moderate (Gain importances, TreeExplainer SHAP attribution)",
+    "operational_risk": "Low (Requires C++ tree backend, fast CPU inference)",
+    "selected_as_champion": false
+  },
+  "GloVe + Stacked BiLSTM": {
+    "family": "Recurrent Deep Learning (M1/CO1 extension)",
+    "f1_score": 0.8182,
+    "roc_auc": 0.8889,
+    "brier_score": 0.184,
+    "inference_latency_ms": 18.5,
+    "model_size_mb": 42.0,
+    "ram_footprint_mb": 350,
+    "interpretability": "Low (Hidden state sequences, gradient saliency maps)",
+    "operational_risk": "Moderate (TensorFlow dependency overhead, recurrent compute latency on CPU)",
+    "selected_as_champion": false
+  },
+  "Fine-Tuned BERT (bert-base-uncased)": {
+    "family": "Transformer / Pre-trained LLM",
+    "f1_score": 0.875,
+    "roc_auc": 0.9583,
+    "brier_score": 0.125,
+    "inference_latency_ms": 145.0,
+    "model_size_mb": 420.0,
+    "ram_footprint_mb": 1200,
+    "interpretability": "Low (Opaque cross-attention matrices, post-hoc Integrated Gradients required)",
+    "operational_risk": "High (Requires dedicated GPU or large memory, high latency violating 50ms SLA, heavy PyTorch footprint)",
+    "selected_as_champion": false
+  }
+}

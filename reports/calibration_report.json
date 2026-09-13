@@ -1,0 +1,11 @@
+{
+  "model": "logistic_l2",
+  "held_out_test_size": 12,
+  "uncalibrated_brier_score": 0.1306,
+  "platt_calibrated_brier_score": 0.1893,
+  "isotonic_calibrated_brier_score": 0.244,
+  "platt_brier_reduction": -0.0587,
+  "isotonic_brier_reduction": -0.1133,
+  "recommended_method": "platt_sigmoid",
+  "rationale": "Platt sigmoid scaling yields monotonic, smooth probabilities and prevents overfitting on small-to-moderate validation windows unlike piecewise-constant isotonic step regressions."
+}

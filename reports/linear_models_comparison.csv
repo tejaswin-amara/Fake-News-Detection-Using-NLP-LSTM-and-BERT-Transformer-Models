@@ -1,0 +1,4 @@
+,accuracy,precision,recall,f1,roc_auc,pr_auc,brier_score,sparsity_pct,n_non_zero_coeffs,total_features
+logistic_l1,0.8333,0.8333,0.8333,0.8333,0.9028,0.8972,0.1381,83.67,57.0,349.0
+logistic_l2,0.9167,1.0,0.8333,0.9091,1.0,1.0,0.0985,0.0,349.0,349.0
+logistic_elasticnet,0.8333,0.8333,0.8333,0.8333,0.9722,0.9762,0.0947,65.33,121.0,349.0

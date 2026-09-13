@@ -1,0 +1,148 @@
+{
+  "project_name": "VERITAS - End-to-End Machine Learning System",
+  "course": "Machine Learning - 25SC2107E",
+  "generated_at_utc": "2026-09-10T09:31:55.048314+00:00",
+  "runtime_environment": {
+    "python": "3.11.16 (main, Sep  1 2026, 00:12:26) [GCC 14.2.0]",
+    "platform": "linux"
+  },
+  "course_outcomes_compliance_matrix": {
+    "CO1 / M1 (ML Lifecycle & Data Governance)": {
+      "status": "IMPLEMENTED & VERIFIED",
+      "evidence_files": [
+        "data/processed/split_manifest.json",
+        "reports/data_summary.json",
+        "src/data/ingestion.py",
+        "src/features/minhash.py"
+      ],
+      "summary": "Canonical schema enforced, MinHash near-duplicate deduplication verified, strict 70/15/15 stratified splitting with zero leakage."
+    },
+    "CO2 / M2 (Linear Models & Regularization)": {
+      "status": "IMPLEMENTED & VERIFIED",
+      "evidence_files": [
+        "reports/linear_models_comparison.json",
+        "reports/linear_models_comparison.csv",
+        "src/models/classical.py"
+      ],
+      "summary": "Evaluated Logistic L1 (Lasso sparsity), Logistic L2 (Ridge penalty), and ElasticNet mixtures with exact coefficient table extraction."
+    },
+    "CO3 / M3 (Tree Models & Ensembles)": {
+      "status": "IMPLEMENTED & VERIFIED",
+      "evidence_files": [
+        "reports/tree_models_comparison.json",
+        "src/models/classical.py"
+      ],
+      "summary": "Evaluated Decision Tree (ccp_alpha pruning), Random Forest (OOB score analysis), XGBoost, LightGBM, Permutation Importance, and SHAP."
+    },
+    "CO4 / M4 (Unsupervised Learning & Structure)": {
+      "status": "IMPLEMENTED & VERIFIED",
+      "evidence_files": [
+        "reports/unsupervised_analysis.json",
+        "src/models/unsupervised.py"
+      ],
+      "summary": "K-Means elbow & silhouette curves, MiniBatch K-Means, Hierarchical linkages, DBSCAN density grid, PCA 2D, t-SNE, Isolation Forest anomaly detection."
+    },
+    "CO5 / M5 (Evaluation & Calibration)": {
+      "status": "IMPLEMENTED & VERIFIED",
+      "evidence_files": [
+        "reports/evaluation_report.json",
+        "reports/calibration_report.json",
+        "src/evaluate.py",
+        "src/evaluation/metrics.py"
+      ],
+      "summary": "5-fold stratified CV, held-out test evaluation, Platt sigmoid and Isotonic calibration analysis (demonstrating sample sparsity overfitting dynamics), and McNemar paired tests."
+    },
+    "CO6 / M6 (ML Engineering, Serving & Monitoring)": {
+      "status": "IMPLEMENTED & VERIFIED",
+      "evidence_files": [
+        "reports/champion_model.json",
+        "reports/drift_report.json",
+        "artifacts/models/package_manifest.json",
+        "src/serving/app.py",
+        "Dockerfile",
+        "docker-compose.dashboard.yml"
+      ],
+      "summary": "Hardened FastAPI serving with Prometheus metrics, asynchronous KS/PSI drift detection jobs, containerized React dashboard integration."
+    }
+  },
+  "champion_model": {
+    "name": "logistic_l2",
+    "artifact_sha256": "d6d66bca3a59d13f3a71cfab93c30d56ffb565d4d00c016a4e4e75711a8057c0",
+    "f1_score": 0.8,
+    "roc_auc": 0.8611
+  },
+  "artifact_ledger": [
+    {
+      "path": "reports/data_summary.json",
+      "size_bytes": 1996,
+      "sha256": "47e77734abf7929f36b31e408a46c81f5dad4b90a1250bf0be40fe80f53f1e64",
+      "modified_at": "2026-09-10T09:30:53.184685+00:00"
+    },
+    {
+      "path": "reports/linear_models_comparison.json",
+      "size_bytes": 7154,
+      "sha256": "f87ec71dde6eb4575f2b84c3398f42fd6b10ad4988fcb75f1c3441eca9d2ccd4",
+      "modified_at": "2026-09-10T09:30:53.442975+00:00"
+    },
+    {
+      "path": "reports/linear_models_comparison.csv",
+      "size_bytes": 336,
+      "sha256": "72ddb4df8142c506ce7f6577a76e1f96932b93f46124a623f787c66d02b0b979",
+      "modified_at": "2026-09-10T09:30:53.430754+00:00"
+    },
+    {
+      "path": "reports/tree_models_comparison.json",
+      "size_bytes": 10249,
+      "sha256": "6e2d5f64eec9e02b21c7f96eb6d7b5f2a2ff22c76effb685a2f443d7cd24d1b9",
+      "modified_at": "2026-09-10T09:31:35.985473+00:00"
+    },
+    {
+      "path": "reports/unsupervised_analysis.json",
+      "size_bytes": 5367,
+      "sha256": "77c0d9d790cf4a23c5b644ad3392d4c31730e10eb570ce2b7c481a211abe6038",
+      "modified_at": "2026-09-10T09:31:46.949762+00:00"
+    },
+    {
+      "path": "reports/evaluation_report.json",
+      "size_bytes": 4317,
+      "sha256": "37ecd2ecd9a034218fbbdd7aedd938ab632be149bbf5d0a0d641439fb093e6da",
+      "modified_at": "2026-09-10T09:31:52.947260+00:00"
+    },
+    {
+      "path": "reports/calibration_report.json",
+      "size_bytes": 493,
+      "sha256": "5e1a58a3d90ae815ca50be7dab74cc3fc85dfc2a004e4edcf269b030f71a5f9f",
+      "modified_at": "2026-09-10T09:31:52.952375+00:00"
+    },
+    {
+      "path": "reports/model_comparison.json",
+      "size_bytes": 2383,
+      "sha256": "830d5bc6a237a32f56c49d32e2ef53e854e7e7446ab33d6efd8e7670b1c5b039",
+      "modified_at": "2026-09-10T09:31:54.731695+00:00"
+    },
+    {
+      "path": "reports/champion_model.json",
+      "size_bytes": 1306,
+      "sha256": "3ea3c4cb9517ca16d41c35c8990df5d42e87e975284596945d5c8056cb63e6ef",
+      "modified_at": "2026-09-10T09:31:54.793547+00:00"
+    },
+    {
+      "path": "reports/drift_report.json",
+      "size_bytes": 1688,
+      "sha256": "d52113b33c74c3711ea10696744298bcea1fc88d4dba30096ba44f35cfd210c3",
+      "modified_at": "2026-09-10T09:31:54.827303+00:00"
+    },
+    {
+      "path": "artifacts/models/package_manifest.json",
+      "size_bytes": 1083,
+      "sha256": "7ecdefe77ef883235552a3ca71476af438d1685d712742a6e279cb0b3283b53b",
+      "modified_at": "2026-09-12T16:52:52.778346+00:00"
+    },
+    {
+      "path": "data/processed/split_manifest.json",
+      "size_bytes": 566,
+      "sha256": "c76bc62a7bdd1b6c6412386cd5dfe454032e724c2fc020b61d7af3e96ad39ae4",
+      "modified_at": "2026-09-10T09:30:53.155678+00:00"
+    }
+  ]
+}

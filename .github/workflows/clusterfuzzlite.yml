@@ -1,0 +1,37 @@
+name: ClusterFuzzLite bounded Python fuzzing
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "35 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clusterfuzzlite-bounded-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  claimreview-metadata:
+    name: Coverage-guided ClaimReview metadata fuzzing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Build bounded Python fuzzer
+        id: build
+        uses: google/clusterfuzzlite/actions/build_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c # v1
+        with:
+          language: python
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sanitizer: address
+
+      - name: Run bounded batch fuzzing
+        id: run
+        uses: google/clusterfuzzlite/actions/run_fuzzers@52ecc61cb587ee99c26825a112a21abf19c7448c # v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fuzz-seconds: 60
+          mode: batch
+          sanitizer: address
+          output-sarif: true

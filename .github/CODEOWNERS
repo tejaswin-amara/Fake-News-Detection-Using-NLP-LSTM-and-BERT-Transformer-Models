@@ -1,0 +1,26 @@
+# The repository owner is the only confirmed review authority. Later rules make
+# sensitive ownership boundaries explicit without inventing teams or contacts.
+* @tejaswin-amara
+
+# Source, testing, and data-contract paths.
+/src/ @tejaswin-amara
+/tests/ @tejaswin-amara
+/configs/ @tejaswin-amara
+/scripts/ @tejaswin-amara
+/dvc.yaml @tejaswin-amara
+/dvc.lock @tejaswin-amara
+/params.yaml @tejaswin-amara
+
+# Delivery, security, and automation boundaries.
+/Dockerfile @tejaswin-amara
+/docker-compose.yml @tejaswin-amara
+/k8s/ @tejaswin-amara
+/.github/ @tejaswin-amara
+/.devcontainer/ @tejaswin-amara
+
+# Public project contract and provenance.
+/docs/ @tejaswin-amara
+/README.md @tejaswin-amara
+/SECURITY.md @tejaswin-amara
+/GOVERNANCE.md @tejaswin-amara
+/CONTRIBUTING.md @tejaswin-amara

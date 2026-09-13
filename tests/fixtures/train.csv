@@ -1,0 +1,15 @@
+id,title,text,label,dataset,content,content_hash
+1,Real report,Officials released a verified report about local weather,0,fixture,Real report Officials released a verified report about local weather,fixture1
+2,Fake claim,An invented story claims impossible events without evidence,1,fixture,Fake claim An invented story claims impossible events without evidence,fixture2
+3,Real update,The public agency published a documented policy update,0,fixture,Real update The public agency published a documented policy update,fixture3
+4,Fake rumor,A fabricated rumor says a celebrity discovered a fictional cure,1,fixture,Fake rumor A fabricated rumor says a celebrity discovered a fictional cure,fixture4
+5,Real statement,Researchers shared a peer reviewed statement with measured results,0,fixture,Real statement Researchers shared a peer reviewed statement with measured results,fixture5
+6,Fake hoax,The hoax article repeats a sensational unsupported conspiracy,1,fixture,Fake hoax The hoax article repeats a sensational unsupported conspiracy,fixture6
+7,Real notice,The department issued an official notice with source references,0,fixture,Real notice The department issued an official notice with source references,fixture7
+8,Fake invention,The invention story is false and has no reliable source,1,fixture,Fake invention The invention story is false and has no reliable source,fixture8
+9,Real evidence,Auditors confirmed the evidence in a transparent review,0,fixture,Real evidence Auditors confirmed the evidence in a transparent review,fixture9
+10,Fake sensational,A sensational fake headline spreads an unsupported allegation,1,fixture,Fake sensational A sensational fake headline spreads an unsupported allegation,fixture10
+11,Real research,The research team reported results from a controlled study,0,fixture,Real research The research team reported results from a controlled study,fixture11
+12,Fake rumor,An unsupported rumor makes a fabricated claim about science,1,fixture,Fake rumor An unsupported rumor makes a fabricated claim about science,fixture12
+13,Real record,The official record includes verified public information,0,fixture,Real record The official record includes verified public information,fixture13
+14,Fake hoax,This hoax presents an invented story as a secret revelation,1,fixture,Fake hoax This hoax presents an invented story as a secret revelation,fixture14
