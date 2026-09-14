@@ -50,7 +50,8 @@ class RedisRateLimiter:
             from redis.exceptions import TimeoutError as RedisTimeoutError
         except ImportError as exc:
             raise RuntimeError("redis package is required for distributed rate limiting") from exc
-        self._redis: Any = redis.from_url(self.url, decode_responses=False)  # type: ignore[no-untyped-call]
+        redis_client_factory: Any = redis
+        self._redis: Any = redis_client_factory.from_url(self.url, decode_responses=False)
         self._redis_error_types: tuple[type[BaseException], ...] = (
             RedisError,
             RedisConnectionError,

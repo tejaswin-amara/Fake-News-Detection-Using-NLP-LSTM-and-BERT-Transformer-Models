@@ -71,7 +71,9 @@ def test_configuration_includes_dvc_and_tracking_flags():
 
 
 def test_local_mlflow_initialization_is_idempotent(tmp_path):
-    pytest.importorskip("mlflow")
+    mlflow = pytest.importorskip("mlflow")
+    if not hasattr(mlflow, "set_tracking_uri"):
+        pytest.skip("mlflow package is not installed (directory namespace collision)")
     first = initialize_tracking(
         tracking_uri=str(tmp_path / "mlruns"),
         experiment_name="fixture-experiment",

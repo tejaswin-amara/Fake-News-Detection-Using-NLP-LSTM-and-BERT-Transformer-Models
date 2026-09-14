@@ -1,0 +1,213 @@
+project:
+  name: fake-news-detection-ml
+  label_mapping:
+    real: 0
+    fake: 1
+  random_seed: 42
+  timezone: UTC
+
+paths:
+  raw_data: data/raw
+  processed_data: data/processed
+  external_data: data/external
+  artifacts: artifacts
+  reports: reports
+  source_register: docs/sources.yaml
+
+split:
+  train_size: 0.70
+  validation_size: 0.15
+  test_size: 0.15
+  stratify: true
+  random_seed: 42
+  near_duplicate_check: true
+  near_duplicate_threshold: 0.85
+
+text:
+  title_weight: 1.0
+  body_weight: 1.0
+  tokenization:
+    stop_words: english
+    stemming: false
+    lemmatization: false
+  statistics:
+    enabled: true
+    readability: true
+  lowercase: true
+  normalize_unicode: true
+  remove_urls: true
+  remove_email_addresses: true
+  remove_html: true
+  stop_words: optional
+  lemmatize: optional
+  max_characters: 50000
+  tfidf:
+    analyzer: word
+    ngram_range: [1, 2]
+    min_df: 2
+    max_df: 0.98
+    max_features: 200000
+    sublinear_tf: true
+  sequence:
+    max_tokens: 30000
+    max_length: 400
+  transformer:
+    model_name: bert-base-uncased
+    max_length: 512
+    dynamic_padding: true
+  embeddings:
+    word2vec_vector_size: 100
+    word2vec_window: 5
+    word2vec_min_count: 1
+    glove_dimension: 100
+    sbert_model: sentence-transformers/all-MiniLM-L6-v2
+
+preprocessing:
+  numeric_imputation: median
+  add_missing_indicators: true
+  knn_neighbors: 5
+  categorical_encoding: onehot
+  target_encoding_smoothing: 10.0
+  target_encoding_folds: 5
+  scaling: standard
+
+unsupervised:
+  representation: tfidf
+  pca_components: 50
+  standardize_before_pca: true
+  projection_dimensions: [2, 3]
+  include_minibatch_kmeans: true
+  include_dbscan_features: true
+  kmeans_k_values: [2, 3, 4, 5, 6, 8, 10]
+  dbscan_eps_values: [0.20, 0.35, 0.50, 0.75]
+  dbscan_min_samples_values: [5, 10, 20]
+  tsne_perplexity: 30
+  umap_n_neighbors: 15
+  umap_min_dist: 0.1
+  isolation_forest_contamination: auto
+
+models:
+  classical:
+    max_iter: 2000
+    logistic_c_values: [0.1, 1.0, 10.0]
+    tree_max_depth: [null, 10, 20]
+    random_forest_estimators: 300
+    random_forest_oob_score: true
+  lstm:
+    embedding_dim: 100
+    embedding_trainable: false
+    lstm_units: [128, 64]
+    dropout: 0.30
+    recurrent_dropout: 0.0
+    batch_size: 64
+    epochs: 10
+    learning_rate: 0.001
+  bert:
+    model_name: bert-base-uncased
+    epochs: 3
+    batch_size: 8
+    learning_rate: 0.00002
+    warmup_ratio: 0.10
+    max_grad_norm: 1.0
+    fp16: true
+
+
+evaluation:
+  cv_folds: 5
+  scoring: average_precision
+  primary_metric: pr_auc
+  calibration_methods: [sigmoid, isotonic]
+  confidence_level: 0.95
+  mcnemar_alpha: 0.05
+
+dvc:
+  enabled: true
+  pipeline_file: dvc.yaml
+  cache_dir: .dvc/cache
+  dataset: isot
+  input_path: data/raw/isot
+  processed_path: data/processed
+  model_name: logistic_l2
+  model_artifact: artifacts/models/logistic_l2.joblib
+  evaluation_report: reports/dvc_evaluation.json
+  stages: [ingest, train, evaluate]
+
+tracking:
+  enabled: false
+  uri: mlruns
+  artifact_location: mlruns
+  experiment_name: fake-news-detection
+  log_source_metadata: true
+  log_config: true
+  retry_attempts: 3
+  retry_backoff_seconds: 0.5
+  local_fallback_uri: mlruns
+  fail_on_remote_error: false
+
+
+phase4:
+  serving_mode: native
+  onnx_model_path: ""
+  calibration_manifest: ""
+  readiness_requires_model: true
+  artifact_manifest: ""
+  confidence_interval_source: ""
+
+serving:
+  host: 0.0.0.0
+  port: 8000
+  model_name: logistic_l2
+  model_artifact: artifacts/models/logistic_l2.joblib
+  model_artifact_sha256: ""
+  package_manifest: artifacts/models/package_manifest.json
+  require_signed_artifact: false
+  artifact_public_key_b64: ""
+  hf_model_dir: ""
+  onnx_model_path: ""
+  serving_mode: native
+  max_batch_size: 64
+  max_text_characters: 50000
+  max_request_bytes: 1000000
+  include_latency_header: true
+  readiness_requires_model: true
+  cors_allowed_origins: []
+  cors_allow_credentials: false
+  cors_allowed_methods: [GET, POST, OPTIONS]
+  cors_allowed_headers: [Content-Type, X-Request-ID]
+  rate_limit_requests: 120
+  rate_limit_window_seconds: 60
+  rate_limit_max_clients: 10000
+  trusted_proxy_ips: []
+  web_concurrency: 1
+  distributed_rate_limiter: ""
+  redis_url: redis://redis:6379/0
+  redis_rate_limit_key_prefix: "fake-news:ratelimit:"
+  redis_circuit_failure_threshold: 3
+  redis_circuit_recovery_seconds: 30
+  max_inflight_inference: 4
+  drift_queue_maxsize: 128
+  drift_workers: 2
+  drift_job_ttl_seconds: 900
+  reject_unknown_fields: true
+  reject_control_characters: true
+  onnx_execution_providers: [CPUExecutionProvider]
+  onnx_intra_op_threads: 1
+  onnx_inter_op_threads: 1
+  onnx_graph_optimization: ORT_ENABLE_ALL
+  onnx_cpu_mem_arena: true
+  readonly_runtime: true
+
+monitoring:
+  ks_alpha: 0.05
+  psi_threshold: 0.20
+  oov_threshold: 0.20
+  length_shift_threshold: 0.20
+  reference_artifact: artifacts/monitoring/reference_features.npz
+  reference_texts: artifacts/monitoring/reference_texts.json
+  baseline_revision: training-reference-v1
+  report_directory: reports/monitoring
+  retraining_hook_enabled: true
+  retraining_cooldown_hours: 24
+  retraining_requires_approval: true
+  max_monitoring_values: 10000
+  reject_non_finite_values: true

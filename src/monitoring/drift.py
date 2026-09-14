@@ -52,10 +52,11 @@ def _safe_edges(reference: FloatVector, current: FloatVector, bins: int) -> Floa
         center = float(reference[0])
         spread = max(float(np.max(np.abs(current - center))), 1.0)
         unique = np.asarray([center - spread, center + spread], dtype=np.float64)
-    edges = unique.astype(np.float64, copy=False)
+    edges = np.asarray(unique, dtype=np.float64)
     edges[0] = -np.inf
     edges[-1] = np.inf
-    return cast(FloatVector, edges)
+    result: FloatVector = np.asarray(edges, dtype=np.float64)
+    return result
 
 
 def ks_drift(reference: Any, current: Any, alpha: float = 0.05) -> dict[str, float | bool | int]:

@@ -1,0 +1,48 @@
+{
+  "baseline_revision": "reference-v1",
+  "monitoring_period": "2026-09-10T11:00:00Z to 2026-09-10T12:00:00Z",
+  "scenarios": {
+    "stable_in_distribution": {
+      "description": "Baseline vs matching test traffic",
+      "ks_statistic": 0.12,
+      "ks_p_value": 0.11228360286766195,
+      "psi_score": 0.08070457281923075,
+      "drift_detected": false,
+      "retraining_signal": {
+        "triggered": false,
+        "reason": "no_drift",
+        "drifted_features": [],
+        "baseline_revision": "reference-v1",
+        "window_id": "window-stable-001",
+        "suggested_action": "continue_monitoring",
+        "requires_human_approval": true,
+        "cooldown_hours": 24,
+        "cooldown_key": "reference-v1:window-stable-001:",
+        "generated_at": "2026-09-10T09:31:54.809397+00:00",
+        "side_effects": "none"
+      }
+    },
+    "synthetically_shifted_distribution": {
+      "description": "Baseline vs high-probability sensationalist traffic",
+      "ks_statistic": 0.82,
+      "ks_p_value": 4.862054680600275e-68,
+      "psi_score": 9.105376569424045,
+      "drift_detected": true,
+      "retraining_signal": {
+        "triggered": true,
+        "reason": "prediction_probability",
+        "drifted_features": [
+          "prediction_probability"
+        ],
+        "baseline_revision": "reference-v1",
+        "window_id": "window-shifted-002",
+        "suggested_action": "review_and_retrain",
+        "requires_human_approval": true,
+        "cooldown_hours": 24,
+        "cooldown_key": "reference-v1:window-shifted-002:prediction_probability",
+        "generated_at": "2026-09-10T09:31:54.809481+00:00",
+        "side_effects": "none"
+      }
+    }
+  }
+}

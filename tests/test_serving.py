@@ -245,3 +245,180 @@ def test_drift_endpoint_accepts_probability_and_text_payloads():
         text_payload = poll_drift(client, text_response)
         assert text_payload["status"] == "completed"
         assert text_payload["result"]["text"]["drift_detected"] is True
+
+
+def test_reports_endpoint_contract():
+    with TestClient(create_app(FakeService())) as client:
+        # 1. Valid allowlisted report
+        response = client.get("/reports/model_comparison")
+        assert response.status_code == 200
+        assert "TF-IDF + Logistic Regression (L2 - Champion)" in response.json()
+
+        # 2. Unknown report
+        missing = client.get("/reports/non_existent_report")
+        assert missing.status_code == 404
+
+        # 3. Path traversal attack blocked
+        traversal = client.get("/reports/../../etc/passwd")
+        assert traversal.status_code in (404, 422)
+
+
+def test_export_torchscript(tmp_path):
+    torch = pytest.importorskip("torch")
+    from src.serving.export import export_torchscript
+
+    model = torch.nn.Linear(2, 1)
+    example = torch.zeros((1, 2))
+    out = export_torchscript(model, tmp_path / "model.pt", example)
+    assert out.exists()
+
+
+def test_load_native_artifact_validation_errors(tmp_path):
+    from src.serving.export import load_native_artifact
+
+    with pytest.raises(ValueError, match="trusted SHA-256 digest is required"):
+        load_native_artifact(tmp_path / "dummy.joblib", expected_sha256=None)
+    with pytest.raises(ValueError, match="trusted SHA-256 digest is required"):
+        load_native_artifact(tmp_path / "dummy.joblib", expected_sha256="   ")
+    with pytest.raises(ValueError, match="64-character hexadecimal digest"):
+        load_native_artifact(tmp_path / "dummy.joblib", expected_sha256="abcd")
+
+    dummy = tmp_path / "dummy.joblib"
+    dummy.write_text("test", encoding="utf-8")
+    with pytest.raises(ValueError, match="SHA-256 digest mismatch"):
+        load_native_artifact(dummy, expected_sha256="0" * 64)
+
+
+def test_verify_package_manifest_errors(tmp_path):
+    from src.serving.export import verify_package_manifest
+
+    art = tmp_path / "art.bin"
+    art.write_bytes(b"data")
+    man = tmp_path / "manifest.json"
+
+    man.write_text("[]", encoding="utf-8")
+    with pytest.raises(ValueError, match="must be a JSON object"):
+        verify_package_manifest(man, art, public_key_b64="key", require_signature=False)
+
+    man.write_text(json.dumps({"native_artifact": {"sha256": "wrong"}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="digest does not match"):
+        verify_package_manifest(man, art, public_key_b64="key", require_signature=False)
+
+    from src.serving.export import sha256_file
+
+    correct_sha = sha256_file(art)
+    man.write_text(json.dumps({"native_artifact": {"sha256": correct_sha}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="Signed package manifest is required"):
+        verify_package_manifest(man, art, public_key_b64="key", require_signature=True)
+
+    man.write_text(
+        json.dumps(
+            {
+                "native_artifact": {"sha256": correct_sha},
+                "signature": {"signature_b64": "sig"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="public key is required"):
+        verify_package_manifest(man, art, public_key_b64="", require_signature=False)
+
+    with pytest.raises(ValueError, match="signature verification failed"):
+        verify_package_manifest(man, art, public_key_b64="d3Jvbmc=", require_signature=False)
+
+
+def test_drift_edge_cases():
+    from src.monitoring.drift import (
+        _benjamini_hochberg,
+        _safe_edges,
+        _text_features,
+        ks_drift,
+        monitor_prediction_probabilities,
+        monitor_text_batch,
+        population_stability_index,
+    )
+
+    with pytest.raises(ValueError, match="bins must be at least two"):
+        _safe_edges(np.array([1.0, 2.0]), np.array([1.0, 2.0]), bins=1)
+
+    edges1 = _safe_edges(np.array([5.0, 5.0]), np.array([5.0, 5.0]), bins=2)
+    assert len(edges1) >= 2
+
+    edges2 = _safe_edges(np.array([5.0, 5.0]), np.array([10.0, 10.0]), bins=2)
+    assert len(edges2) >= 2
+
+    edges3 = _safe_edges(np.array([5.0, 5.0]), np.array([1.0, 10.0]), bins=2)
+    assert len(edges3) >= 2
+
+    assert _benjamini_hochberg([], 0.05) == ([], [])
+
+    with pytest.raises(ValueError, match="epsilon must be finite and positive"):
+        population_stability_index([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], epsilon=-1.0)
+
+    with pytest.raises(ValueError, match="alpha must lie strictly between zero and one"):
+        ks_drift([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], alpha=0.0)
+
+    with pytest.raises(ValueError, match="Prediction probabilities must be finite"):
+        monitor_prediction_probabilities([np.nan, 0.5], [0.1, 0.2])
+
+    with pytest.raises(ValueError, match=r"Prediction probabilities must lie in \[0, 1\]"):
+        monitor_prediction_probabilities([-0.1, 0.5], [0.1, 0.2])
+
+    with pytest.raises(ValueError, match="All monitored texts must be strings"):
+        _text_features([123, "valid"])  # type: ignore[list-item]
+
+    with pytest.raises(ValueError, match="Text drift requires at least two"):
+        monitor_text_batch(["one"], ["two"])
+
+    with pytest.raises(ValueError, match="Monitored text exceeds the maximum length"):
+        monitor_text_batch(["short text", "x" * 50_001], ["another text", "sample"])
+
+
+
+def test_serving_app_error_handlers(tmp_path):
+    class ErrorService:
+        ready = True
+        artifact_path = "fixture"
+        error = None
+
+        def __init__(self, exc):
+            self.exc = exc
+
+        def predict(self, requests):
+            raise self.exc
+
+    client_runtime = TestClient(create_app(ErrorService(RuntimeError("backend fail"))))
+    resp = client_runtime.post("/predict", json={"text": "sample text"})
+    assert resp.status_code == 503
+
+    resp_b = client_runtime.post("/predict/batch", json={"requests": [{"text": "sample text"}]})
+    assert resp_b.status_code == 503
+
+    client_val = TestClient(create_app(ErrorService(ValueError("invalid data"))))
+    resp_v = client_val.post("/predict", json={"text": "sample text"})
+    assert resp_v.status_code == 422
+
+    resp_vb = client_val.post("/predict/batch", json={"requests": [{"text": "sample text"}]})
+    assert resp_vb.status_code == 422
+
+    client = TestClient(create_app(FakeService()))
+    assert client.get("/monitoring/drift/non-existent-uuid").status_code == 404
+
+    from pathlib import Path
+
+    reports_dir = Path("reports")
+    reports_dir.mkdir(exist_ok=True)
+    corrupt_report = reports_dir / "final_evidence_manifest.json"
+    had_corrupt = corrupt_report.exists()
+    original_text = corrupt_report.read_text(encoding="utf-8") if had_corrupt else None
+    try:
+        corrupt_report.write_text("{invalid json", encoding="utf-8")
+        resp = client.get("/reports/final_evidence_manifest")
+        assert resp.status_code == 500
+    finally:
+        if had_corrupt and original_text is not None:
+            corrupt_report.write_text(original_text, encoding="utf-8")
+        elif corrupt_report.exists():
+            corrupt_report.unlink()
+
+

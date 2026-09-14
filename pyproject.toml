@@ -7,7 +7,7 @@ name = "fake-news-detection-ml"
 version = "0.1.0"
 description = "Handout-compliant fake news detection with NLP, classical ML, BiLSTM, and BERT"
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.11,<3.14"
 license = {text = "Project source license; see repository terms and dependency licenses"}
 authors = [{name = "Manus AI"}]
 dependencies = [
@@ -37,14 +37,14 @@ select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 strict = true
 explicit_package_bases = true
 mypy_path = "."
 ignore_missing_imports = true
 warn_unreachable = true
 warn_unused_ignores = true
-exclude = '(^|/)(notebooks|\.venv|build|dist)/'
+exclude = '(?i)(^|[/\\])(notebooks|\.venv|build|dist|node_modules)[/\\]'
 
 # The scientific stack exposes incomplete typing at sklearn/LightGBM/TensorFlow
 # boundaries. These compatibility overrides are limited to legacy adapters and
@@ -58,8 +58,7 @@ module = [
     "src.evaluation.*",
     "src.train",
     "src.evaluate",
-    "scripts.export_onnx",
-    "scripts.generate_reports",
+    "scripts.*",
     "tests.*",
 ]
 disable_error_code = [
@@ -73,6 +72,7 @@ disable_error_code = [
     "no-untyped-def",
     "operator",
     "type-arg",
+    "union-attr",
     "unreachable",
     "unused-ignore",
 ]

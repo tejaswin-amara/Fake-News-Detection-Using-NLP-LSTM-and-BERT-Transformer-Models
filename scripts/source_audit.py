@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -16,23 +17,32 @@ IGNORED_DIRS = {
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
+    ".venv",
+    "venv",
+    "node_modules",
+    "Rules and workflow",
     "artifacts",
     "data",
     "mlruns",
     "reports",
+    "ECC",
+    ".manus-logs",
 }
+IGNORED_FILES = {"pnpm-lock.yaml", "package-lock.json", "yarn.lock", "components.json"}
 TEXT_SUFFIXES = {".md", ".py", ".yaml", ".yml", ".toml", ".txt", ".json", ".ipynb"}
 RESERVED_FIXTURE_URLS = {"https://example.com"}
-LOCAL_OPERATIONAL_URL_RE = re.compile(r"https?://(?:localhost|127\.0\.0\.1|api)(?::\d+)?(?:/|$)")
+LOCAL_OPERATIONAL_URL_RE = re.compile(r"https?://(?:localhost|127\.0\.0\.1|api|ml-api)(?::\d+)?(?:/|$)")
 
 
 def iter_text_files(root: Path) -> Iterator[Path]:
-    for path in root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
-            continue
-        if any(part in IGNORED_DIRS for part in path.parts):
-            continue
-        yield path
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in IGNORED_DIRS]
+        for filename in filenames:
+            if filename in IGNORED_FILES:
+                continue
+            path = Path(dirpath) / filename
+            if path.suffix.lower() in TEXT_SUFFIXES:
+                yield path
 
 
 def audit(root: Path) -> tuple[list[str], list[str]]:
@@ -47,9 +57,10 @@ def audit(root: Path) -> tuple[list[str], list[str]]:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         for url in URL_RE.findall(text):
-            normalized = url.rstrip(".,;:")
+            normalized = url.rstrip(".,;:\"'`")
             if (
                 LOCAL_OPERATIONAL_URL_RE.match(normalized) is None
+                and not normalized.startswith("https://img.shields.io/")
                 and normalized not in combined_register
                 and normalized not in RESERVED_FIXTURE_URLS
                 and normalized

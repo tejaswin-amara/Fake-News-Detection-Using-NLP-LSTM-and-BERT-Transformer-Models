@@ -1,0 +1,44 @@
+services:
+  ml-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: veritas-ml-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      MODEL_ARTIFACT: /app/artifacts/models/logistic_l2.joblib
+      PACKAGE_MANIFEST: /app/artifacts/models/package_manifest.json
+      SERVING_MODE: native
+      REQUIRE_SIGNED_ARTIFACT: "false"
+      READINESS_REQUIRES_MODEL: "true"
+      MAX_BATCH_SIZE: "64"
+      MAX_TEXT_CHARACTERS: "50000"
+      DISTRIBUTED_RATE_LIMITER: memory
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: veritas-dashboard:latest
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      LOCAL_DEMO_MODE: "true"
+      FAKE_NEWS_INTEGRATION_MODE: live
+      FAKE_NEWS_API_BASE_URL: http://ml-api:8000
+      PORT: "3000"
+    depends_on:
+      ml-api:
+        condition: service_healthy

@@ -171,10 +171,15 @@ def generate_report_bundle(
         import mlflow  # type: ignore
         from mlflow.tracking import MlflowClient  # type: ignore
     except ImportError as exc:
-        raise RuntimeError("MLflow is required to generate finalized run reports") from exc
+        if client is None:
+            raise RuntimeError("MLflow is required to generate finalized run reports") from exc
+        mlflow = None
     resolved_tracking_uri, _ = resolve_tracking_uri(tracking_uri)
-    mlflow.set_tracking_uri(resolved_tracking_uri)
-    active_client = client or MlflowClient(tracking_uri=resolved_tracking_uri)
+    if mlflow is not None:
+        mlflow.set_tracking_uri(resolved_tracking_uri)
+        active_client = client or MlflowClient(tracking_uri=resolved_tracking_uri)
+    else:
+        active_client = client
     experiment = active_client.get_experiment_by_name(experiment_name)
     if experiment is None:
         raise RuntimeError(f"MLflow experiment does not exist: {experiment_name}")

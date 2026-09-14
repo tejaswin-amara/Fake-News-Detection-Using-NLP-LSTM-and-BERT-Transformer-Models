@@ -1,0 +1,211 @@
+{
+  "held_out_test_results": {
+    "logistic_l1": {
+      "accuracy": 0.75,
+      "precision": 0.8,
+      "recall": 0.6667,
+      "f1": 0.7273,
+      "roc_auc": 0.7639,
+      "pr_auc": 0.8357,
+      "brier_score": 0.2084,
+      "confusion_matrix": [
+        [
+          5,
+          1
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.747,
+        "std_cv_accuracy": 0.0919,
+        "mean_cv_f1": 0.7261,
+        "std_cv_f1": 0.1029,
+        "mean_cv_roc_auc": 0.8522,
+        "std_cv_roc_auc": 0.0573
+      }
+    },
+    "logistic_l2": {
+      "accuracy": 0.8333,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8,
+      "roc_auc": 0.8611,
+      "pr_auc": 0.9056,
+      "brier_score": 0.1306,
+      "confusion_matrix": [
+        [
+          6,
+          0
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.9273,
+        "std_cv_accuracy": 0.0891,
+        "mean_cv_f1": 0.9267,
+        "std_cv_f1": 0.0904,
+        "mean_cv_roc_auc": 0.9667,
+        "std_cv_roc_auc": 0.0422
+      }
+    },
+    "logistic_elasticnet": {
+      "accuracy": 0.8333,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8,
+      "roc_auc": 0.8611,
+      "pr_auc": 0.9242,
+      "brier_score": 0.1583,
+      "confusion_matrix": [
+        [
+          6,
+          0
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.7652,
+        "std_cv_accuracy": 0.1492,
+        "mean_cv_f1": 0.7487,
+        "std_cv_f1": 0.1493,
+        "mean_cv_roc_auc": 0.8489,
+        "std_cv_roc_auc": 0.0882
+      }
+    },
+    "decision_tree_pruned": {
+      "accuracy": 0.8333,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8,
+      "roc_auc": 0.8333,
+      "pr_auc": 0.8333,
+      "brier_score": 0.1667,
+      "confusion_matrix": [
+        [
+          6,
+          0
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.5515,
+        "std_cv_accuracy": 0.1057,
+        "mean_cv_f1": 0.5668,
+        "std_cv_f1": 0.0993,
+        "mean_cv_roc_auc": 0.5822,
+        "std_cv_roc_auc": 0.1354
+      }
+    },
+    "random_forest": {
+      "accuracy": 0.6667,
+      "precision": 0.6667,
+      "recall": 0.6667,
+      "f1": 0.6667,
+      "roc_auc": 0.8056,
+      "pr_auc": 0.8413,
+      "brier_score": 0.1667,
+      "confusion_matrix": [
+        [
+          4,
+          2
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.8379,
+        "std_cv_accuracy": 0.0697,
+        "mean_cv_f1": 0.8338,
+        "std_cv_f1": 0.0889,
+        "mean_cv_roc_auc": 0.9433,
+        "std_cv_roc_auc": 0.0611
+      }
+    },
+    "xgboost": {
+      "accuracy": 0.9167,
+      "precision": 0.8571,
+      "recall": 1.0,
+      "f1": 0.9231,
+      "roc_auc": 0.9167,
+      "pr_auc": 0.9206,
+      "brier_score": 0.1482,
+      "confusion_matrix": [
+        [
+          5,
+          1
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.6606,
+        "std_cv_accuracy": 0.1057,
+        "mean_cv_f1": 0.7272,
+        "std_cv_f1": 0.0595,
+        "mean_cv_roc_auc": 0.7422,
+        "std_cv_roc_auc": 0.0959
+      }
+    },
+    "lightgbm": {
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "roc_auc": 0.5,
+      "pr_auc": 0.5,
+      "brier_score": 0.25,
+      "confusion_matrix": [
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "cv_5fold": {
+        "mean_cv_accuracy": 0.4636,
+        "std_cv_accuracy": 0.0182,
+        "mean_cv_f1": 0.25,
+        "std_cv_f1": 0.3062,
+        "mean_cv_roc_auc": 0.5,
+        "std_cv_roc_auc": 0.0
+      }
+    }
+  },
+  "calibration": {
+    "method": "platt_sigmoid",
+    "uncalibrated_brier": 0.1306,
+    "calibrated_brier": 0.1893,
+    "brier_reduction": -0.0587
+  },
+  "mcnemar_significance": {
+    "logistic_l2_vs_random_forest": {
+      "statistic": 0.5,
+      "p_value": 0.5,
+      "significant_at_05": false
+    },
+    "logistic_l2_vs_xgboost": {
+      "statistic": 0.0,
+      "p_value": 1.0,
+      "significant_at_05": false
+    }
+  }
+}

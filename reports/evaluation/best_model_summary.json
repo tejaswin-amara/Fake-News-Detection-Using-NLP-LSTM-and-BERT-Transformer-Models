@@ -1,0 +1,88 @@
+{
+  "experiment_name": "fake-news-detection",
+  "experiment_id": "1",
+  "tracking_uri": "sqlite:///mlruns/mlflow.db",
+  "selection": {
+    "metric": "pr_auc",
+    "direction": "maximize"
+  },
+  "best_run": {
+    "run_id": "12a57b0616c34b91aa3b67a493ebcf28",
+    "status": "FINISHED",
+    "model_name": "held-out-evaluation",
+    "metrics": {
+      "accuracy": 0.8333333333333334,
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "f1_macro": 0.8285714285714285,
+      "f1_weighted": 0.8285714285714286,
+      "roc_auc": 0.8611111111111112,
+      "pr_auc": 0.9055555555555554,
+      "brier_score": 0.13063847159812586,
+      "precision_macro": 0.875,
+      "precision_weighted": 0.875,
+      "recall_macro": 0.8333333333333333,
+      "recall_weighted": 0.8333333333333334,
+      "test_rows": 12.0
+    },
+    "params": {
+      "test_rows": "12",
+      "artifact": "artifacts/models/logistic_l2.joblib",
+      "validation": "data\\processed\\validation.csv",
+      "config": "configs/default.yaml",
+      "final_test_evaluated_once": "True"
+    },
+    "tags": {
+      "mlflow.user": "speed",
+      "mlflow.source.name": "C:\\Users\\speed\\Documents\\antigravity\\goofy-bohr\\src\\evaluate.py",
+      "mlflow.source.type": "LOCAL",
+      "mlflow.source.git.commit": "630c5d0a11539a28166b6681c69bde47e459d369",
+      "mlflow.source.git.branch": "master",
+      "mlflow.runName": "held-out-evaluation"
+    }
+  },
+  "artifact_root": "reports\\evaluation\\mlflow_runs\\12a57b0616c34b91aa3b67a493ebcf28",
+  "plots": {
+    "reliability.png": {
+      "status": "available",
+      "description": "calibration reliability diagram",
+      "path": "reports\\evaluation\\reliability.png",
+      "sha256": "c339733a567bfd8a346e30940d794e2832f7651cf772352f7b2de096c406c0df",
+      "source_artifact": "reports\\evaluation\\mlflow_runs\\12a57b0616c34b91aa3b67a493ebcf28\\reliability.png"
+    },
+    "calibration_comparison.png": {
+      "status": "available",
+      "description": "calibration comparison",
+      "path": "reports\\evaluation\\calibration_comparison.png",
+      "sha256": "4accf343e1a440e6a3907911ce078754e92be841c450d2304e3bd6b21c2db408",
+      "source_artifact": "reports\\evaluation\\mlflow_runs\\12a57b0616c34b91aa3b67a493ebcf28\\calibration_comparison.png"
+    },
+    "roc_pr.png": {
+      "status": "available",
+      "description": "ROC/PR curve",
+      "path": "reports\\evaluation\\roc_pr.png",
+      "sha256": "a0cc5053a02678d3ecb35b3db294998c8caf6bd4098c173c7f3503520ba43386",
+      "source_artifact": "reports\\evaluation\\mlflow_runs\\12a57b0616c34b91aa3b67a493ebcf28\\roc_pr.png"
+    },
+    "confusion_matrix.png": {
+      "status": "available",
+      "description": "confusion matrix",
+      "path": "reports\\evaluation\\confusion_matrix.png",
+      "sha256": "8133aa1a699412172607ae107018d4ea7cac2cebd4baac0432ae50ba24252e1c",
+      "source_artifact": "reports\\evaluation\\mlflow_runs\\12a57b0616c34b91aa3b67a493ebcf28\\confusion_matrix.png"
+    },
+    "shap_summary.png": {
+      "status": "unavailable",
+      "description": "SHAP summary plot",
+      "reason": "not logged by selected run"
+    }
+  },
+  "source_ids": [
+    "SRC-024",
+    "SRC-025",
+    "SRC-029",
+    "SRC-033"
+  ],
+  "test_data_used_for_selection": false,
+  "generated_from_executed_run": true
+}

@@ -27,7 +27,7 @@ from src.models.classical import (
     build_xgboost,
     compute_scale_pos_weight,
 )
-from src.serving.export import artifact_metadata
+from src.serving.export import artifact_metadata, build_package_manifest
 from src.serving.predictor import PackagedTextModel
 from src.tracking import experiment_run, log_artifact, log_metrics, log_parameters
 
@@ -137,6 +137,7 @@ def _train_bert_path(frame: pd.DataFrame, validation: pd.DataFrame, args: argpar
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train a fake-news model with optional hyperparameter search")
+    parser.add_argument("--train", default="data/processed/train.csv")
     parser.add_argument("--validation", default="data/processed/validation.csv")
     parser.add_argument("--output", default="artifacts/models/logistic_l2.joblib")
     parser.add_argument("--model", default="logistic_l2")
@@ -228,6 +229,9 @@ def main() -> None:
             ),
         }
         joblib.dump(artifact, output)
+        manifest = build_package_manifest(args.model, output, artifact["metadata"])
+        manifest_path = output.parent / "package_manifest.json"
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         if search_payload is not None:
             save_search_result(search_payload, args.search_output)
         log_parameters(run, {"model": args.model, "train_rows": len(frame), "feature_count": X_train.shape[1], "random_seed": seed, "config": args.config, "search_type": search_type, "cv_folds": args.cv_folds})
