@@ -356,6 +356,11 @@ sources:
     urls:
       - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git
       - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml/badge.svg?branch=main
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/codeql.yml
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/codeql.yml/badge.svg
+      - https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/deploy-pages.yml/badge.svg
+      - https://tejaswin-amara.github.io/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/
       - https://img.shields.io/badge/Python-3.11-3776AB
       - https://img.shields.io/badge/License-MIT-1f6f54
     accessed: "2026-08-21"
