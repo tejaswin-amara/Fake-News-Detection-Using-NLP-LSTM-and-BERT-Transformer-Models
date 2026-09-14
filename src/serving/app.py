@@ -8,6 +8,7 @@ explicitly parity-verified ONNX serving adapter is configured.
 from __future__ import annotations
 
 import asyncio
+import json
 import math
 import os
 import platform
@@ -140,6 +141,8 @@ class PredictionRequest(BaseModel):
     @field_validator("text")
     @classmethod
     def validate_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("text must contain non-whitespace content")
         return _validate_text_value(value, "text", _SAFE_TEXT_MAX)
 
     def content(self) -> str:
@@ -229,7 +232,7 @@ class DriftRequest(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
     label: int = Field(..., ge=0, le=1)
     label_name: str
@@ -247,7 +250,7 @@ class PredictionResponse(BaseModel):
 
 
 class BatchPredictionResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
     predictions: list[PredictionResponse]
     count: int
@@ -382,7 +385,7 @@ class ModelService:
             self.loaded_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         except Exception as exc:
             self.model = None
-            self.error = f"Model artifact failed to load: {type(exc).__name__}"
+            self.error = f"Model artifact failed to load: {type(exc).__name__}: {exc}"
 
     def close(self) -> None:
         session = getattr(self.model, "session", None)
@@ -801,6 +804,33 @@ def create_app(
         model_name = predictions[0].model_name if predictions else "unknown"
         artifact_version = predictions[0].artifact_version if predictions else "unknown"
         return BatchPredictionResponse(predictions=predictions, count=len(predictions), model_name=model_name, artifact_version=artifact_version)
+
+    @application.get("/reports/{report_name}", tags=["reports"])
+    def get_report(report_name: str) -> dict[str, Any]:
+        safe_name = _REQUEST_ID_SAFE.sub("", report_name)
+        allowed = {
+            "data_summary",
+            "linear_models_comparison",
+            "tree_models_comparison",
+            "unsupervised_analysis",
+            "evaluation_report",
+            "calibration_report",
+            "model_comparison",
+            "champion_model",
+            "drift_report",
+            "final_evidence_manifest",
+        }
+        if safe_name not in allowed:
+            raise HTTPException(status_code=404, detail="Report not found")
+        report_path = Path("/app/reports") / f"{safe_name}.json"
+        if not report_path.exists():
+            report_path = Path("reports") / f"{safe_name}.json"
+        if not report_path.exists():
+            raise HTTPException(status_code=404, detail="Report file not found")
+        try:
+            return cast(dict[str, Any], json.loads(report_path.read_text(encoding="utf-8")))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail="Failed to load report") from exc
 
     return application
 

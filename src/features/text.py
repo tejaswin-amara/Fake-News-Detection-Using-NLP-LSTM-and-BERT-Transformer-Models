@@ -302,5 +302,10 @@ class TfidfTextPipeline:
             raise RuntimeError("TfidfTextPipeline is not fitted")
         return self.vectorizer.get_feature_names_out()
 
+    def get_feature_names_out(self, input_features=None) -> np.ndarray:
+        if not self.fitted:
+            raise RuntimeError("TfidfTextPipeline is not fitted")
+        return self.vectorizer.get_feature_names_out(input_features)
+
     def as_sklearn_pipeline(self) -> Pipeline:
         return Pipeline([("tfidf", self.vectorizer)])

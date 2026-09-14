@@ -1,0 +1,10 @@
+{
+  "test": "max_batch_200k_feature_sparse_memory_budget",
+  "batch_size": 64,
+  "vocabulary_features": 200000,
+  "rss_before_bytes": 690819072,
+  "rss_after_bytes": 691183616,
+  "rss_delta_bytes": 364544,
+  "compose_memory_limit_bytes": 1073741824,
+  "within_configured_limit_with_margin": true
+}

@@ -22,7 +22,7 @@ def _filesystem_uri(value: str | Path) -> str:
     """Convert a local path to a stable filesystem URI and create it."""
     candidate = str(value)
     parsed = urlparse(candidate)
-    if parsed.scheme:
+    if parsed.scheme and len(parsed.scheme) > 1:
         return candidate
     path = Path(candidate).expanduser().resolve()
     path.mkdir(parents=True, exist_ok=True)
@@ -33,7 +33,7 @@ def resolve_tracking_uri(value: str | Path) -> tuple[str, str | None]:
     """Use SQLite metadata for local tracking paths and retain filesystem artifacts."""
     candidate = str(value)
     parsed = urlparse(candidate)
-    if parsed.scheme:
+    if parsed.scheme and len(parsed.scheme) > 1:
         return candidate, None
     path = Path(candidate).expanduser().resolve()
     path.mkdir(parents=True, exist_ok=True)
@@ -46,6 +46,9 @@ def _initialize_tracking_once(
     artifact_location: str | None,
 ) -> dict[str, str]:
     import mlflow
+
+    if not hasattr(mlflow, "set_tracking_uri"):
+        raise ImportError("mlflow package is not installed or shadowed by local directory")
 
     resolved_uri, default_artifacts = resolve_tracking_uri(tracking_uri)
     resolved_artifacts = _filesystem_uri(artifact_location) if artifact_location else default_artifacts

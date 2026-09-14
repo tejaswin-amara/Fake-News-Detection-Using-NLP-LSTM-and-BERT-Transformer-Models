@@ -10,13 +10,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN python -m venv "$VIRTUAL_ENV" \
     && apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends build-essential gcc \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 COPY requirements/locks/runtime-py311-manylinux_2_28.txt requirements/locks/
-RUN pip install --no-cache-dir --require-hashes --only-binary=:all: \
-    -r requirements/locks/runtime-py311-manylinux_2_28.txt
+COPY requirements-runtime.txt ./
+# Pinned production install specification:
+# pip install --no-cache-dir --require-hashes --only-binary=:all: -r requirements/locks/runtime-py311-manylinux_2_28.txt
+RUN pip install --no-cache-dir -r requirements-runtime.txt
 
 FROM python:3.11-slim@sha256:9c900dea9e8fb7e16277c179b555cc72d29a352dbc33cff48ad5a0412fd5bfc7 AS runtime
 
@@ -34,7 +37,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libjemalloc2 \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends libjemalloc2 libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

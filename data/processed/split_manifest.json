@@ -1,0 +1,27 @@
+{
+  "seed": 42,
+  "train_size": 0.7,
+  "validation_size": 0.15,
+  "test_size": 0.15,
+  "train_count": 56,
+  "validation_count": 12,
+  "test_count": 12,
+  "train_label_counts": {
+    "0": 28,
+    "1": 28
+  },
+  "validation_label_counts": {
+    "0": 6,
+    "1": 6
+  },
+  "test_label_counts": {
+    "0": 6,
+    "1": 6
+  },
+  "source_files": [],
+  "notes": [
+    "Exact normalized-content duplicates removed before splitting.",
+    "Near-duplicate MinHash/LSH filtering removed 0 rows before splitting.",
+    "No learned feature transform fitted in this function."
+  ]
+}

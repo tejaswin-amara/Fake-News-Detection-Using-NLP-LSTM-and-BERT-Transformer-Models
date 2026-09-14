@@ -405,6 +405,7 @@ def test_model_service_signed_load_and_runtime_config(monkeypatch: pytest.Monkey
     packaged = PackagedTextModel(DummyPipeline(), DummyEstimator())
     monkeypatch.setenv("PACKAGE_MANIFEST", str(tmp_path / "manifest.json"))
     monkeypatch.setenv("ARTIFACT_PUBLIC_KEY_B64", "public-key")
+    monkeypatch.setenv("REQUIRE_SIGNED_ARTIFACT", "true")
     monkeypatch.setattr(
         app_module,
         "load_verified_native_artifact",

@@ -1,0 +1,427 @@
+{
+  "metrics": {
+    "decision_tree_pruned": {
+      "accuracy": 0.6667,
+      "precision": 0.75,
+      "recall": 0.5,
+      "f1": 0.6,
+      "roc_auc": 0.6667,
+      "pr_auc": 0.625,
+      "brier_score": 0.3333
+    },
+    "random_forest": {
+      "accuracy": 0.75,
+      "precision": 0.7143,
+      "recall": 0.8333,
+      "f1": 0.7692,
+      "roc_auc": 0.875,
+      "pr_auc": 0.8968,
+      "brier_score": 0.1995,
+      "oob_score": 0.8393
+    },
+    "xgboost": {
+      "accuracy": 0.5,
+      "precision": 0.5,
+      "recall": 0.8333,
+      "f1": 0.625,
+      "roc_auc": 0.7083,
+      "pr_auc": 0.7238,
+      "brier_score": 0.2648
+    },
+    "lightgbm": {
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "roc_auc": 0.5,
+      "pr_auc": 0.5,
+      "brier_score": 0.25
+    }
+  },
+  "explainability": {
+    "decision_tree_pruned": {
+      "gini_importance_top10": [
+        {
+          "feature": "leaked",
+          "importance": 0.14285714285714285
+        },
+        {
+          "feature": "rights",
+          "importance": 0.13333333333333336
+        },
+        {
+          "feature": "secret",
+          "importance": 0.12987012987012989
+        },
+        {
+          "feature": "robotic",
+          "importance": 0.11666666666666663
+        },
+        {
+          "feature": "ninety",
+          "importance": 0.10783055198973056
+        },
+        {
+          "feature": "citizens",
+          "importance": 0.10294117647058824
+        },
+        {
+          "feature": "drinking",
+          "importance": 0.09312638580931257
+        },
+        {
+          "feature": "synthetic",
+          "importance": 0.09150326797385613
+        },
+        {
+          "feature": "ancient",
+          "importance": 0.08187134502923975
+        },
+        {
+          "feature": "price",
+          "importance": 0.0
+        }
+      ],
+      "permutation_importance_top10": [
+        {
+          "feature": "citizens",
+          "importance_mean": 0.10277777777777777,
+          "importance_std": 0.04082482904638632
+        },
+        {
+          "feature": "leaked",
+          "importance_mean": 0.01499999999999999,
+          "importance_std": 0.0734846922834953
+        },
+        {
+          "feature": "ancient",
+          "importance_mean": 0.01499999999999999,
+          "importance_std": 0.0734846922834953
+        },
+        {
+          "feature": "secret",
+          "importance_mean": 0.01499999999999999,
+          "importance_std": 0.0734846922834953
+        },
+        {
+          "feature": "power",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "projected",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "program",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "processing",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "processes",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "private",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        }
+      ]
+    },
+    "random_forest": {
+      "gini_importance_top10": [
+        {
+          "feature": "secret",
+          "importance": 0.029748395083566033
+        },
+        {
+          "feature": "data",
+          "importance": 0.026455006013758976
+        },
+        {
+          "feature": "leaked",
+          "importance": 0.02438041555574878
+        },
+        {
+          "feature": "annual",
+          "importance": 0.021262206441274346
+        },
+        {
+          "feature": "infrastructure",
+          "importance": 0.01715084734258075
+        },
+        {
+          "feature": "artificial",
+          "importance": 0.015286006227151842
+        },
+        {
+          "feature": "national",
+          "importance": 0.01475996712215593
+        },
+        {
+          "feature": "completely",
+          "importance": 0.013743981380880944
+        },
+        {
+          "feature": "ninety",
+          "importance": 0.012036428669025958
+        },
+        {
+          "feature": "synthetic",
+          "importance": 0.011884186379990124
+        }
+      ],
+      "permutation_importance_top10": [
+        {
+          "feature": "academic",
+          "importance_mean": 0.050072150072150115,
+          "importance_std": 0.02397114891823372
+        },
+        {
+          "feature": "surveillance",
+          "importance_mean": 0.049844877344877324,
+          "importance_std": 0.022336582157848804
+        },
+        {
+          "feature": "national",
+          "importance_mean": 0.04248556998556996,
+          "importance_std": 0.026037936110588328
+        },
+        {
+          "feature": "releases",
+          "importance_mean": 0.04111111111111112,
+          "importance_std": 0.03339808525597586
+        },
+        {
+          "feature": "citizens",
+          "importance_mean": 0.040039682539682576,
+          "importance_std": 0.01450742852780229
+        },
+        {
+          "feature": "mandatory",
+          "importance_mean": 0.04000000000000008,
+          "importance_std": 0.005443310539518154
+        },
+        {
+          "feature": "directly",
+          "importance_mean": 0.04000000000000008,
+          "importance_std": 0.005443310539518154
+        },
+        {
+          "feature": "leaked",
+          "importance_mean": 0.039007936507936505,
+          "importance_std": 0.06637331528263044
+        },
+        {
+          "feature": "major",
+          "importance_mean": 0.034087301587301624,
+          "importance_std": 0.013529592995405158
+        },
+        {
+          "feature": "commercial",
+          "importance_mean": 0.0340873015873016,
+          "importance_std": 0.013529592995405171
+        }
+      ]
+    },
+    "xgboost": {
+      "gini_importance_top10": [
+        {
+          "feature": "leaked",
+          "importance": 0.10193504393100739
+        },
+        {
+          "feature": "secret",
+          "importance": 0.09798670560121536
+        },
+        {
+          "feature": "department",
+          "importance": 0.09348257631063461
+        },
+        {
+          "feature": "drinking",
+          "importance": 0.07985229790210724
+        },
+        {
+          "feature": "annual",
+          "importance": 0.07891394197940826
+        },
+        {
+          "feature": "data",
+          "importance": 0.06939863413572311
+        },
+        {
+          "feature": "artificial",
+          "importance": 0.06898090988397598
+        },
+        {
+          "feature": "human",
+          "importance": 0.06294255703687668
+        },
+        {
+          "feature": "synthetic",
+          "importance": 0.0528428815305233
+        },
+        {
+          "feature": "according",
+          "importance": 0.04516593739390373
+        }
+      ],
+      "permutation_importance_top10": [
+        {
+          "feature": "100",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "power",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "protect",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "projected",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "program",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "processing",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "processes",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "private",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "price",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "practices",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        }
+      ]
+    },
+    "lightgbm": {
+      "gini_importance_top10": [
+        {
+          "feature": "100",
+          "importance": 0
+        },
+        {
+          "feature": "power",
+          "importance": 0
+        },
+        {
+          "feature": "protect",
+          "importance": 0
+        },
+        {
+          "feature": "projected",
+          "importance": 0
+        },
+        {
+          "feature": "program",
+          "importance": 0
+        },
+        {
+          "feature": "processing",
+          "importance": 0
+        },
+        {
+          "feature": "processes",
+          "importance": 0
+        },
+        {
+          "feature": "private",
+          "importance": 0
+        },
+        {
+          "feature": "price",
+          "importance": 0
+        },
+        {
+          "feature": "practices",
+          "importance": 0
+        }
+      ],
+      "permutation_importance_top10": [
+        {
+          "feature": "100",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "power",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "protect",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "projected",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "program",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "processing",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "processes",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "private",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "price",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        },
+        {
+          "feature": "practices",
+          "importance_mean": 0.0,
+          "importance_std": 0.0
+        }
+      ]
+    }
+  }
+}
