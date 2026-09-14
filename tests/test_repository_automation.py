@@ -185,7 +185,7 @@ def test_scorecard_remediated_dependency_pins_cannot_be_downgraded() -> None:
         "onnx": "1.22.0  # Compatible with skl2onnx 1.20.0",
         "pytest": "9.0.3",
         "python-multipart": "0.0.32",
-        "torch": "2.13.0",
+        "torch": "2.14.0",
     }
     assert {name: development_pins[name] for name in expected_pins} == expected_pins
     assert "torchaudio" not in development_pins
@@ -203,7 +203,7 @@ def test_scorecard_remediated_dependency_pins_cannot_be_downgraded() -> None:
     } == {
         "cryptography": "49.0.0",
         "python-multipart": "0.0.32",
-        "torch": "2.13.0",
+        "torch": "2.14.0",
     }
     assert "torchaudio" not in runtime_pins
     assert "torchvision" not in runtime_pins
