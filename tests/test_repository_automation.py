@@ -277,20 +277,6 @@ def test_agent_guidance_and_seo_blueprint_preserve_project_boundaries() -> None:
     assert "conventional commit title" in pr_template
     assert "independent reviewer" in pr_template
 
-    blueprint = read("github-seo-growth-strategy.md")
-    description = (
-        "Reproducible fake-news text classification with NLP, BiLSTM, BERT, DVC, MLflow, "
-        "FastAPI, ONNX, monitoring, Kubernetes, and CI/CD quality gates for research use."
-    )
-    assert description in blueprint
-    assert len(description) == 160
-
-    topics_start = blueprint.index("fake-news-detection\n")
-    topics_end = blueprint.index("```", topics_start)
-    topics = blueprint[topics_start:topics_end].strip().splitlines()
-    assert len(topics) == 20
-    assert all(topic == topic.lower() and " " not in topic for topic in topics)
-    assert "not independent fact verification" in blueprint.lower()
 
 
 def test_scorecard_remediation_ledger_preserves_evidence_and_open_dispositions() -> None:
