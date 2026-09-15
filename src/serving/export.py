@@ -232,13 +232,11 @@ def export_torchscript(model: Any, output_path: str | Path, example_inputs: Any)
     except ImportError as exc:
         raise RuntimeError("Install torch to export TorchScript models") from exc
     model.eval()
-    export = cast(Callable[[Any, tuple[Any, ...]], Any], torch.export.export)
-    if not isinstance(example_inputs, tuple):
-        example_inputs = (example_inputs,)
-    scripted = export(model, example_inputs)
+    trace = cast(Callable[[Any, Any], Any], torch.jit.trace)
+    scripted = trace(model, example_inputs)
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    torch.export.save(scripted, str(output))
+    scripted.save(str(output))
     return output
 
 
