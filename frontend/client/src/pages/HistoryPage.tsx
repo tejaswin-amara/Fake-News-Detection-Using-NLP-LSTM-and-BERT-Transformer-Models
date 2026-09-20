@@ -34,7 +34,7 @@ export default function HistoryPage() {
             <Table>
               <TableHeader><TableRow><TableHead>Article fingerprint</TableHead><TableHead>Label</TableHead><TableHead>Fake signal</TableHead><TableHead>Model artifact</TableHead><TableHead>Recorded</TableHead></TableRow></TableHeader>
               <TableBody>
-                {history.isLoading ? <TableRow><TableCell className="h-44 text-center text-muted-foreground" colSpan={5}>Loading protected ledger…</TableCell></TableRow> : history.data?.records.length ? history.data.records.map(record => (
+                {history.isLoading ? <TableRow><TableCell className="h-44 text-center text-muted-foreground" colSpan={5}>Loading protected ledger…</TableCell></TableRow> : history.data?.records.length ? history.data.records.map((record: any) => (
                   <TableRow key={record.id}>
                     <TableCell><p className="font-semibold">{record.articleLength.toLocaleString()} character article</p><p className="text-xs text-muted-foreground">Title: {record.titleLength.toLocaleString()} characters · {record.source}</p></TableCell>
                     <TableCell><StatusBadge label={record.label.toUpperCase()} tone={record.label === "fake" ? "red" : record.label === "real" ? "green" : "amber"} /></TableCell>
