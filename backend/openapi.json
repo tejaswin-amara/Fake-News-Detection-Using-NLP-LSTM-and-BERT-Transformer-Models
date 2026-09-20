@@ -1,0 +1,844 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VERITAS AI \u2014 Fake News Detection & Explainability API",
+    "description": "Production-grade ML inference service comparing GloVe + Stacked Bi-LSTM and Fine-Tuned BERT Transformer with token-level saliency attribution and empirical benchmark reporting.",
+    "contact": {
+      "name": "VERITAS AI Engineering Team",
+      "url": "https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    },
+    {
+      "url": "/",
+      "description": "Root edge proxy routing"
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": [
+          "System Health"
+        ],
+        "summary": "Liveness and health check",
+        "description": "Returns HTTP 200 when the service is alive and accepting connections.",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "tags": [
+          "System Health"
+        ],
+        "summary": "Readiness probe",
+        "description": "Returns HTTP 200 when ML inference engines are initialized and ready.",
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predict/lstm": {
+      "post": {
+        "tags": [
+          "Inference & Benchmarks"
+        ],
+        "summary": "Predict veracity using Stacked Bi-LSTM",
+        "description": "Executes sequence classification and token saliency attribution via GloVe + Stacked Bi-LSTM.",
+        "operationId": "predict_lstm_api_predict_lstm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextClassificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InferenceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predict/bert": {
+      "post": {
+        "tags": [
+          "Inference & Benchmarks"
+        ],
+        "summary": "Predict veracity using Fine-Tuned BERT",
+        "description": "Executes sequence classification and attention-head token attribution via BERT-base-uncased.",
+        "operationId": "predict_bert_api_predict_bert_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextClassificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InferenceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predict/both": {
+      "post": {
+        "tags": [
+          "Inference & Benchmarks"
+        ],
+        "summary": "Dual-model comparative veracity inference",
+        "description": "Runs parallel or sequential inference across both Bi-LSTM and BERT, returning comparative consensus.",
+        "operationId": "predict_both_api_predict_both_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextClassificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predict": {
+      "post": {
+        "tags": [
+          "Inference & Benchmarks"
+        ],
+        "summary": "Unified veracity prediction endpoint",
+        "description": "Unified prediction endpoint supporting model parameter selection (lstm, bert, or both).",
+        "operationId": "predict_unified_api_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextClassificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/benchmarks": {
+      "get": {
+        "tags": [
+          "Inference & Benchmarks"
+        ],
+        "summary": "Get empirical model benchmarks",
+        "description": "Returns cross-model empirical metrics including F1-Score, ROC-AUC, latency, and confusion matrices.",
+        "operationId": "get_benchmarks_api_benchmarks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BenchmarkMetricsResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Benchmarks Api Benchmarks Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BenchmarkMetricsResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Model identifier name."
+          },
+          "family": {
+            "type": "string",
+            "title": "Family",
+            "description": "Architectural family."
+          },
+          "tag": {
+            "type": "string",
+            "title": "Tag",
+            "description": "Descriptive tag or award."
+          },
+          "accuracy": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Accuracy",
+            "description": "Classification accuracy."
+          },
+          "precision": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Precision",
+            "description": "Positive predictive value."
+          },
+          "recall": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Recall",
+            "description": "True positive rate."
+          },
+          "f1Score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "F1Score",
+            "description": "Harmonic mean of precision and recall."
+          },
+          "rocAuc": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Rocauc",
+            "description": "Area under ROC curve."
+          },
+          "brierScore": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Brierscore",
+            "description": "Brier calibration score."
+          },
+          "latencyMs": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Latencyms",
+            "description": "P95 inference latency in milliseconds."
+          },
+          "modelSizeMb": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Modelsizemb",
+            "description": "Serialized model footprint in megabytes."
+          },
+          "paramCount": {
+            "type": "string",
+            "title": "Paramcount",
+            "description": "Total parameter count string."
+          },
+          "ramMb": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Rammb",
+            "description": "Working RAM footprint in megabytes."
+          },
+          "interpretability": {
+            "type": "string",
+            "title": "Interpretability",
+            "description": "Explainability mechanism."
+          },
+          "operationalRisk": {
+            "type": "string",
+            "title": "Operationalrisk",
+            "description": "Production operational risk assessment."
+          },
+          "isChampion": {
+            "type": "boolean",
+            "title": "Ischampion",
+            "description": "Whether this model is designated production champion.",
+            "default": false
+          },
+          "confusionMatrix": {
+            "$ref": "#/components/schemas/ConfusionMatrixSchema",
+            "description": "Empirical 2x2 confusion matrix."
+          },
+          "rocCurve": {
+            "items": {
+              "$ref": "#/components/schemas/RocCurvePointSchema"
+            },
+            "type": "array",
+            "title": "Roccurve",
+            "description": "Empirical ROC curve coordinates."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "family",
+          "tag",
+          "accuracy",
+          "precision",
+          "recall",
+          "f1Score",
+          "rocAuc",
+          "brierScore",
+          "latencyMs",
+          "modelSizeMb",
+          "paramCount",
+          "ramMb",
+          "interpretability",
+          "operationalRisk",
+          "confusionMatrix"
+        ],
+        "title": "BenchmarkMetricsResponse",
+        "description": "Empirical benchmark evaluation metrics for a model architecture."
+      },
+      "ComparisonResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique inference request ID."
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 UTC timestamp of the inference execution."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Evaluated article title.",
+            "default": ""
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Evaluated article body text."
+          },
+          "targetModel": {
+            "type": "string",
+            "enum": [
+              "lstm",
+              "bert",
+              "both"
+            ],
+            "title": "Targetmodel",
+            "description": "Target model(s) requested for this analysis."
+          },
+          "lstm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InferenceResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Bi-LSTM inference result if requested."
+          },
+          "bert": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InferenceResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "BERT inference result if requested."
+          },
+          "consensus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AGREEMENT",
+                  "DIVERGENCE"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consensus",
+            "description": "Consensus between models when both are evaluated."
+          },
+          "differentialConfidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Differentialconfidence",
+            "description": "Absolute difference between model confidence scores."
+          },
+          "isSimulated": {
+            "type": "boolean",
+            "title": "Issimulated",
+            "description": "Whether fallback simulation heuristics were used.",
+            "default": false
+          },
+          "simulationNotice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simulationnotice",
+            "description": "Simulation or fallback notice explaining offline execution mode."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "timestamp",
+          "text",
+          "targetModel"
+        ],
+        "title": "ComparisonResponse",
+        "description": "Dual-model comparison inference response."
+      },
+      "ConfusionMatrixSchema": {
+        "properties": {
+          "tp": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Tp",
+            "description": "True Positives (Deceptive correctly identified)."
+          },
+          "fp": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Fp",
+            "description": "False Positives (Credible falsely flagged)."
+          },
+          "tn": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Tn",
+            "description": "True Negatives (Credible correctly identified)."
+          },
+          "fn": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Fn",
+            "description": "False Negatives (Deceptive missed)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "tp",
+          "fp",
+          "tn",
+          "fn"
+        ],
+        "title": "ConfusionMatrixSchema",
+        "description": "2x2 empirical confusion matrix."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InferenceResponse": {
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "enum": [
+              "lstm",
+              "bert"
+            ],
+            "title": "Modelid",
+            "description": "Model identifier: lstm or bert."
+          },
+          "modelName": {
+            "type": "string",
+            "title": "Modelname",
+            "description": "Human-readable descriptive model name."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "FAKE",
+              "UNCERTAIN"
+            ],
+            "title": "Verdict",
+            "description": "Calibrated veracity verdict: REAL, FAKE, or UNCERTAIN."
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Winning class confidence probability [0.0 - 1.0]."
+          },
+          "probabilityFake": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Probabilityfake",
+            "description": "Calibrated probability of fake content [0.0 - 1.0]."
+          },
+          "probabilityReal": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Probabilityreal",
+            "description": "Calibrated probability of real content [0.0 - 1.0]."
+          },
+          "latencyMs": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Latencyms",
+            "description": "Model inference execution latency in milliseconds."
+          },
+          "tokensCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Tokenscount",
+            "description": "Number of tokens processed by the model tokenizer."
+          },
+          "paramCount": {
+            "type": "string",
+            "title": "Paramcount",
+            "description": "Parameter count description (e.g. ~4.2M params)."
+          },
+          "architecture": {
+            "type": "string",
+            "title": "Architecture",
+            "description": "Summary of the model architecture and layers."
+          },
+          "saliencyTokens": {
+            "items": {
+              "$ref": "#/components/schemas/TokenAttribution"
+            },
+            "type": "array",
+            "title": "Saliencytokens",
+            "description": "Token-level attribution heatmap items."
+          }
+        },
+        "type": "object",
+        "required": [
+          "modelId",
+          "modelName",
+          "verdict",
+          "confidence",
+          "probabilityFake",
+          "probabilityReal",
+          "latencyMs",
+          "tokensCount",
+          "paramCount",
+          "architecture"
+        ],
+        "title": "InferenceResponse",
+        "description": "Inference result for a single neural model architecture."
+      },
+      "RocCurvePointSchema": {
+        "properties": {
+          "fpr": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Fpr",
+            "description": "False Positive Rate."
+          },
+          "tpr": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Tpr",
+            "description": "True Positive Rate."
+          }
+        },
+        "type": "object",
+        "required": [
+          "fpr",
+          "tpr"
+        ],
+        "title": "RocCurvePointSchema",
+        "description": "Single point along empirical ROC curve."
+      },
+      "TextClassificationRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Text",
+            "description": "Input text sequence to evaluate for veracity.",
+            "examples": [
+              "Central Banks coordinate liquidity backstop in joint statement."
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Title",
+            "description": "Optional headline or article title.",
+            "default": "",
+            "examples": [
+              "Global Economic Update"
+            ]
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lstm",
+                  "bert",
+                  "both"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Target neural architecture for inference: lstm, bert, or both.",
+            "default": "both"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TextClassificationRequest",
+        "description": "Payload for text classification requests."
+      },
+      "TokenAttribution": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique token instance identifier."
+          },
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Token text segment."
+          },
+          "weight": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Weight",
+            "description": "Normalized attribution saliency weight [0.0 - 1.0]."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "real",
+              "fake",
+              "neutral"
+            ],
+            "title": "Direction",
+            "description": "Directional impact of this token toward real, fake, or neutral veracity."
+          },
+          "rawScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rawscore",
+            "description": "Raw unnormalized logit/gradient attribution score."
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Explainability rationale for this token attribution."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "token",
+          "weight",
+          "direction"
+        ],
+        "title": "TokenAttribution",
+        "description": "Token-level saliency attribution data for explainability visualization."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Inference & Benchmarks",
+      "description": "Operations for Bi-LSTM, BERT, and dual-model veracity predictions and empirical metrics."
+    },
+    {
+      "name": "System Health",
+      "description": "Operations for health checks and container readiness probes."
+    }
+  ]
+}

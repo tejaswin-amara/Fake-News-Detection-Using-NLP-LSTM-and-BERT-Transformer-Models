@@ -2,3 +2,15 @@ title = "Fake News Detection repository secret detection policy"
 
 [extend]
 useDefault = true
+
+[allowlist]
+description = "Ignore test fixtures, mock UUIDs, and processed sample dataset sha256 hashes"
+paths = [
+  '''data/processed/validation\.csv''',
+  '''frontend/server/dashboard\.contract\.test\.ts''',
+  '''reports/.*''',
+]
+stopwords = [
+  "5ffed7f4-b66f-4f7c-9fb2-5f38cb7a55fd",
+  "a567e2144f6a1ec734ad958ad774b9b7e9988b5a745ee356913c27f7922706ec",
+]

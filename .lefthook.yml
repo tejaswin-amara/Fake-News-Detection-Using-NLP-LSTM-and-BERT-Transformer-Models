@@ -1,0 +1,26 @@
+# Polyglot Git Quality Gate Configuration (.lefthook.yml)
+# Enforces Biome, TypeScript, Ruff, Gitleaks, Vitest, and Pytest across Python and TypeScript.
+
+pre-commit:
+  parallel: true
+  commands:
+    frontend-biome:
+      root: frontend
+      glob: "*.{js,ts,jsx,tsx,json}"
+      run: pnpm --prefix frontend check
+    frontend-typecheck:
+      run: pnpm --prefix frontend tsc --noEmit
+    backend-ruff-check:
+      run: uv run --project backend ruff check --fix backend/
+    backend-ruff-format:
+      run: uv run --project backend ruff format backend/
+    security-gitleaks:
+      run: gitleaks protect --staged --verbose
+
+pre-push:
+  parallel: false
+  commands:
+    frontend-unit-test:
+      run: pnpm --prefix frontend test --run
+    backend-unit-test:
+      run: uv run --project backend pytest backend/

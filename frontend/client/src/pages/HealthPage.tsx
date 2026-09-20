@@ -12,7 +12,7 @@ export default function HealthPage() {
   const health = trpc.dashboard.health.useQuery(undefined, { refetchInterval: 15_000 });
   const telemetry = trpc.dashboard.telemetry.get.useQuery();
   const updateTelemetry = trpc.dashboard.telemetry.set.useMutation({
-    onError: error => toast.error(error.message),
+    onError: (error: { message: string }) => toast.error(error.message),
     onSuccess: () => telemetry.refetch(),
   });
   const snapshot = health.data;
