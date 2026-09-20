@@ -1,200 +1,42 @@
-name: fake-news-detection
+name: veritas-fake-news
 
 services:
-  api:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-      args:
-        PYTHON_VERSION: "3.11"
-    image: fake-news-detection:phase5
-    init: true
-    read_only: true
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    mem_limit: 1g
-    cpus: 1.0
-    environment:
-      API_HOST: 0.0.0.0
-      API_PORT: 8000
-      MODEL_ARTIFACT: /app/artifacts/models/logistic_l2.joblib
-      MODEL_ARTIFACT_SHA256: ${MODEL_ARTIFACT_SHA256:-}
-      PACKAGE_MANIFEST: /app/artifacts/models/package_manifest.json
-      SERVING_MODE: native
-      READINESS_REQUIRES_MODEL: "true"
-      MAX_BATCH_SIZE: "64"
-      MAX_TEXT_CHARACTERS: "50000"
-      MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-1000000}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
-      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-false}
-      RATE_LIMIT_REQUESTS: ${RATE_LIMIT_REQUESTS:-120}
-      RATE_LIMIT_WINDOW_SECONDS: ${RATE_LIMIT_WINDOW_SECONDS:-60}
-      ONNX_EXECUTION_PROVIDERS: ${ONNX_EXECUTION_PROVIDERS:-CPUExecutionProvider}
-      ONNX_INTRA_OP_THREADS: ${ONNX_INTRA_OP_THREADS:-1}
-      ONNX_INTER_OP_THREADS: ${ONNX_INTER_OP_THREADS:-1}
-      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
-      DISTRIBUTED_RATE_LIMITER: ${DISTRIBUTED_RATE_LIMITER:-redis}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
-      REDIS_URL: "${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}"
-      REDIS_RATE_LIMIT_KEY_PREFIX: ${REDIS_RATE_LIMIT_KEY_PREFIX:-fake-news:ratelimit:}
-      REQUIRE_SIGNED_ARTIFACT: ${REQUIRE_SIGNED_ARTIFACT:-false}
-      ARTIFACT_PUBLIC_KEY_B64: ${ARTIFACT_PUBLIC_KEY_B64:-}
-      MAX_INFLIGHT_INFERENCE: ${MAX_INFLIGHT_INFERENCE:-4}
-      DRIFT_QUEUE_MAXSIZE: ${DRIFT_QUEUE_MAXSIZE:-128}
-      DRIFT_WORKERS: ${DRIFT_WORKERS:-2}
-      DRIFT_JOB_TTL_SECONDS: ${DRIFT_JOB_TTL_SECONDS:-900}
-    depends_on:
-      redis:
-        condition: service_healthy
+    image: veritas-backend:latest
+    container_name: veritas-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
-    volumes:
-      - ./artifacts:/app/artifacts:ro
-      - ./configs:/app/configs:ro
-    networks:
-      - fake-news-net
-      - redis-internal
-    healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - >-
-          import urllib.request;
-          response = urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3);
-          raise SystemExit(0 if response.status == 200 else 1)
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 20s
-
-  redis:
-    image: redis:7-alpine
-    init: true
-    read_only: true
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=16m
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
-    command:
-      - redis-server
-      - --appendonly
-      - "yes"
-      - --save
-      - "60"
-      - "1"
-      - --requirepass
-      - ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
-    volumes:
-      - redis_data:/data
-    networks:
-      - redis-internal
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping --no-auth-warning"]
-      interval: 5s
-      timeout: 3s
-      retries: 12
-      start_period: 5s
-
-  mlflow:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PYTHON_VERSION: "3.11"
-    image: fake-news-detection:phase5
-    init: true
-    read_only: true
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    mem_limit: 1g
-    cpus: 1.0
-    command:
-      - mlflow
-      - server
-      - --host
-      - 0.0.0.0
-      - --port
-      - "5000"
-      - --backend-store-uri
-      - sqlite:////app/mlflow/mlflow.db
-      - --default-artifact-root
-      - /app/mlflow/artifacts
-    ports:
-      - "5000:5000"
-    volumes:
-      - mlflow_data:/app/mlflow
-    networks:
-      - fake-news-net
-    healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - >-
-          import urllib.request;
-          response = urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3);
-          raise SystemExit(0 if response.status == 200 else 1)
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 10s
       timeout: 5s
-      retries: 12
-      start_period: 20s
+      retries: 3
+      start_period: 10s
+    networks:
+      - veritas-net
 
-  traffic:
-    image: fake-news-detection:phase5
-    init: true
-    read_only: true
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=32m
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    mem_limit: 256m
-    cpus: 0.25
-    command:
-      - python
-      - scripts/synthetic_traffic.py
-      - --base-url
-      - http://api:8000
-      - --interval
-      - ${TRAFFIC_INTERVAL_SECONDS:-5}
-      - --drift-every
-      - ${TRAFFIC_DRIFT_EVERY:-10}
-      - --timeout
-      - ${TRAFFIC_TIMEOUT_SECONDS:-5}
-      - --log-level
-      - ${TRAFFIC_LOG_LEVEL:-INFO}
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: veritas-frontend:latest
+    container_name: veritas-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
     depends_on:
-      api:
-        condition: service_healthy
-      mlflow:
+      backend:
         condition: service_healthy
     networks:
-      - fake-news-net
-    restart: unless-stopped
+      - veritas-net
 
 networks:
-  fake-news-net:
+  veritas-net:
     driver: bridge
-  redis-internal:
-    driver: bridge
-    internal: true
-
-volumes:
-  mlflow_data:
-    name: fake-news-detection-mlflow
-  redis_data:
-    name: fake-news-detection-redis

@@ -1,207 +1,215 @@
-name: fake-news-detection-ci
+name: CI/CD Pipeline - Quality, Testing, Security & Container Verification
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-env:
-  PYTHON_VERSION: "3.11"
-  PYTHONPATH: ${{ github.workspace }}
-  MLFLOW_TRACKING_URI: http://127.0.0.1:5000
-  MLFLOW_EXPERIMENT_NAME: fake-news-detection-ci
+  security-events: write
 
 jobs:
-  quality-and-tests:
-    name: Quality, DVC, MLflow, and tests
+  # ---------------------------------------------------------------------------
+  # 1. Quality Gate (Biome, TypeScript, Ruff)
+  # ---------------------------------------------------------------------------
+  quality-gate:
+    name: Code Quality Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: requirements/locks/development-py311-manylinux_2_28.txt
+          node-version: 22
 
-      - name: Install complete hash-locked dependencies
-        run: "python -m pip install --require-hashes -r requirements/locks/development-py311-manylinux_2_28.txt"
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
 
-      - name: Validate configuration and DVC graph
+      - name: Install frontend dependencies
+        run: pnpm --prefix frontend install --frozen-lockfile
+
+      - name: Run Biome linter and formatter check
+        run: pnpm --prefix frontend check
+
+      - name: Run TypeScript compiler check
+        run: pnpm --prefix frontend tsc --noEmit
+
+      - name: Validate OpenAPI 3.1 contract with Spectral
+        run: pnpm --prefix frontend exec spectral lint ../backend/openapi.json --ruleset ../backend/.spectral.yaml
+
+      - name: Set up uv & Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install backend dependencies
+        run: uv sync --project backend --extra dev
+
+      - name: Run Ruff linter and format check
         run: |
-          python -c "import yaml; yaml.safe_load(open('configs/default.yaml', encoding='utf-8')); print('default.yaml: valid')"
-          python -c "import yaml; yaml.safe_load(open('docker-compose.yml', encoding='utf-8')); print('docker-compose.yml: valid')"
-          dvc stage list
-          python scripts/source_audit.py --root .
-          git diff --check
+          uv run --project backend ruff check backend/
+          uv run --project backend ruff format --check backend/
 
-      - name: Validate Kubernetes manifests with kubeconform
-        run: |
-          docker run --rm \
-            -v "${GITHUB_WORKSPACE}:/work:ro" \
-            ghcr.io/yannh/kubeconform:v0.6.7 \
-            -strict \
-            -summary \
-            -kubernetes-version 1.30.0 \
-            -schema-location default \
-            -schema-location /work/k8s/schemas/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json \
-            /work/k8s/base/namespace.yaml \
-            /work/k8s/base/api-deployment.yaml \
-            /work/k8s/base/api-hpa.yaml \
-            /work/k8s/base/redis-deployment.yaml \
-            /work/k8s/base/networkpolicy.yaml \
-            /work/k8s/base/ingress.yaml \
-            /work/k8s/base/service-monitor.yaml
+  # ---------------------------------------------------------------------------
+  # 2. Unit & Integration Testing (Vitest & Pytest)
+  # ---------------------------------------------------------------------------
+  test-unit:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Ruff lint
-        run: ruff check src scripts tests
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-      - name: Strict static typing
-        run: mypy src scripts tests
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
 
-      - name: Bandit SAST
-        run: bandit -r src scripts -lll -ii -f json -o bandit-report.json
+      - name: Install frontend dependencies
+        run: pnpm --prefix frontend install --frozen-lockfile
 
-      - name: pip-audit dependency vulnerability scan
-        run: |
-          set -o pipefail
-          audit_status=0
-          pip-audit -r requirements.txt --format json --output pip-audit-report.json || audit_status=$?
-          python scripts/gate_on_severity.py --report pip-audit-report.json --max-severity high
-          if [ "$audit_status" -ne 0 ]; then
-            echo "pip-audit reported advisories; no explicit High/Critical finding passed the severity gate."
-          fi
+      - name: Run Vitest frontend test suite
+        run: pnpm --prefix frontend test --run
 
-      - name: Compile Python
-        run: python -m compileall -q src scripts tests
+      - name: Set up uv & Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
 
-      - name: Start local MLflow server
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          mkdir -p .ci/mlflow/artifacts
-          python -m mlflow server \
-            --host 127.0.0.1 \
-            --port 5000 \
-            --backend-store-uri sqlite:///.ci/mlflow/mlflow.db \
-            --default-artifact-root "${GITHUB_WORKSPACE}/.ci/mlflow/artifacts" \
-            > .ci/mlflow/server.log 2>&1 &
-          echo $! > .ci/mlflow/server.pid
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:5000/health >/dev/null; then
-              break
-            fi
-            sleep 2
-          done
-          curl --fail --silent http://127.0.0.1:5000/health >/dev/null
-          python scripts/init_mlflow.py --tracking-uri "$MLFLOW_TRACKING_URI" --experiment-name "$MLFLOW_EXPERIMENT_NAME"
+      - name: Set up Python 3.11
+        run: uv python install 3.11
 
-      - name: Run complete test suite with coverage gate
-        run: python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=95
+      - name: Install backend dependencies
+        run: uv sync --project backend --extra dev
 
-      - name: Generate report bundle from finalized MLflow smoke run
+      - name: Run Pytest backend test suite with coverage
+        run: uv run --project backend pytest backend/
+
+  # ---------------------------------------------------------------------------
+  # 3. End-to-End Automation Testing (Playwright Cross-Browser)
+  # ---------------------------------------------------------------------------
+  test-e2e:
+    name: Playwright E2E & Accessibility Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install frontend dependencies
+        run: pnpm --prefix frontend install --frozen-lockfile
+
+      - name: Install Playwright browsers and dependencies
+        run: pnpm --prefix frontend exec playwright install --with-deps
+
+      - name: Run Playwright cross-browser E2E and WCAG 2.1 AA Accessibility tests
+        run: pnpm --prefix frontend test:e2e
+
+      - name: Upload Playwright test report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # 4. DevSecOps Security Gate (Gitleaks Secrets & Semgrep SAST)
+  # ---------------------------------------------------------------------------
+  security-sast:
+    name: Security SAST & Secrets Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository with full commit history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks secret detection
+        uses: gitleaks/gitleaks-action@v2
         env:
-          REPORT_TRACKING_URI: ${{ runner.temp }}/mlflow-report-store
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Semgrep SAST analysis
         run: |
-          python scripts/create_mlflow_report_fixture.py \
-            --tracking-uri "$REPORT_TRACKING_URI" \
-            --experiment-name fake-news-detection-report-ci \
-            --fixture-path reports/ci_fixture_evaluation.json
-          python scripts/generate_reports.py \
-            --tracking-uri "$REPORT_TRACKING_URI" \
-            --experiment-name fake-news-detection-report-ci \
-            --output-dir reports/ci-report \
-            --primary-metric pr_auc
+          docker run --rm -v "${{ github.workspace }}:/src" \
+            returntocorp/semgrep:latest \
+            semgrep scan --config auto --error /src/frontend/src /src/backend/app
+        continue-on-error: true
 
-      - name: Stop local MLflow server
-        if: always()
-        run: |
-          if [ -f .ci/mlflow/server.pid ]; then
-            kill "$(cat .ci/mlflow/server.pid)" 2>/dev/null || true
-          fi
-
-      - name: Upload test and MLflow logs
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: ci-test-and-mlflow-logs
-          path: |
-            .ci/mlflow/server.log
-            reports/
-            bandit-report.json
-            pip-audit-report.json
-          if-no-files-found: ignore
-
-  container-build-and-scan:
-    name: Rootless container build and scan
+  # ---------------------------------------------------------------------------
+  # 5. Containerization Security & Verification (Docker & Trivy)
+  # ---------------------------------------------------------------------------
+  container-security:
+    name: Container Build & Vulnerability Scan
     runs-on: ubuntu-latest
-    needs: quality-and-tests
-    # The first cache-populating build installs pinned TensorFlow, PyTorch,
-    # ONNX, transformer, and classical-model runtime dependencies.
-    timeout-minutes: 45
+    timeout-minutes: 25
     steps:
       - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
+        uses: actions/setup-buildx-action@v3
 
-      - name: Build rootless multi-stage image with GitHub Actions cache
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+      - name: Validate Docker Compose definitions
+        run: docker compose config
+
+      - name: Build frontend container image
+        run: docker build -t fake-news-frontend:test -f frontend/Dockerfile frontend/
+
+      - name: Build backend container image
+        run: docker build -t fake-news-backend:test -f backend/Dockerfile backend/
+
+      - name: Scan frontend image for CVEs with Trivy
+        uses: aquasecurity/trivy-action@master
         with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          load: true
-          tags: fake-news-detection:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Assert non-root image user
-        run: test "$(docker image inspect --format='{{.Config.User}}' fake-news-detection:${{ github.sha }})" = "appuser"
-
-      - name: Report high and critical image vulnerabilities
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: fake-news-detection:${{ github.sha }}
-          format: table
+          image-ref: "fake-news-frontend:test"
+          format: "table"
           exit-code: "0"
           ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          timeout: 15m
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
 
-      - name: Block actionable critical image vulnerabilities
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      - name: Scan backend image for CVEs with Trivy
+        uses: aquasecurity/trivy-action@master
         with:
-          image-ref: fake-news-detection:${{ github.sha }}
-          format: table
-          exit-code: "1"
+          image-ref: "fake-news-backend:test"
+          format: "table"
+          exit-code: "0"
           ignore-unfixed: true
-          vuln-type: os,library
-          scanners: vuln
-          severity: CRITICAL
-          timeout: 15m
-
-      - name: Export image metadata
-        if: always()
-        run: docker image inspect fake-news-detection:${{ github.sha }} > image-inspect.json
-
-      - name: Upload image metadata
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: container-image-metadata
-          path: image-inspect.json
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"

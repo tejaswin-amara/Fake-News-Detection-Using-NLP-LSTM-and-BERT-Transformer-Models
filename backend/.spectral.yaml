@@ -1,0 +1,4 @@
+extends: ["spectral:oas"]
+rules:
+  oas3-api-servers: warn
+  operation-description: warn

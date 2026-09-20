@@ -55,6 +55,9 @@ frontend/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+frontend/playwright-report/
+frontend/test-results/
+frontend/.manus-logs/
 
 # Environment & Secrets
 .env
