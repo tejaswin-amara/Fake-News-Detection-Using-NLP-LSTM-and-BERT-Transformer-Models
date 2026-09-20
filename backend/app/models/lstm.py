@@ -286,6 +286,7 @@ class LSTMPredictor:
             p = Path(self.model_path)
             if p.is_file():
                 net = BiLSTMNetwork()
+                # nosemgrep: trailofbits.python.pickles-in-pytorch
                 state_dict = torch.load(p, map_location="cpu", weights_only=True)
                 net.load_state_dict(state_dict)
                 net.eval()
