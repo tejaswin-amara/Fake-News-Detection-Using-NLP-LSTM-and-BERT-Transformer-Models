@@ -45,7 +45,7 @@ networkx==3.4.2
 # Hyperparameter search, evaluation, calibration, and monitoring (SRC-024 through SRC-029)
 optuna==4.1.0
 statsmodels==0.14.4
-psutil==6.1.0
+psutil==7.2.2
 
 # Serving and validation (SRC-030)
 fastapi==0.141.1
