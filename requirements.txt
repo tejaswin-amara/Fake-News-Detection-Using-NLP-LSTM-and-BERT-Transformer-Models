@@ -43,7 +43,7 @@ plotly==5.24.1
 networkx==3.4.2
 
 # Hyperparameter search, evaluation, calibration, and monitoring (SRC-024 through SRC-029)
-optuna==4.1.0
+optuna==5.0.0
 statsmodels==0.14.4
 psutil==6.1.0
 
