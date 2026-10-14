@@ -266,7 +266,7 @@ curl -X POST "http://localhost:8000/api/predict/both" \
 
 ```bash
 # 1. Clone the repository
-git clone [https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git)
+git clone https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git
 cd Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models
 
 # 2. Initialize environment configuration
@@ -462,7 +462,7 @@ The `docs/` directory contains a complete software and ML engineering specificat
   author       = {Amara, Tejaswin},
   title        = {{VERITAS AI: Fake News Detection Using NLP, LSTM, and BERT Transformer Models}},
   year         = {2026},
-  url          = {[https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models)},
+  url          = {https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models},
   license      = {MIT}
 }
 ```
