@@ -1,91 +1,64 @@
 <div align="center">
 
-# 🛡️ VERITAS
-
-### **Verified Explainable Real-time Information Telemetry & Analytics System**
-**Production-Hardened Machine Learning & MLOps System (Course: 25SC2107E, CO1–CO6)**
+# 🛡️ VERITAS AI
+### Production-Grade Fake News Detection & Explainability Platform Using Classical NLP, BiLSTM & BERT Transformers
 
 [![CI Pipeline](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/ci.yml)
-[![GitHub Pages](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/deploy-pages.yml/badge.svg)](https://tejaswin-amara.github.io/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/)
-[![Course: 25SC2107E](https://img.shields.io/badge/Course-25SC2107E%20(CO1--CO6)-4F46E5.svg?logo=academia&logoColor=white)](docs/compliance_matrix.md)
-[![Test Suite](https://img.shields.io/badge/Tests-171%2F171%20Passed-10B981.svg?logo=pytest&logoColor=white)](tests/)
-[![Coverage](https://img.shields.io/badge/Coverage-95.54%25-10B981.svg?logo=codecov&logoColor=white)](tests/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.141.1-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-19.0.0-61DAFB.svg?logo=react&logoColor=black)](frontend/)
-[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![CodeQL](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/codeql.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B.svg?logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![CodeQL SAST](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/codeql.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/codeql.yml)
+[![ClusterFuzzLite](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/clusterfuzzlite.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/clusterfuzzlite.yml)
+[![Continuous Fuzzing](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/fuzz.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/fuzz.yml)
+[![Performance Smoke](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/performance-smoke.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/performance-smoke.yml)
+[![OpenSSF Scorecard](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/scorecards.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/scorecards.yml)
+[![Secret Scan](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/secret-scan.yml)
+[![GitHub Pages](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/actions/workflows/deploy-pages.yml)
 
-<p align="center">
-  <a href="https://tejaswin-amara.github.io/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/">
-    <img src="https://img.shields.io/badge/Live_Showcase-Visit_GitHub_Pages-6366F1?style=for-the-badge&logo=githubpages&logoColor=white" alt="Live Demo" />
-  </a>
-  <a href="#4-model-hierarchy--empirical-comparison">
-    <img src="https://img.shields.io/badge/Benchmark-9_Model_Comparison-10B981?style=for-the-badge&logo=scikitlearn&logoColor=white" alt="Benchmarks" />
-  </a>
-  <a href="#5-publication-grade-empirical-evidence-gallery">
-    <img src="https://img.shields.io/badge/Visuals-Publication_Plots-EC4899?style=for-the-badge&logo=plotly&logoColor=white" alt="Plots" />
-  </a>
-  <a href="#7-course-syllabus-traceability-matrix-25sc2107e">
-    <img src="https://img.shields.io/badge/Audit-CO1--CO6_Traceability-F59E0B?style=for-the-badge&logo=googlekeep&logoColor=white" alt="Traceability" />
-  </a>
-</p>
+![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
+![HuggingFace](https://img.shields.io/badge/Transformers-BERT-FFD21E?style=flat-square&logo=huggingface&logoColor=black)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.5+-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-ASGI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Caddy 2](https://img.shields.io/badge/Caddy_2-Edge_Proxy-1F88C9?style=flat-square&logo=caddy&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Kustomize-326CE5?style=flat-square&logo=kubernetes&logoColor=white)
+![DVC](https://img.shields.io/badge/DVC-Data_Lineage-945DD6?style=flat-square&logo=dvc&logoColor=white)
+![MLflow](https://img.shields.io/badge/MLflow-Tracking-0194E2?style=flat-square&logo=mlflow&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-success?style=flat-square)](./LICENSE)
 
-An enterprise-grade, end-to-end Machine Learning capstone system for deceptive information classification, multi-model empirical benchmarking, Platt probability calibration, exact log-odds feature attribution, unsupervised corpus geometry discovery, and automated Kolmogorov-Smirnov distribution drift SRE.
+[**Overview**](#-1-executive-overview) •
+[**Architecture**](#-3-system--ml-architecture) •
+[**Model Zoo & Benchmarks**](#-4-model-zoo--evaluation-diagnostics) •
+[**Quick Start**](#-7-quick-start--deployment) •
+[**API Reference**](#-6-api-specification--serving-contracts) •
+[**Documentation Hub**](#-10-engineering-documentation-hub)
 
 </div>
 
 ---
 
-## 📑 Table of Contents
+## 📌 1. Executive Overview
 
-- [1. What VERITAS Is](#1-what-veritas-is)
-- [2. What Problem It Solves](#2-what-problem-it-solves)
-- [3. System Architecture & End-to-End Flow](#3-system-architecture--end-to-end-flow)
-- [4. Model Hierarchy & Empirical Comparison](#4-model-hierarchy--empirical-comparison)
-- [5. Publication-Grade Empirical Evidence Gallery](#5-publication-grade-empirical-evidence-gallery)
-- [6. Mathematical Formulations & Statistical Theory](#6-mathematical-formulations--statistical-theory)
-- [7. Course Syllabus Traceability Matrix (25SC2107E)](#7-course-syllabus-traceability-matrix-25sc2107e)
-- [8. Explainable AI (XAI) & Feature Attribution](#8-explainable-ai-xai--feature-attribution)
-- [9. Statistical Drift SRE & Automated Guardrails](#9-statistical-drift-sre--automated-guardrails)
-- [10. Quick Start & Execution Guide](#10-quick-start--execution-guide)
-- [11. Cryptographic Evidence Ledger & Reproducibility](#11-cryptographic-evidence-ledger--reproducibility)
-- [12. Limitations & Governance Disclaimers](#12-limitations--governance-disclaimers)
-- [Status & Compliance](#status--compliance)
-- [13. References](#13-references)
+**VERITAS AI** is an end-to-end, enterprise-hardened misinformation detection, model benchmarking, and token-level explainability platform. It unifies a reproducible **DVC + MLflow machine learning pipeline** (`src/`) with a low-latency **FastAPI dual-inference backend** (`backend/`), an **OLED-optimized React 19 analytical dashboard** (`frontend/`), and **Kubernetes Kustomize** cloud-native manifests (`k8s/`).
+
+Unlike standalone notebook experiments, VERITAS AI enforces strict **data leakage prevention**, **post-hoc probability calibration**, **statistical drift monitoring**, and **zero-trust DevSecOps gates** across every stage of the lifecycle.
 
 ---
 
-## 1. What VERITAS Is
+## ✨ 2. Key Platform Capabilities
 
-**VERITAS** (*Verified Explainable Real-time Information Telemetry & Analytics System*) is a production-hardened machine learning platform designed to verify information claims and distinguish authentic reporting from fabricated or manipulative disinformation. It unifies a high-throughput **FastAPI** prediction engine, an interactive **React 19** analytics dashboard, and a **tRPC/Express** intermediate bridge with strict mathematical governance, zero-leakage cross-validation, and cryptographic artifact packaging.
-
-### Key Capabilities
-
-- **Sub-Millisecond Serving**: Optimized TF-IDF + Logistic L2 pipeline delivering **0.24 ms (p95)** CPU inference latency (over 600x faster than BERT).
-- **Platt Probability Calibration**: Post-hoc sigmoid scaling converting raw classifier margins into true posterior probabilities, minimizing empirical Brier loss ($0.1306$).
-- **White-Box Explainability**: Exact sparse log-odds feature attribution providing word-by-word token scores for immediate editorial audit.
-- **Statistical Drift SRE**: Continuous two-sample Kolmogorov-Smirnov (KS) tests and Population Stability Index (PSI) tracking to detect concept and covariate shift before silent degradation occurs.
-- **Zero-Leakage Guarantee**: 70/15/15 stratified isolation with MinHash LSH deduplication strictly fit on training partitions.
+| Pillar | Capabilities & Engineering Highlights |
+| :--- | :--- |
+| 🧠 **Multi-Paradigm NLP Engine** | Benchmarks **L2/L1 Logistic Regression**, **Decision Trees**, **Random Forest**, **XGBoost**, **Unsupervised Clustering (K-Means/GMM/SVD)**, **Bidirectional LSTM (GloVe 300d)**, and **Fine-Tuned BERT (`bert-base-uncased`)** with ONNX runtime export support (`scripts/export_onnx.py`). |
+| 🔬 **Leakage-Safe Data Governance** | Automated ingestion of **ISOT**, **WELFake**, and **ClaimReview** datasets (`src/data/`), featuring **128-permutation MinHash LSH near-duplicate elimination** (`src/features/minhash.py`) before deterministic `70% / 15% / 15%` stratified splitting (`data/processed/split_manifest.json`). |
+| 🎯 **Calibrated Veracity & Explainability** | Post-hoc **Platt Sigmoid Scaling** reduces Expected Calibration Error (ECE) and Brier score (`reports/calibration_report.json`), paired with **token-level saliency heatmaps** and differential model variance gauges. |
+| 🖥️ **React 19 OLED Analytical SPA** | 10+ specialized views (`AnalyzePage`, `ModelComparisonPage`, `ExplainabilityPage`, `EvaluationPage`, `UnsupervisedPage`, `DriftPage`, `HistoryPage`, `HealthPage`, `ApiKeysPage`) powered by **React 19, Tailwind CSS v4, Radix UI, TanStack Query, tRPC, and Drizzle ORM** behind a **Caddy 2** edge proxy. |
+| 🛡️ **Zero-Trust DevSecOps & SRE** | Hardened non-root containers, **Kubernetes HPA + NetworkPolicy + Redis rate limiting** (`k8s/base/`), **Prometheus `/metrics`**, **Atheris & ClusterFuzzLite** continuous fuzzing (`fuzz/`), **CodeQL**, **Gitleaks**, **OpenSSF Scorecards**, and **manylinux Python 3.11 hash-locked dependencies**. |
 
 ---
 
-## 2. What Problem It Solves
-
-The proliferation of AI-generated content, partisan echo chambers, and coordinated disinformation campaigns presents significant societal and algorithmic challenges:
-
-| Challenge | Failure Mode in Standard ML | VERITAS Engineering Solution |
-| :--- | :--- | :--- |
-| **Overconfidence** | Deep neural networks produce uncalibrated 99% confidence on out-of-distribution hallucinations | Enforces **Platt Sigmoid Scaling** and Isotonic regression so probabilities match empirical observation. |
-| **Model Opacity** | Black-box classifiers provide no audit trail for regulatory compliance or human fact-checkers | Dual explainability: sparse linear log-odds coefficients ($\beta$) and Tree SHAP / Gini importances. |
-| **Distribution Drift** | Disinformation vocabulary evolves rapidly; static models decay silently in production | Continuous **Two-Sample Kolmogorov-Smirnov ($D_{KS}$)** and **PSI** streaming guardrails with automated alerts. |
-| **Data Leakage** | Fitting vectorizers or scalers on the whole dataset leaks test distribution into training folds | Strict **Zero-Trust Stratified 70/15/15** pipeline; vocabulary fit strictly on training split with SHA-256 validation. |
-
----
-
-## 3. System Architecture & End-to-End Flow
-
-VERITAS adheres to the C4 architectural model, decoupling presentation, edge security routing, and deep learning sequence classification.
+## 🏗️ 3. System & ML Architecture
 
 ### 3.1 System Context Architecture (C4 Level 1)
 
@@ -93,69 +66,63 @@ VERITAS adheres to the C4 architectural model, decoupling presentation, edge sec
 C4Context
     title System Context Diagram for VERITAS AI Fake News Detection Platform
 
-    Person(auditor, "Compliance Auditor / Journalist", "Submits news claims, inspects veracity scores, and reviews token-level attention attributions.")
-    Person(mlops, "MLOps / DevSecOps Engineer", "Monitors inference latency, tracks model drift, audits security scans, and manages releases.")
+    Person(auditor, "Compliance Auditor / Journalist", "Submits news claims, inspects veracity scores, and audits token attributions")
+    Person(mlops, "MLOps / DevSecOps Engineer", "Monitors inference latency, tracks model drift, and audits pipeline health")
 
     Enterprise_Boundary(b0, "VERITAS AI Trust Boundary") {
-        System(veritas_platform, "VERITAS AI Full-Stack System", "Unified web interface, edge reverse proxy, and dual-model neural inference platform (Bi-LSTM & BERT).")
+        System(veritas_platform, "VERITAS AI Full-Stack System", "Unified React 19 web interface, Caddy 2 edge reverse proxy, and FastAPI ML inference engine")
     }
 
-    System_Ext(wire_services, "External Wire Feeds", "Source content for claim validation (Reuters, AP, Bloomberg, OpenWire).")
-    System_Ext(ci_cd, "GitHub Actions CI/CD", "Automated quality gates, security SAST, container scanning, and artifact delivery.")
-    System_Ext(docker_registry, "OCI Container Registry", "Versioned multi-stage images for edge proxy and ML backend.")
+    System_Ext(wire_services, "External Wire Feeds", "Source content for claim validation - Reuters, AP, ClaimReview")
+    System_Ext(ci_cd, "GitHub Actions CI/CD", "Automated quality gates, CodeQL SAST, ClusterFuzzLite, and container scans")
+    System_Ext(docker_registry, "OCI Container Registry", "Versioned multi-stage images for edge proxy and backend API")
 
-    Rel(auditor, veritas_platform, "Submits articles, queries predictions, audits attributions", "HTTPS / REST")
-    Rel(mlops, veritas_platform, "Monitors health metrics (/healthz), reviews benchmarks", "HTTPS / Prometheus")
+    Rel(auditor, veritas_platform, "Submits articles, queries predictions, audits attributions", "HTTPS")
+    Rel(mlops, veritas_platform, "Monitors health metrics at /healthz and reviews benchmarks", "HTTPS / Prometheus")
     Rel(ci_cd, docker_registry, "Publishes verified, scanned OCI images", "Docker Push")
-    Rel(ci_cd, veritas_platform, "Deploys container recipes via Docker Compose", "SSH / Compose")
+    Rel(ci_cd, veritas_platform, "Deploys container recipes via Docker Compose and K8s", "SSH / Compose")
     Rel(veritas_platform, wire_services, "Cross-references wire citation metadata", "HTTPS")
 ```
-
----
 
 ### 3.2 Container Architecture (C4 Level 2)
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph ClientBrowser["User Desktop / Mobile Browser"]
         SPA["React 19 OLED SPA<br/>(Tailwind v4, TanStack Query, Radix UI)"]
         LocalStorage["Browser LocalStorage<br/>(Persistent Verification Audit Trail)"]
-        SPA -->|Persist Audits| LocalStorage
+        SPA -->|"Persist Audits"| LocalStorage
     end
 
-    subgraph DockerHost["Docker Container Network (veritas-net)"]
+    subgraph DockerHost["Docker / K8s Network (veritas-net)"]
         subgraph FrontendContainer["Frontend Container (caddy:2-alpine) - Port 3000:80"]
-            CaddyProxy["Caddy 2 Edge Proxy<br/>gzip/zstd, Security Headers, CSP"]
+            CaddyProxy["Caddy 2 Edge Proxy<br/>(gzip/zstd, Security Headers, CSP)"]
             StaticFiles["Static SPA Assets<br/>(/usr/share/caddy)"]
-            CaddyProxy -->|Serve Static /| StaticFiles
+            CaddyProxy -->|"Serve Static /"| StaticFiles
         end
 
         subgraph BackendContainer["Backend Container (python:3.11-slim) - Port 8000"]
-            FastAPIEngine["FastAPI Async App<br/>(Telemetry Middleware, CORS, Pydantic V2)"]
-            HealthEndpoint["Health Check Router<br/>(/healthz, /readyz)"]
-            InferenceRouter["Inference Router<br/>(/api/predict/lstm, bert, both)"]
-            BenchmarksRouter["Benchmarks Router<br/>(/api/benchmarks)"]
-
-            subgraph MLWorkers["Neural ML Predictors"]
-                LSTMEngine["GloVe + Stacked Bi-LSTM<br/>(~4.2M params, 18.5ms latency)"]
-                BERTEngine["Fine-Tuned BERT Transformer<br/>(~109.5M params, 12 attention heads)"]
-                HeuristicEngine["Calibrated Local Heuristic Fallback<br/>(Zero-Crash Offline Engine)"]
-            end
+            FastAPIEngine["FastAPI Async Engine<br/>(Telemetry Middleware, CORS, Pydantic V2)"]
+            HealthEndpoint["SRE & Observability Router<br/>(/healthz, /readyz, /metrics)"]
+            InferenceRouter["Dual Inference Router<br/>(/api/predict, /api/predict/both)"]
+            LinearModel["Logistic L2 Champion<br/>(Platt Calibrated Sublinear TF-IDF)"]
+            LstmEngine["BiLSTM Sequence Engine<br/>(GloVe 300d + Temporal Pooling)"]
+            BertEngine["BERT Transformer Engine<br/>(Fine-Tuned WordPiece + Saliency)"]
 
             FastAPIEngine --> HealthEndpoint
             FastAPIEngine --> InferenceRouter
-            FastAPIEngine --> BenchmarksRouter
-            InferenceRouter --> LSTMEngine
-            InferenceRouter --> BERTEngine
-            InferenceRouter -.->|Fallback if weights missing| HeuristicEngine
+            InferenceRouter --> LinearModel
+            InferenceRouter --> LstmEngine
+            InferenceRouter --> BertEngine
         end
+
+        RedisCache["Redis Rate-Limit & Cache Store<br/>(k8s/base/redis-deployment.yaml)"]
+        FastAPIEngine -->|"Token Bucket Rate Limit"| RedisCache
     end
 
-    SPA -->|HTTPS / HTTP Requests| CaddyProxy
-    CaddyProxy -->|Reverse Proxy /api/* & /healthz| FastAPIEngine
+    SPA -->|"HTTPS Requests (Port 3000)"| CaddyProxy
+    CaddyProxy -->|"Reverse Proxy /api/*"| FastAPIEngine
 ```
-
----
 
 ### 3.3 End-to-End Inference & Token Attribution Flow
 
@@ -167,375 +134,337 @@ sequenceDiagram
     participant Caddy as Caddy 2 Edge Proxy
     participant FastAPI as FastAPI ASGI Engine
     participant ModelRouter as Inference Router
+    participant LstmModel as BiLSTM Engine
     participant BertModel as BERT Transformer Engine
     participant Storage as Browser LocalStorage
 
-    User->>SPA: Submit news text (custom or preset)
+    User->>SPA: Submit news claim or article text
     User->>SPA: Click "Analyze Veracity"
-    activate SPA
-    SPA->>Caddy: POST /api/predict/both { text }
-    activate Caddy
+    SPA->>Caddy: POST /api/predict/both (JSON payload)
     Caddy->>FastAPI: Reverse proxy request to http://backend:8000
-    activate FastAPI
-    FastAPI->>FastAPI: Record t0 & validate payload (Pydantic V2)
-    FastAPI->>ModelRouter: Route to dual prediction models
+    FastAPI->>FastAPI: Record t0 & validate schema (Pydantic V2)
+    FastAPI->>ModelRouter: Dispatch parallel dual-model inference
 
-    activate ModelRouter
-    par Dual Inference Execution
-        ModelRouter->>ModelRouter: Run GloVe Bi-LSTM Inference (~18.5ms)
-    and Transformer Attention Analysis
-        ModelRouter->>BertModel: Run BERT Sequence Classification (~145ms)
-        activate BertModel
-        BertModel->>BertModel: Extract layer[-1] attention matrices across 12 heads
-        BertModel->>BertModel: Aggregate token attention scores & normalize to [0, 1]
-        BertModel-->>ModelRouter: Return label, confidence, tokens, latency_ms
-        deactivate BertModel
+    par BiLSTM Sequence Inference
+        ModelRouter->>LstmModel: Tokenize & run BiLSTM forward pass
+        LstmModel-->>ModelRouter: Return veracity probability & latency_ms
+    and BERT Transformer & Saliency Attribution
+        ModelRouter->>BertModel: Run WordPiece tokenization & attention pass
+        BertModel-->>ModelRouter: Return calibrated score & token saliency weights
     end
-    ModelRouter-->>FastAPI: ComparisonResponse
-    deactivate ModelRouter
 
-    FastAPI->>FastAPI: Calculate latency -> attach X-Process-Time header
-    FastAPI-->>Caddy: 200 OK JSON (ComparisonResponse)
-    deactivate FastAPI
-    Caddy-->>SPA: 200 OK JSON (zstd/gzip compressed)
-    deactivate Caddy
-
-    SPA->>SPA: Update TanStack Query cache
-    SPA->>Storage: Persist verification record to LocalStorage audit log
-    SPA->>SPA: Render OLED Token Heatmap with saliency popovers
-    SPA-->>User: Visualized predictions, gauges, and attention highlights
-    deactivate SPA
+    ModelRouter-->>FastAPI: Compute confidence variance & consensus verdict
+    FastAPI-->>Caddy: 200 OK (DualInferenceResponse JSON)
+    Caddy-->>SPA: Forward zstd/gzip compressed response
+    SPA->>Storage: Append verification entry to local audit trail
+    SPA-->>User: Render confidence gauges & interactive token heatmap
 ```
-
----
 
 ### 3.4 Data Pipeline Architecture
 
 ```mermaid
 flowchart TD
     subgraph Data["1. Data Ingestion & Governance"]
-        Raw["Raw News Datasets<br/>(ISOT, WELFake, ClaimReview)"] --> MinHash["MinHash LSH Deduplication<br/>(Jaccard threshold = 0.85)"]
+        Raw["Raw News Corpora<br/>(ISOT, WELFake, ClaimReview)"] --> MinHash["MinHash LSH Deduplication<br/>(128 Permutations, Jaccard Threshold)"]
         MinHash --> Split["Deterministic Stratified Split<br/>(70% Train, 15% Val, 15% Test)"]
     end
 
     subgraph Feat["2. Dual Feature Extraction"]
-        Split --> TFIDF["Sublinear TF-IDF Vectorizer<br/>(1,2-grams, smooth IDF, sublinear tf)"]
-        Split --> Tokens["WordPiece / Tokenizer<br/>(GloVe 300d & BERT Tokenizer)"]
+        Split --> TFIDF["Sublinear TF-IDF Vectorizer<br/>(1,2-grams, smooth IDF, sublinear TF)"]
+        Split --> Tokens["Sequence & WordPiece Tokenizers<br/>(GloVe 300d & BERT Tokenizer)"]
     end
 
     subgraph Models["3. Multi-Model Benchmark"]
-        TFIDF --> L2["Logistic L2 (Ridge)<br/>Champion Model"]
+        TFIDF --> L2["Logistic L2 (Ridge)<br/>Champion Classical Model"]
         TFIDF --> L1["Logistic L1 (Lasso)"]
         TFIDF --> Trees["Decision Trees / Random Forest / XGBoost"]
         Tokens --> DL["BiLSTM & Fine-Tuned BERT"]
     end
 
     subgraph Serving["4. Serving & Production Calibration"]
-        L2 --> Platt["Platt Probability Calibration<br/>(Sigmoid scaling on Val split)"]
-        Platt --> API["FastAPI Serving Engine<br/>(/predict, /health, /metrics)"]
+        L2 --> Platt["Platt Probability Calibration<br/>(Sigmoid scaling on Validation split)"]
+        DL --> Platt
+        Platt --> API["FastAPI Serving Engine<br/>(/predict, /healthz, /metrics)"]
         API --> Dashboard["React 19 Dashboard & UI<br/>(Interactive Token Highlighter)"]
     end
 
-    subgraph SRE["5. Continuous Reliability & SRE"]
-        API --> KS["Two-Sample Kolmogorov-Smirnov Test<br/>(Continuous D_KS Monitoring)"]
-        API --> PSI["Population Stability Index (PSI)<br/>(Stream Binning)"]
-        KS --> Alert{"Retraining Trigger?<br/>PSI > 0.20"}
-        PSI --> Alert
-        Alert -- "Yes" --> Retrain["Automated MLflow Retrain Signal"]
-        Alert -- "No" --> OK["continue_monitoring"]
+    subgraph Monitoring["5. MLOps & Drift Governance"]
+        API --> Drift["PSI & KS Drift Detection<br/>(reports/drift_report.json)"]
+        Split --> Lineage["DVC & MLflow Lineage<br/>(dvc.lock, report_manifest.json)"]
     end
-
-    classDef primary fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff;
-    classDef success fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
-    classDef warn fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#fff;
-    class L2,Platt,API primary;
-    class OK,Dashboard success;
-    class Alert,Retrain warn;
 ```
 
 ---
 
-## 4. Model Hierarchy & Empirical Comparison
+## 📊 4. Model Zoo & Evaluation Diagnostics
 
-VERITAS implements a disciplined 4-tier model hierarchy evaluating classical linear baselines, ensemble trees, deep recurrent architectures, and bidirectional transformers on identical held-out test splits under zero data leakage:
+### 4.1 Implemented Model Families
 
-| Model Architecture | Family / Tier | Accuracy | F1-Score | ROC-AUC | Parameters | Latency (p95) | Memory Footprint | Explainability Mechanism | Role in VERITAS |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- | :--- |
-| **Fine-Tuned BERT (`bert-base-uncased`)** | **Transformer** | **94.8%** | **0.952** | **0.988** | **~109.5M** | **145.0 ms** | **420.0 MB** | **Multi-Head Self-Attention (12 heads)** | **Deep Transformer Benchmark** |
-| **GloVe (300d) + Stacked BiLSTM** | **Deep Recurrent** | **91.4%** | **0.918** | **0.962** | **~4.2M** | **18.5 ms** | **42.0 MB** | **Gradient-Weighted Saliency** | **Neural Sequential Baseline** |
-| **TF-IDF + Logistic Regression (L2)** | **Linear / Classical** | **85.7%** | **0.857** | **0.944** | **~50K** | **0.24 ms** | **0.05 MB** | **Direct Sparse Log-Odds ($\beta$)** | **Production Edge Champion (M2/M6)** |
-| Random Forest (100 trees) | Tree / Ensemble | 83.3% | 0.833 | 0.875 | ~2.5M | 33.28 ms | 1.20 MB | Gini Impurity / Tree SHAP | Ensemble Benchmark (M3) |
-| XGBoost (Gradient Boosted Trees) | Tree / Boosting | 83.3% | 0.833 | 0.880 | ~1.8M | 1.51 ms | 0.85 MB | Gain Attribution / SHAP | Boosting Baseline |
-| Decision Tree (ccp_alpha pruned) | Tree / Single | 80.0% | 0.800 | 0.833 | ~15K | 0.18 ms | 0.02 MB | Exact Decision Graph Paths | Minimal Tree Baseline |
-| TF-IDF + Logistic (ElasticNet) | Linear / Mixture | 80.0% | 0.800 | 0.861 | ~50K | 0.23 ms | 0.04 MB | Elastic L1/L2 Penalties | Regularization Baseline |
-| LightGBM (Histogram Boost) | Tree / Boosting | 75.0% | 0.750 | 0.790 | ~1.2M | 1.12 ms | 0.62 MB | Histogram Split Frequency | Fast Boosting Baseline |
-| TF-IDF + Logistic Regression (L1) | Linear / Sparse | 72.7% | 0.727 | 0.764 | ~50K | 0.22 ms | 0.03 MB | Sparse Log-Odds (83.7% zeroed) | Sparsity Baseline |
+| Model Family | Implementation Path | Feature Representation | Role in Platform |
+| :--- | :--- | :--- | :--- |
+| **Logistic Regression (L2 Ridge)** | `src/models/classical.py` / `artifacts/models/logistic_l2.joblib` | Sublinear TF-IDF (`1,2`-grams) + Platt Scaling | Fast, calibrated baseline & classical champion (`reports/champion_model.json`) |
+| **Logistic Regression (L1 Lasso)** | `src/models/classical.py` | Sparse Sublinear TF-IDF (`1,2`-grams) | Feature selection & sparse linear benchmark (`reports/linear_models_comparison.json`) |
+| **Tree Ensembles (DT / RF / XGBoost)** | `src/models/classical.py` | TF-IDF + Lexical Metadata Features | Non-linear tabular/lexical benchmark (`reports/tree_models_comparison.json`) |
+| **Unsupervised (K-Means / GMM / SVD)** | `src/models/unsupervised.py` | Latent Semantic Analysis + Stylometric Features | Blind cluster purity & topic structure discovery (`reports/unsupervised_analysis.json`) |
+| **Bidirectional LSTM (BiLSTM)** | `src/models/lstm.py` / `backend/app/models/lstm.py` | Pre-trained 300d GloVe Embeddings | Sequential recurrence & temporal dependency capture |
+| **Fine-Tuned BERT Transformer** | `src/models/bert.py` / `backend/app/models/bert.py` | WordPiece Subword Tokens (`bert-base-uncased`) | Bidirectional self-attention & token saliency attribution |
 
-### Champion Model Selection Rationale
+### 4.2 Visual Evaluation Gallery
 
-While Fine-Tuned BERT achieves the highest discriminative accuracy ($94.8\%$), **TF-IDF + Logistic Regression (L2 with Platt Sigmoid Calibration)** was selected as the **Production Edge Champion** based on rigorous multi-attribute engineering trade-offs:
+All evaluation curves and calibration diagnostics are automatically generated by `src/evaluate.py` and `scripts/generate_reports.py`:
 
-- **Inference Latency**: $0.24\text{ ms}$ vs $145.0\text{ ms}$ for BERT (**600x faster serving throughput**), easily handling high-frequency news feeds.
-- **Resource Footprint**: $45\text{ MB RAM}$ vs $1.2\text{ GB RAM}$ (**zero GPU dependency**), enabling resilient, low-cost edge container deployment.
-- **Auditable Explainability**: Direct, unapproximated log-odds feature weights enable instant verification of which specific phrases triggered an alert.
-- **Reliability & Cold Start**: Deterministic $<1\text{ ms}$ cold start with air-gapped signature verification.
-
----
-
-## 5. Publication-Grade Empirical Evidence Gallery
-
-The following publication-quality figures are generated deterministically by the evaluation pipeline in `src/evaluation/plots.py` and saved under `pages/assets/`:
-
-### Discrimination & Separation (ROC & PR Curves)
-
-![ROC and PR Curves](pages/assets/roc_pr.png)
-
-> **Evaluator Analysis:** The Receiver Operating Characteristic (ROC) curve yields an Area Under Curve (AUC) of **0.9444**, demonstrating high discriminative separation across decision thresholds. The Precision-Recall (PR) curve achieves an AUC of **0.9056**, significantly outperforming the baseline no-skill rate ($0.50$) under balanced evaluation.
-
----
-
-### Classification Accuracy & Error Topology (Confusion Matrix)
-
-![Confusion Matrix](pages/assets/confusion_matrix.png)
-
-> **Evaluator Analysis:** Evaluated on the held-out test split under zero data leakage, the champion model achieved zero false alarms on the test sample, ensuring editorial credibility and minimizing erroneous censorship of authentic reporting.
-
----
-
-### Empirical Probability Calibration (Platt vs Isotonic)
-
-![Probability Calibration Comparison](pages/assets/calibration_comparison.png)
-
-> **Evaluator Analysis:** Reliability diagrams comparing Uncalibrated Margins, Platt Sigmoid Scaling, and Isotonic Regression against the ideal diagonal $P(\hat{y} = 1) = \text{Empirical Frequency}$. Platt scaling reduces Brier score to **0.1306**, effectively taming extreme overconfidence.
-
----
-
-### Learning Dynamics & Bias-Variance Diagnostics
-
-| Empirical Learning Curve | Regularization Validation Curve |
+| ROC & Precision-Recall Curves | Probability Calibration Comparison |
 | :---: | :---: |
-| ![Learning Curve](pages/assets/learning_curve.png) | ![Validation Curve](pages/assets/validation_curve.png) |
-| **Convergence Diagnosis:** As training sample volume scales, cross-validation score steadily ascends toward training score, demonstrating healthy generalization with low variance. | **Hyperparameter Trajectory:** Evaluates model score across regularization parameter $C \in [10^{-3}, 10^3]$. Optimal validation performance peaks at $C = 1.0$ without overfitting. |
+| ![ROC and PR Curves](./reports/evaluation/roc_pr.png) | ![Calibration Comparison](./reports/evaluation/calibration_comparison.png) |
+| **Held-Out Confusion Matrix** | **Reliability & Confidence Diagram** |
+| ![Confusion Matrix](./reports/evaluation/confusion_matrix.png) | ![Reliability Diagram](./reports/evaluation/reliability.png) |
+| **Sample Complexity Learning Curve** | **Hyperparameter Validation Curve** |
+| ![Learning Curve](./reports/evaluation/notebook_learning_curve.png) | ![Validation Curve](./reports/evaluation/notebook_validation_curve.png) |
 
 ---
 
-## 6. Mathematical Formulations & Statistical Theory
+## 🖥️ 5. Frontend OLED SPA & Analytical Workbench
 
-VERITAS strictly implements foundational mathematical formulations across every stage of the pipeline:
+Located in `frontend/`, the web client is built with **React 19, TypeScript, Vite, Tailwind CSS v4, Radix UI, TanStack React Query, tRPC, and Drizzle ORM**:
 
-### 1. Sublinear TF-IDF with Smooth IDF
-To prevent bias toward long articles and suppress uninformative high-frequency lexical items:
-$$\text{tf-idf}(t, d, D) = \big(1 + \ln(\text{tf}(t, d))\big) \cdot \left(\ln\frac{1 + |D|}{1 + \text{df}(t, D)} + 1\right)$$
-Followed by Euclidean $L_2$ document normalization:
-$$\mathbf{x}_d = \frac{\mathbf{v}_d}{\|\mathbf{v}_d\|_2} = \frac{\mathbf{v}_d}{\sqrt{\sum_{j=1}^M v_{d,j}^2}}$$
-
-### 2. Regularized Negative Log-Likelihood
-For binary fake news classification ($y_i \in \{0, 1\}$), the $L_2$ Ridge penalized objective is:
-$$\min_{\mathbf{w}, b} \frac{1}{N}\sum_{i=1}^N \ln\left(1 + \exp\big(- (2y_i - 1)(\mathbf{w}^T \mathbf{x}_i + b)\big)\right) + \frac{1}{2C} \|\mathbf{w}\|_2^2$$
-For sparsity induction, $L_1$ Lasso regularizes via the 1-norm $\|\mathbf{w}\|_1 = \sum_{j=1}^M |w_j|$, driving $83.7\%$ of uninformative features strictly to zero.
-
-### 3. Platt Sigmoid Calibration
-To convert uncalibrated decision margins $z_i = \mathbf{w}^T \mathbf{x}_i + b$ into empirical probabilities:
-$$P(y_i = 1 \mid z_i) = \sigma(A z_i + B) = \frac{1}{1 + \exp(A z_i + B)}$$
-Parameters $A$ and $B$ are fit via maximum likelihood on the held-out validation set, evaluated by Brier Score:
-$$\text{BS} = \frac{1}{N} \sum_{i=1}^N \big(\hat{p}_i - y_i\big)^2$$
-
-### 4. Non-Parametric Kolmogorov-Smirnov Test
-To continuously evaluate whether live production probability stream $Q(x)$ has drifted from reference baseline $P(x)$:
-$$D_{KS} = \sup_{x \in [0, 1]} |F_{\text{ref}}(x) - F_{\text{stream}}(x)|$$
-Under null hypothesis $H_0: F_{\text{ref}} = F_{\text{stream}}$, asymptotic $p$-value determines drift significance at $\alpha = 0.05$.
-
-### 5. Population Stability Index (PSI)
-Across $B = 10$ probability quantiles:
-$$\text{PSI} = \sum_{b=1}^B \big(q_b - p_b\big) \cdot \ln\left(\frac{q_b}{p_b}\right)$$
-Decision threshold: $\text{PSI} < 0.10$ (stable), $0.10 \le \text{PSI} \le 0.20$ (moderate shift), $\text{PSI} > 0.20$ (severe drift $\to$ automated alert).
+* **Dual-Model Inference & Comparison (`AnalyzePage`, `ModelComparisonPage`)**: Side-by-side execution of BiLSTM and BERT models with a **Differential Confidence Gauge** (`DifferentialConfidenceGauge.tsx`) that flags cross-model divergence.
+* **Token-Level Explainability (`ExplainabilityPage`)**: Interactive **Token Heatmap** (`TokenHighlighter.tsx`, `SaliencyPopover.tsx`, `WeightScale.tsx`) highlighting lexical triggers driving fake vs. real classifications.
+* **Benchmarks & Telemetry Hub (`EvaluationPage`, `BenchmarksHub.tsx`)**: Interactive `MetricsRadar`, `ROCChart`, `LossGraph`, `ConfusionMatrix`, and `ComparativeMetricsTable` components.
+* **Drift & Unsupervised Explorer (`DriftPage`, `UnsupervisedPage`)**: Monitors Population Stability Index (PSI) and Kolmogorov-Smirnov (KS) feature drift alongside unsupervised topic clusters.
+* **Audit Trail & Export (`HistoryPage`, `ExportModal.tsx`)**: Persistent client/server verification log with JSON and CSV compliance export.
 
 ---
 
-## 7. Course Syllabus Traceability Matrix (25SC2107E)
+## 🔌 6. API Specification & Serving Contracts
 
-Full mapping of Course Outcomes (CO1–CO6) for the Machine Learning Capstone:
+The platform exposes OpenAPI 3.1-validated endpoints (linted via Spectral in `backend/.spectral.yaml` and documented in `backend/openapi.json`):
 
-| Course Outcome | Syllabus Module | Implementation Component | Test Suite | Generated Evidence Report | Status |
-| :--- | :--- | :--- | :--- | :--- | :---: |
-| **CO1 / M1** | ML Lifecycle & Data Governance | `src/data/ingestion.py`<br>`src/features/minhash.py` | `tests/test_ingestion.py`<br>`tests/test_zero_trust.py` | `reports/data_summary.json`<br>`data/processed/split_manifest.json` | **VERIFIED** |
-| **CO2 / M2** | Linear Models & Regularization | `src/models/classical.py`<br>`src/features/text.py` | `tests/test_models_evaluation.py` | `reports/linear_models_comparison.json`<br>`reports/linear_models_comparison.csv` | **VERIFIED** |
-| **CO3 / M3** | Tree Models & Ensembles | `src/models/classical.py` (DT, RF, XGB, LGBM) | `tests/test_models_evaluation.py` | `reports/tree_models_comparison.json` | **VERIFIED** |
-| **CO4 / M4** | Unsupervised Learning & Clustering | `src/models/unsupervised.py`<br>`src/features/text.py` | `tests/test_features_phase2.py`<br>`tests/test_models_evaluation.py` | `reports/unsupervised_analysis.json` | **VERIFIED** |
-| **CO5 / M5** | Evaluation & Calibration | `src/evaluate.py`<br>`src/evaluation/metrics.py` | `tests/test_models_evaluation.py`<br>`tests/test_zero_trust.py` | `reports/evaluation_report.json`<br>`reports/calibration_report.json` | **VERIFIED** |
-| **CO6 / M6** | ML Serving & Drift Monitoring | `src/serving/app.py`<br>`src/monitoring/drift.py` | `tests/test_serving.py`<br>`tests/test_day5_sre.py`<br>`frontend/src/**/*.test.tsx` | `reports/champion_model.json`<br>`reports/drift_report.json`<br>`reports/final_evidence_manifest.json` | **VERIFIED** |
+| Method | Endpoint | Service | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/predict/both` | `backend/app/api/endpoints.py` | Runs parallel **BiLSTM + BERT** inference, returning dual veracity scores, variance, and token attributions |
+| `POST` | `/api/predict/bert` | `backend/app/api/endpoints.py` | Executes single-model **BERT Transformer** inference with attention saliency weights |
+| `POST` | `/api/predict/lstm` | `backend/app/api/endpoints.py` | Executes single-model **BiLSTM** sequence inference |
+| `POST` | `/predict` | `src/serving/app.py` | Champion model inference endpoint with Redis token-bucket rate limiting (`src/serving/rate_limiter.py`) |
+| `GET` | `/healthz` / `/readyz` | Both Services | Kubernetes liveness and readiness probes |
+| `GET` | `/metrics` | `src/serving/app.py` | Prometheus telemetry scrape endpoint |
 
----
+### Example Request (`POST /api/predict/both`)
 
-## 8. Explainable AI (XAI) & Feature Attribution
-
-VERITAS avoids black-box opacity by extracting exact learned log-odds coefficients from the trained $L_1/L_2$ estimators:
-
-### Top Feature Attribution Tokens
-
-| Top Fake News Predictors ($\beta > 0$) | Log-Odds ($\beta$) | Linguistic Signal | Top Real News Predictors ($\beta < 0$) | Log-Odds ($\beta$) | Linguistic Signal |
-| :--- | :---: | :--- | :--- | :---: | :--- |
-| `leaked` | **+2.418** | Sensationalist urgency | `reuters` | **-3.114** | Institutional wire attribution |
-| `secret` | **+2.105** | Conspiracy narrative | `department` | **-2.650** | Official institutional entity |
-| `miracle` | **+1.982** | Medical/scientific hyperbole | `spokesman` | **-2.318** | Attribution of primary source |
-| `shocking` | **+1.854** | Emotional bait | `fiscal` | **-2.140** | Precise technical/economic register |
-| `breaking` | **+1.710** | Synthetic viral framing | `parliament` | **-1.955** | Formal governance reporting |
-
----
-
-## 9. Statistical Drift SRE & Automated Guardrails
-
-VERITAS features an automated SRE subsystem that monitors incoming inference streams and executes hypothesis testing against the reference distribution:
-
-- **Scenario 1 (Stable In-Distribution):** Reference validation traffic compared against normal test stream:
-  - Two-sample KS test: $D_{KS} = 0.121$, $p = 0.1123 > 0.05$ (Fail to reject $H_0$).
-  - Population Stability Index: $\text{PSI} = 0.0807 < 0.20$ (Negligible distributional shift).
-  - Automated Signal: `continue_monitoring`.
-
-- **Scenario 2 (Synthetically Shifted):** Reference validation traffic compared against adversarial out-of-distribution traffic:
-  - Two-sample KS test: $D_{KS} = 0.824$, $p < 10^{-67}$ (Reject $H_0$, severe drift detected).
-  - Population Stability Index: $\text{PSI} = 9.1054 \gg 0.20$ (Significant structural divergence).
-  - Automated Signal: `review_and_retrain` (flagged with cooldown and audit key).
-
-To generate live synthetic test traffic against the running API:
 ```bash
-python scripts/synthetic_traffic.py --base-url http://localhost:8000 --max-requests 50 --drift-every 10
+curl -X POST "http://localhost:8000/api/predict/both" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Federal Reserve announces benchmark interest rate decision following monthly FOMC policy meeting in Washington."
+  }'
 ```
 
 ---
 
-## 10. Quick Start & Execution Guide
+## 🚀 7. Quick Start & Deployment
 
-### Option A: Production Multi-Stage Containerized Stack
-
-Build and stand up the decoupled, hardened full-stack architecture (Caddy 2 Edge Reverse Proxy + React 19 SPA + FastAPI ML Backend):
+### 7.1 Option A: Full-Stack Docker Compose (Recommended)
 
 ```bash
-docker compose up -d --build
+# 1. Clone the repository
+git clone https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models.git
+cd Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models
+
+# 2. Initialize environment configuration
+cp .env.example .env
+
+# 3. Build and launch Frontend (Caddy 2 + React 19 on :3000) & Backend (FastAPI on :8000)
+docker compose up --build -d
+
+# 4. Verify container health
+curl -fsSL http://localhost:8000/healthz
 ```
 
-#### Active Service Endpoints
-- **React 19 OLED Dashboard (Caddy Edge):** [http://localhost:3000](http://localhost:3000)
-- **FastAPI Backend Service:** [http://localhost:8000](http://localhost:8000)
-- **Interactive OpenAPI 3.1 Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Edge Reverse Proxy Health Check:** `curl http://localhost:3000/healthz`
-- **Backend Model Readiness Probe:** `curl http://localhost:8000/readyz`
+* **React 19 Web Application**: `http://localhost:3000`
+* **FastAPI Interactive Swagger UI**: `http://localhost:8000/docs`
+* **Development / Dashboard Compose Profiles**: Use `docker-compose.dev.yml` for hot-reloading or `docker-compose.dashboard.yml` for dashboard-isolated deployment.
 
----
+### 7.2 Option B: Reproducible DVC & ML Pipeline Execution
 
-### Option B: Local Dual-Service Development
+```bash
+# Create a Python 3.11 virtual environment and install locked dependencies
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-#### 1. Start the React 19 Frontend (Vite 7)
+# Execute the complete deterministic pipeline (Ingestion -> Dedup -> Train -> Evaluate -> Reports)
+bash scripts/run_pipeline.sh
+
+# Or reproduce individual stages via DVC
+dvc repro
+
+# Export trained deep learning models to ONNX Runtime
+python scripts/export_onnx.py
+```
+
+### 7.3 Option C: Local Frontend & Backend Development
+
+**Terminal 1 — FastAPI Inference Backend:**
+```bash
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Terminal 2 — React 19 Vite SPA:**
 ```bash
 cd frontend
 pnpm install
 pnpm dev
-# Vite dev server running at http://localhost:5173 with proxy to :8000
 ```
 
-#### 2. Start the FastAPI ML Backend (uv)
+### 7.4 Option D: Kubernetes Cloud-Native Deployment (`k8s/base`)
+
 ```bash
-cd backend
-uv sync
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-# FastAPI engine running at http://localhost:8000
+# Validate and apply Kustomize manifests (Namespace, Deployment, HPA, Ingress, NetworkPolicy, Redis, ServiceMonitor)
+kubectl apply -k k8s/base/
+kubectl get pods -n veritas-ai
 ```
 
 ---
 
-### Option C: Standard Quality & Verification Commands
+## 🧪 8. Testing, Fuzzing & Quality Gates
 
-Execute the exact commands enforced across continuous integration and pre-commit quality gates:
+The repository enforces automated verification across unit, contract, accessibility, stress, security, and fuzzing layers:
 
-| Scope | Command | Purpose |
+```bash
+# 1. Run full Python test suite (unit, ingestion, serving, SRE, zero-trust, security hardening)
+pytest -v --cov=src --cov=backend
+
+# 2. Run production readiness & severity gates
+python scripts/verify_production_readiness.py
+python scripts/source_audit.py
+
+# 3. Run Frontend Vitest unit tests, Biome linter & Playwright E2E / Accessibility tests
+cd frontend
+pnpm check
+pnpm test
+pnpm exec playwright test
+
+# 4. Run Atheris ClaimReview fuzzer locally
+python fuzz/atheris_claimreview_fuzzer.py fuzz/corpus/ -max_total_time=30
+```
+
+### CI/CD Automation Matrix (`.github/workflows/`)
+
+| Workflow | File | Purpose |
 | :--- | :--- | :--- |
-| **Frontend Typecheck** | `pnpm --prefix frontend check` | Strict TypeScript compilation check (`tsc --noEmit`). |
-| **Frontend Lint** | `pnpm --prefix frontend lint` | High-speed static analysis and formatting with Biome. |
-| **Frontend Unit Tests** | `pnpm --prefix frontend test --run` | Vitest component, hook, and store test suite (40 tests). |
-| **Frontend E2E & WCAG** | `pnpm --prefix frontend test:e2e` | Playwright cross-browser tests + `@axe-core/playwright` audits. |
-| **Backend Linter** | `uv run --project backend ruff check backend/` | Ruff linting and formatting compliance pass. |
-| **Backend Test Suite** | `uv run --project backend pytest backend/` | Pytest suite covering endpoints, attribution, and edge cases. |
-| **API Contract Linter** | `npx @stoplight/spectral-cli lint backend/openapi.json --ruleset backend/.spectral.yaml` | OpenAPI 3.1 strict schema validation (`spectral:oas`). |
-| **Compose Validation** | `docker compose config` | Validates container networking, ports, and environment variables. |
-| **Pre-Commit Hooks** | `lefthook run pre-commit` | Polyglot local git pre-commit verification pipeline. |
+| **Continuous Integration** | `ci.yml` | Runs Python/Frontend linting, type-checking, unit tests, coverage, and build verification |
+| **CodeQL Analysis** | `codeql.yml` | Static Application Security Testing (SAST) across Python and TypeScript/JavaScript |
+| **ClusterFuzzLite** | `clusterfuzzlite.yml` | Continuous sanitizer-instrumented fuzzing on pull requests and batch runs |
+| **Atheris Fuzzing** | `fuzz.yml` | Dedicated fuzzing for text parsing (`tests/fuzz/fuzz_text_parsing.py`) and ClaimReview schemas |
+| **Performance Smoke** | `performance-smoke.yml` | k6 API latency and throughput smoke testing (`tests/performance/api_smoke.js`) |
+| **Secret Scanning** | `secret-scan.yml` | Gitleaks secret detection across commit history (`.gitleaks.toml`) |
+| **OpenSSF Scorecards** | `scorecards.yml` | Supply-chain security posture and branch protection auditing |
+| **GitHub Pages Deploy** | `deploy-pages.yml` | Publishes static showcase and benchmark reports (`pages/`) |
+| **Release Automation** | `release.yml` | Semantic release packaging and container artifact publishing |
+| **PR Labeler** | `labeler.yml` | Automated PR categorization based on modified file paths |
 
 ---
 
-## 11. Cryptographic Evidence Ledger & Reproducibility
+## 📂 9. Repository Topology
 
-Every deliverable in the repository is cryptographically anchored. All 12 artifact digests are verified by automated quality gates:
-
-| Artifact Path | Component Role | Size (Bytes) | SHA-256 Digest | Status |
-| :--- | :--- | :---: | :--- | :---: |
-| `reports/data_summary.json` | Data Ingestion Summary | 1,996 | `47e77734abf7929f36b31e408a46c81f5dad4b90a1250bf0be40fe80f53f1e64` | **VERIFIED** |
-| `reports/linear_models_comparison.json` | Linear Models Benchmark | 7,154 | `f87ec71dde6eb4575f2b84c3398f42fd6b10ad4988fcb75f1c3441eca9d2ccd4` | **VERIFIED** |
-| `reports/linear_models_comparison.csv` | Linear Models Tabular | 336 | `72ddb4df8142c506ce7f6577a76e1f96932b93f46124a623f787c66d02b0b979` | **VERIFIED** |
-| `reports/tree_models_comparison.json` | Tree Ensembles Benchmark | 10,249 | `6e2d5f64eec9e02b21c7f96eb6d7b5f2a2ff22c76effb685a2f443d7cd24d1b9` | **VERIFIED** |
-| `reports/unsupervised_analysis.json` | Unsupervised Geometry | 5,367 | `77c0d9d790cf4a23c5b644ad3392d4c31730e10eb570ce2b7c481a211abe6038` | **VERIFIED** |
-| `reports/evaluation_report.json` | Evaluation Report | 4,317 | `37ecd2ecd9a034218fbbdd7aedd938ab632be149bbf5d0a0d641439fb093e6da` | **VERIFIED** |
-| `reports/calibration_report.json` | Calibration Report | 493 | `5e1a58a3d90ae815ca50be7dab74cc3fc85dfc2a004e4edcf269b030f71a5f9f` | **VERIFIED** |
-| `reports/model_comparison.json` | Global Benchmark | 2,383 | `830d5bc6a237a32f56c49d32e2ef53e854e7e7446ab33d6efd8e7670b1c5b039` | **VERIFIED** |
-| `reports/champion_model.json` | Champion Model Specs | 1,306 | `3ea3c4cb9517ca16d41c35c8990df5d42e87e975284596945d5c8056cb63e6ef` | **VERIFIED** |
-| `reports/drift_report.json` | Drift SRE Baseline | 1,688 | `d52113b33c74c3711ea10696744298bcea1fc88d4dba30096ba44f35cfd210c3` | **VERIFIED** |
-| `artifacts/models/package_manifest.json` | Packaged Model Manifest | 1,083 | `7ecdefe77ef883235552a3ca71476af438d1685d712742a6e279cb0b3283b53b` | **VERIFIED** |
-| `data/processed/split_manifest.json` | Partition Hashes | 566 | `c76bc62a7bdd1b6c6412386cd5dfe454032e724c2fc020b61d7af3e96ad39ae4` | **VERIFIED** |
+```text
+Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models/
+├── .clusterfuzzlite/          # ClusterFuzzLite Dockerfile, build.sh & project.yaml
+├── .devcontainer/             # VS Code DevContainer configuration
+├── .dvc/                      # Data Version Control configuration
+├── .github/                   # GitHub Actions workflows (10), Dependabot, CODEOWNERS & templates
+├── artifacts/models/          # Serialized champion model (logistic_l2.joblib) & package_manifest.json
+├── backend/                   # FastAPI Dual-Engine Inference Service
+│   ├── app/                   # API endpoints, Pydantic v2 schemas, BiLSTM & BERT inference engines
+│   ├── tests/                 # Backend API contract tests (test_api.py)
+│   ├── Dockerfile             # Hardened multi-stage backend image
+│   └── openapi.json           # OpenAPI 3.1 contract specification
+├── configs/                   # Declarative YAML configs (default, dataset, models, evaluation)
+├── data/                      # Raw, external & stratified processed splits (split_manifest.json)
+├── deploy/                    # Production release contract environment templates
+├── docs/                      # 25 numbered engineering specs, ADRs, runbooks & security guides
+├── frontend/                  # React 19 + TypeScript + Tailwind v4 SPA & tRPC/Drizzle server
+│   ├── client/                # Dashboard layouts and 10+ analytical page views
+│   ├── src/                   # Feature modules (inference, explainability, comparison, benchmarks, history)
+│   ├── server/                # Express/tRPC routers, Drizzle DB integration & FastAPI proxy client
+│   ├── e2e/                   # Playwright E2E, accessibility, audit-trail & explainability specs
+│   ├── Caddyfile              # Caddy 2 reverse proxy, compression & CSP security headers
+│   └── Dockerfile             # Multi-stage Node build + Caddy 2 Alpine edge image
+├── fuzz/                      # Atheris ClaimReview fuzzer & seed corpus
+├── k8s/                       # Kubernetes Kustomize base manifests & Prometheus ServiceMonitor schemas
+├── notebooks/                 # Reproducible notebooks (01_eda, 02_unsupervised_analysis, 03_model_evaluation)
+├── pages/                     # Static showcase & pre-built SPA bundle for GitHub Pages
+├── reports/                   # JSON evaluation reports, drift reports, MLflow runs & PNG diagnostic plots
+├── requirements/              # Reproducible manylinux_2_28 Python 3.11 hash-locked requirement files
+├── scripts/                   # Automation scripts (pipeline, ONNX export, MLflow init, readiness gates)
+├── src/                       # Core ML package (data, features, models, evaluation, monitoring, serving)
+├── tests/                     # 18+ comprehensive Python test suites + k6 performance & fuzz harnesses
+├── docker-compose.yml         # Production multi-container orchestration
+├── dvc.yaml                   # DVC pipeline DAG definition
+└── pyproject.toml             # Python project metadata, Ruff, Pytest & Mypy configuration
+```
 
 ---
 
-## 12. Limitations & Governance Disclaimers
+## 📚 10. Engineering Documentation Hub
 
-- **Benchmark Corpus Scope (Smoke-Test Fixture):** The default evaluation benchmark in `scripts/run_capstone_experiments.py` uses a curated 80-article balanced fixture (40 authentic agency dispatches, 40 debunked claims) designed to provide instant, deterministic, zero-network grading for CI/CD and laboratory review. For production training, ingestion scripts connect to the full multi-thousand article ISOT and ClaimReview corpora.
-- **Deep Learning GPU Execution:** While full BiLSTM and BERT transformer architectures are implemented in `src/models/lstm.py` and `src/models/bert.py`, their metrics in `reports/model_comparison.json` are benchmarked from published reference checkpoints to allow lean CPU container operation without requiring 16GB VRAM GPU instances.
-- **Lexical Representation:** TF-IDF n-grams capture surface lexical and rhetorical register but do not encode long-range causal reasoning.
+The `docs/` directory contains a complete software and ML engineering specification suite:
+
+<details>
+<summary><strong>📖 Click to expand all 25 Engineering Specifications, ADRs & Runbooks</strong></summary>
+
+### Core Engineering & ML Specifications
+* [`00_PROJECT_MASTER_PLAN.md`](./docs/00_PROJECT_MASTER_PLAN.md) — End-to-end master execution plan
+* [`01_PROJECT_CHARTER.md`](./docs/01_PROJECT_CHARTER.md) — Scope, objectives, and stakeholder charter
+* [`02_REQUIREMENTS.md`](./docs/02_REQUIREMENTS.md) — Functional and non-functional system requirements
+* [`03_ARCHITECTURE.md`](./docs/03_ARCHITECTURE.md) & [`ARCHITECTURE.md`](./ARCHITECTURE.md) — C4 architectural blueprints
+* [`04_DEVELOPMENT_WORKFLOW.md`](./docs/04_DEVELOPMENT_WORKFLOW.md) — Branching, Lefthook pre-commit hooks, and CI conventions
+* [`05_MVP_IMPLEMENTATION_PLAN.md`](./docs/05_MVP_IMPLEMENTATION_PLAN.md) — Phased MVP delivery milestones
+* [`06_ML_METHODOLOGY.md`](./docs/06_ML_METHODOLOGY.md) & [`mathematical_formulation.md`](./docs/mathematical_formulation.md) — Mathematical derivations for TF-IDF, Logistic Regression, Platt Scaling, BiLSTM, and BERT
+* [`07_EVALUATION_PROTOCOL.md`](./docs/07_EVALUATION_PROTOCOL.md) — Metrics, calibration, and statistical significance testing
+* [`08_UNSUPERVISED_PLAN.md`](./docs/08_UNSUPERVISED_PLAN.md) — Clustering, dimensionality reduction, and topic modeling protocol
+* [`09_API_SPEC.md`](./docs/09_API_SPEC.md) — REST & tRPC endpoint contracts
+* [`10_DATASET_CARD.md`](./docs/10_DATASET_CARD.md) & [`dataset_card.md`](./docs/dataset_card.md) — Dataset provenance, preprocessing, and split manifests
+* [`11_MODEL_CARD.md`](./docs/11_MODEL_CARD.md) & [`model_cards.md`](./docs/model_cards.md) — Intended use, limitations, and subgroup fairness metrics
+* [`12_EXPERIMENT_TRACKER_TEMPLATE.md`](./docs/12_EXPERIMENT_TRACKER_TEMPLATE.md) — MLflow run logging standard
+* [`13_TESTING_STRATEGY.md`](./docs/13_TESTING_STRATEGY.md) & [`performance-testing.md`](./docs/performance-testing.md) — Unit, E2E, fuzz, and load testing strategy
+* [`14_DEPLOYMENT_GUIDE.md`](./docs/14_DEPLOYMENT_GUIDE.md) & [`deployment.md`](./docs/deployment.md) — Container and K8s rollout procedures
+* [`15_MLOPS_PLAN.md`](./docs/15_MLOPS_PLAN.md) — Drift detection, retraining triggers, and artifact lineage
+* [`16_CAPSTONE_COMPLIANCE_MATRIX.md`](./docs/16_CAPSTONE_COMPLIANCE_MATRIX.md) & [`compliance_matrix.md`](./docs/compliance_matrix.md) — Requirement traceability matrix
+* [`17_RISK_REGISTER.md`](./docs/17_RISK_REGISTER.md) — Technical and operational risk mitigation log
+* [`18_DEMO_SCRIPT.md`](./docs/18_DEMO_SCRIPT.md) — Step-by-step live walkthrough guide
+* [`19_CAPSTONE_REPORT_OUTLINE.md`](./docs/19_CAPSTONE_REPORT_OUTLINE.md) — Academic report structure
+* [`20_DEVELOPER_CHECKLIST.md`](./docs/20_DEVELOPER_CHECKLIST.md) — Pre-release verification checklist
+* [`21_GITHUB_REPO_STRUCTURE.md`](./docs/21_GITHUB_REPO_STRUCTURE.md) — Repository layout specification
+* [`22_WEEKLY_EXECUTION_PLAN.md`](./docs/22_WEEKLY_EXECUTION_PLAN.md) — Sprint schedule
+* [`23_SOURCE_GOVERNANCE.md`](./docs/23_SOURCE_GOVERNANCE.md) & [`sources.md`](./docs/sources.md) — Data source authenticity and SHA-256 verification
+* [`24_DECISION_LOG.md`](./docs/24_DECISION_LOG.md) — Architectural Decision Records (ADRs)
+
+### Security, SRE & Production Runbooks
+* [`docs/security_hardening.md`](./docs/security_hardening.md) — Container, API, and dependency hardening controls
+* [`docs/security/api-and-observability.md`](./docs/security/api-and-observability.md) — Zero-trust API telemetry
+* [`docs/security/hash-lock-maintenance.md`](./docs/security/hash-lock-maintenance.md) — Supply-chain lockfile maintenance
+* [`docs/deployment/production-readiness.md`](./docs/deployment/production-readiness.md) & [`production-rollout.md`](./docs/deployment/production-rollout.md)
+* [`docs/runbooks/incident-response.md`](./docs/runbooks/incident-response.md) & [`rollback.md`](./docs/runbooks/rollback.md)
+
+</details>
 
 ---
 
-## Status & Compliance
+## 🤝 11. Contributing, Governance & License
 
-The repository is **100% implemented** and **Complete through Phase 7**. Reproducibility, source governance, handout traceability, production packaging, zero-trust artifact verification, air-gapped model loading, bounded extreme-scale serving, orchestration with `docker-compose.yml`, CI/CD, monitoring boundaries, report provenance, and test evidence are fully verified. Full pipeline execution is codified in `scripts/run_pipeline.sh`.
+* **Contributing**: Please review [`CONTRIBUTING.md`](./CONTRIBUTING.md) and [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) before submitting pull requests.
+* **Security Policy**: Report vulnerabilities privately per [`SECURITY.md`](./SECURITY.md).
+* **Governance & Support**: Project stewardship and support channels are detailed in [`GOVERNANCE.md`](./GOVERNANCE.md) and [`SUPPORT.md`](./SUPPORT.md).
+* **Citation**: If you use this platform or methodology in academic work, please cite it using [`CITATION.cff`](./CITATION.cff):
 
----
+```bibtex
+@software{amara_veritas_ai_2026,
+  author       = {Amara, Tejaswin},
+  title        = {{VERITAS AI: Fake News Detection Using NLP, LSTM, and BERT Transformer Models}},
+  year         = {2026},
+  url          = {https://github.com/tejaswin-amara/Fake-News-Detection-Using-NLP-LSTM-and-BERT-Transformer-Models},
+  license      = {MIT}
+}
+```
 
-## 13. References
-
-### Level 1: Primary Foundational References
-1. [Ahmed H, Traore I, and Saad S. *Detecting opinion spams and fake news using text classification*.](https://doi.org/10.1002/spy2.9)
-2. [Devlin J, Chang MW, Lee K, and Toutanova K. *BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding*.](https://arxiv.org/abs/1810.04805)
-3. [Hastie T, Tibshirani R, and Friedman J. *The Elements of Statistical Learning*. 2nd ed. 2017.](https://hastie.su.domains/ElemStatLearn/)
-4. [Platt J. *Probabilistic Outputs for Support Vector Machines*.](https://www.cs.cornell.edu/people/tj/publications/joachims_99a.pdf)
-5. [Lundberg SM and Lee SI. *A Unified Approach to Interpreting Model Predictions*.](https://arxiv.org/abs/1705.07874)
-6. [*Machine Learning*, 25SC2107E, supplied course handout.](docs/references/MachineLearninghandout.pdf) [Course Portal](https://y25btech.klef.in)
-
-### Level 2: Supporting Domain References
-7. [Verma PK, Agrawal P, and Prodan R. *WELFake dataset for fake news detection in text data*.](https://doi.org/10.5281/zenodo.4561253)
-8. [Data Commons Fact Check Markup Tool Data Feed and FAQ.](https://datacommons.org/factcheck/download)
-9. [Pennington J, Socher R, and Manning CD. *GloVe: Global Vectors for Word Representation*.](https://nlp.stanford.edu/projects/glove/)
-10. [Géron A. *Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow*. 3rd ed. 2022.](https://www.oreilly.com/library/view/hands-on-machine-learning/9781098125974/)
-11. [James G, Witten D, Hastie T, Tibshirani R, and Taylor J. *An Introduction to Statistical Learning*.](https://www.statlearning.com/)
-12. [Bishop CM. *Pattern Recognition and Machine Learning*. 2006.](https://link.springer.com/book/9780387310732)
-13. [Huyen C. *Designing Machine Learning Systems*. 2022.](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/)
-14. [Ameisen E. *Building Machine Learning Powered Applications*. 2020.](https://www.oreilly.com/library/view/building-machine-learning/9781492045106/)
-15. [Burkov A. *Machine Learning Engineering*. 2020.](https://www.mlebook.com/)
-16. [Hugging Face Transformers documentation and bert-base-uncased card.](https://huggingface.co/google-bert/bert-base-uncased)
-17. [UKPLab Sentence Transformers documentation and repository.](https://www.sbert.net/)
-18. [The scikit-learn User Guide.](https://scikit-learn.org/stable/user_guide.html)
-19. [Lloyd S. *Least Squares Quantization in PCM*.](https://doi.org/10.1109/TIT.1982.1056489)
-20. [Müllner D. *Modern hierarchical, agglomerative clustering algorithms*.](https://arxiv.org/abs/1109.2378)
-21. [Ester M, Kriegel HP, Sander J, and Xu X. *A density-based algorithm for discovering clusters*.](https://www.aaai.org/papers/kdd96-037-a-density-based-algorithm-for-discovering-clusters-in-large-spatial-databases-with-noise/)
-22. [Pearson PCA reference.](https://doi.org/10.1080/14786440109462720)
-23. [Liu FT, Ting KM, and Zhou ZH. *Isolation Forest*.](https://doi.org/10.1109/ICDM.2008.17)
-24. [scikit-learn LogisticRegression and linear-model documentation.](https://scikit-learn.org/stable/modules/linear_model.html)
-25. [scikit-learn trees and ensembles, XGBoost, and LightGBM documentation.](https://scikit-learn.org/stable/modules/tree.html)
-26. [scikit-learn model selection and evaluation documentation.](https://scikit-learn.org/stable/modules/model_evaluation.html)
-27. [Snoek J, Larochelle H, and Adams RP. *Practical Bayesian Optimization*.](https://arxiv.org/abs/1206.2944)
-28. [Zadrozny B and Elkan C. *Transforming Classifier Scores into Probability Estimates*.](https://doi.org/10.1145/775047.775151)
-29. [McNemar Q. *Note on the sampling error of the difference between correlated proportions*.](https://doi.org/10.1007/BF02295996)
-30. [SciPy statistical-functions documentation.](https://docs.scipy.org/doc/scipy/reference/stats.html)
-31. [FastAPI documentation.](https://fastapi.tiangolo.com/)
-32. [ONNX documentation and ONNX Runtime documentation.](https://onnxruntime.ai/docs/)
-33. [Dockerfile reference and Docker Python guide.](https://docs.docker.com/reference/dockerfile/)
-34. [MLflow Tracking documentation and Model Registry documentation.](https://mlflow.org/docs/latest/ml/tracking/)
-35. [Python Packaging User Guide and PEP 621.](https://packaging.python.org/en/latest/)
-36. [DVC documentation, repository, and package metadata.](https://dvc.org/doc)
-
-*The complete academic and engineering source register with detailed provenance entries is maintained in [`docs/sources.md`](docs/sources.md) and [`docs/sources.yaml`](docs/sources.yaml).*
+Distributed under the **[MIT License](./LICENSE)**.
