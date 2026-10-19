@@ -9,7 +9,7 @@ joblib==1.4.2
 pydantic==2.9.2
 pydantic-settings==2.6.1
 nltk==3.10.3
-xgboost==2.1.2
+xgboost==3.2.0
 lightgbm==4.7.0
 matplotlib==3.9.2
 
